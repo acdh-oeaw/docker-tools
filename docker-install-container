@@ -1,0 +1,44 @@
+#!/bin/bash
+
+NAME=$1
+if [ -z $1 ] || [ -z $2 ]; then
+  echo "Builds a docker image, installs is as a container and configures to be run at system startup."
+  echo "  If a container with the same name already exists, it is removed with '-fv' options."
+  echo ""
+  echo "Usage:"
+  echo "    $0 containerName buildDir [dockerRunParams]"
+  echo ""
+  echo "Useful dockerRunParams:"
+  echo "  -d - run in daemon mode"
+  echo "  -p hostPort:containerPort - port forwarding"
+  echo "  -v hostPath:containerPath[:rw|ro] - mounting host directory"
+  exit
+fi
+DIR=$2
+
+docker build -t acdh/$NAME $DIR
+if [ $? != 0 ]; then
+  exit
+fi
+
+docker rm -fv $NAME
+docker run --name $NAME $3 acdh/$NAME
+if [ $? != 0 ]; then
+  exit
+fi
+
+docker-mount-volumes
+
+echo "[Unit]
+Description=$NAME
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/docker start -a $NAME
+ExecStop=/usr/bin/docker stop $NAME
+
+[Install]
+WantedBy=multi-user.target" > /usr/lib/systemd/system/docker-${NAME}.service
+systemctl enable docker-${NAME}.service

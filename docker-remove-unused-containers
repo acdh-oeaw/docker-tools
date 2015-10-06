@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Removes all containers which:
+# - are not running
+# and
+# - are based on an image without tag
+#
+# Typically these are temporary containers created during an image build 
+# proccess and not removed due to an error in the build
+
+for i in `docker ps -a | grep -E '[0-9a-z]{64}' | grep Exited | awk '{print \$1}'`; do
+	docker rm -fv $i
+done
