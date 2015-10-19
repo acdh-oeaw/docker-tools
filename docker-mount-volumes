@@ -17,7 +17,11 @@ rootBase  = '/srv/docker/'	# symlinks will be create at {rootBase}/{containerNam
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', action = 'store_true', required = False)
+parser.add_argument('-c', '--container', action = 'append', nargs='*', required = False)
 args = parser.parse_args()
+if args.container is None :
+  args.container = [[]]
+args.container = reduce(lambda x, y: x + y, args.container)
 
 ###########################################################
 
@@ -31,27 +35,28 @@ for container in host.containers():
   name = container['Id']
   if len(container['Names']) > 0: 
     name = re.sub('^/', '', container['Names'][0])
+
   name = name.replace('/', '-')
-   
-  if args.verbose == True :
-    print 'Creating symlinks for container ' + name 
-
-  for guestPath, hostPath in host.inspect_container(container['Id'])['Volumes'].iteritems():
+  if args.container.count(name) > 0 or len(args.container) == 0:
     if args.verbose == True :
-      print '\t' + guestPath + ':' + hostPath
+      print 'Creating symlinks for container ' + name 
 
-    if not os.path.exists(rootBase + '/' + name):
-      os.makedirs(rootBase + '/' + name)
-
-    path = rootBase + '/' + name + '/' + re.sub('^/', '', guestPath).replace('/', '-')
-
-    if os.path.islink(path):
-      os.unlink(path)
-
-    if not os.path.exists(path):
-      os.symlink(hostPath, path)
-    else: 
-      if args.verbose == False :
+    for guestPath, hostPath in host.inspect_container(container['Id'])['Volumes'].iteritems():
+      if args.verbose == True :
         print '\t' + guestPath + ':' + hostPath
-      print '\tcan not create symlink - file or directory with the same name already exists!'
+
+      if not os.path.exists(rootBase + '/' + name):
+        os.makedirs(rootBase + '/' + name)
+
+      path = rootBase + '/' + name + '/' + re.sub('^/', '', guestPath).replace('/', '-')
+
+      if os.path.islink(path):
+        os.unlink(path)
+
+      if not os.path.exists(path):
+        os.symlink(hostPath, path)
+      else: 
+        if args.verbose == False :
+          print '\t' + guestPath + ':' + hostPath
+        print '\tcan not create symlink - file or directory with the same name already exists!'
 
