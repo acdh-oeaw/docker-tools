@@ -6,13 +6,18 @@
 # containers volumes
 ###########################################################
 
+import argparse
 import docker
 import os
 import re
 
 dockerURL = 'unix://var/run/docker.sock'
 rootBase  = '/srv/docker/'	# symlinks will be create at {rootBase}/{containerName}/{containerPath}
-							# where {containerPath} will have '/' turned into '-'
+				# where {containerPath} will have '/' turned into '-'
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-v', '--verbose', action = 'store_true', required = False)
+args = parser.parse_args()
 
 ###########################################################
 
@@ -27,11 +32,13 @@ for container in host.containers():
   if len(container['Names']) > 0: 
     name = re.sub('^/', '', container['Names'][0])
   name = name.replace('/', '-')
-    
-  print 'Creating symlinks for container ' + name 
+   
+  if args.verbose == True :
+    print 'Creating symlinks for container ' + name 
 
   for guestPath, hostPath in host.inspect_container(container['Id'])['Volumes'].iteritems():
-    print '\t' + guestPath + ':' + hostPath
+    if args.verbose == True :
+      print '\t' + guestPath + ':' + hostPath
 
     if not os.path.exists(rootBase + '/' + name):
       os.makedirs(rootBase + '/' + name)
@@ -44,5 +51,7 @@ for container in host.containers():
     if not os.path.exists(path):
       os.symlink(hostPath, path)
     else: 
+      if args.verbose == False :
+        print '\t' + guestPath + ':' + hostPath
       print '\tcan not create symlink - file or directory with the same name already exists!'
 
