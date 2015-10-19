@@ -2,15 +2,15 @@
 
 # An application for automatic managment of docker images
 
+import collections
 import json
 import os
 import re
 import stat
 import subprocess
-import collections
 
 class HTTPReverseProxy(object):
-  portNumber = 8000
+  portNumber = 8020
 
   @staticmethod
   def getPort():
@@ -186,6 +186,7 @@ class Environment(object):
   Mounts        = None
   Links         = None
   Ports         = None
+  DockerOpts    = ''
 
   def __init__(self, conf):
     self.Mounts      = []
@@ -194,6 +195,10 @@ class Environment(object):
 
     if not isinstance(conf, dict) :
       raise Exception('configuration is of a wrong type')
+
+    #TODO
+    if 'DockerOpts' in conf :
+      self.DockerOpts = conf['DockerOpts']
 
     if not 'Account' in conf or not Param.isValidName(conf['Account']) :
       raise Exception('Account name is missing or invalid')
@@ -282,17 +287,20 @@ class Environment(object):
           raise Exception (str(len(self.Ports) + 1) + ' port forwarding host port is missing or invalid')
       if not 'Guest' in port or not Param.isValidNumber(port['Guest']) or int(port['Guest']) < 1 or int(port['Guest']) > 65535 :
         raise Exception(str(len(self.Ports) + 1) + ' port forwarding guest port is missing or invalid')
+      if port['Type'] == 'HTTP' :
+        if not 'ws' in port :
+          port['ws'] = []
+        if not isinstance(port['ws'], list) :
+          port['ws'] = [ port['ws'] ]
+        for ws in port['ws']:
+          if not isinstance(ws, basestring) or not Param.isValidAlias(ws) :
+            raise Exception(str(len(self.Ports) + 1) + ' port forwarding websockets paths are invalid')
       self.Ports.append(port)
 
   def check(self, duplDomains, duplPorts, duplNames, names):
     errors = []
     if self.Name in duplNames :
       errors.append('Duplicated name: ' + self.Name)
-    if self.ServerName in duplDomains :
-      errors.append('Domain ' + self.serverName + ' is duplicated')
-    for alias in self.ServerAlias:
-      if alias in duplDomains :
-        errors.append('ServerAlias ' + alias + ' is duplicated')
     for port in self.Ports:
       if port['Host'] in duplPorts :
         errors.append('Port ' + str(port) + ' is duplicated')
@@ -313,6 +321,10 @@ class Environment(object):
       dockerfileDir = self.DockerImgBase + '/' + self.DockerfileDir
     else :
       raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
+
+    #TODO
+    dockerOpts += ' ' + self.DockerOpts
+
     print ['docker-install-container', self.Name, dockerfileDir, dockerOpts]
     subprocess.call(['docker-install-container', self.Name, dockerfileDir, dockerOpts])
 
@@ -323,11 +335,7 @@ class Environment(object):
     return ports
 
   def getDomains(self):
-    domains = []
-    if not self.ServerName is None :
-      domains.append(self.ServerName)
-    domains += self.ServerAlias
-    return domains
+    return []
 
   def getDockerOpts(self):
     dockerOpts = ' -d'
@@ -342,11 +350,9 @@ class Environment(object):
 class EnvironmentHTTP(Environment):
   ServerName    = None
   ServerAlias   = None
-  Websockets    = None
 
   def __init__(self, conf):
     self.ServerAlias = []
-    self.Websockets  = []
     super(EnvironmentHTTP, self).__init__(conf)
 
     if 'ServerName' in conf and Param.isValidDomain(conf['ServerName']) :
@@ -354,17 +360,6 @@ class EnvironmentHTTP(Environment):
 
     if 'ServerAlias' in conf:
       self.processServerAlias(conf['ServerAlias'])
-
-    if 'Websockets' in conf :
-      self.processWebsockets(conf['Websockets'])
-
-  def processWebsockets(self, conf):
-    if not isinstance(conf, list) :
-      raise Exception('Websockets descriptions is not a list')
-    for ws in conf:
-      if not isinstance(ws, basestring) or not Param.isValidAlias(ws) :
-        raise Exception(ws + ' is an invalid websocket path')
-    self.Websockets = conf
 
   def processServerAlias(self, conf):
     if not isinstance(conf, list):
@@ -377,17 +372,36 @@ class EnvironmentHTTP(Environment):
         raise Exception(alias + ' is not a valid domain')
     self.ServerAlias = conf
 
+  def check(self, duplDomains, duplPorts, duplNames, names):
+    errors = super(EnvironmentHTTP, self).check(duplDomains, duplPorts, duplNames, names)
+    if self.ServerName in duplDomains :
+      errors.append('Domain ' + self.serverName + ' is duplicated')
+    for alias in self.ServerAlias:
+      if alias in duplDomains :
+        errors.append('ServerAlias ' + alias + ' is duplicated')
+    if len(errors) == 0 :
+      self.ready = True
+    else :
+      self.ready = False
+    return errors
+
   def apply(self):
     super(EnvironmentHTTP, self).apply()
     self.configureProxy()
 
   def configureProxy(self):
+    HTTPPort = self.getHTTPPort()
+    websockets = ''
+    for ws in HTTPPort['ws']:
+      websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+      websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
     vhFileName = '/etc/httpd/conf.d/sites-enabled/' + self.Name + '.conf'
     vhFile = open(vhFileName, 'w')
     vhFile.write(self.ReverseProxyTemplate.format(
       ServerName = self.ServerName,
       ServerAlias = self.getServerAlias(),
-      Port = str(self.getHTTPPort())
+      Port = str(HTTPPort['Host']),
+      Websockets = websockets
     ))
     vhFile.close()
     subprocess.call(['systemctl', 'reload', 'httpd'])
@@ -395,6 +409,13 @@ class EnvironmentHTTP(Environment):
   def getDockerOpts(self):
     dockerOpts = super(EnvironmentHTTP, self).getDockerOpts()
     return dockerOpts
+
+  def getDomains(self):
+    domains = []
+    if not self.ServerName is None :
+      domains.append(self.ServerName)
+    domains += self.ServerAlias
+    return domains
 
   def getServerAlias(self):
     serverAlias = self.ServerName
@@ -405,7 +426,8 @@ class EnvironmentHTTP(Environment):
   def getHTTPPort(self):
     for port in self.Ports:
       if port['Type'] == 'HTTP' :
-        return port['Host'] 
+        return port
+    raise Exception('No HTTP port')
 
   ReverseProxyTemplate = """
 <VirtualHost *:80>
@@ -413,6 +435,7 @@ class EnvironmentHTTP(Environment):
   ServerAlias {ServerAlias}
 
   ProxyPreserveHost On
+  {Websockets}
   ProxyPass        / http://127.0.0.1:{Port}/
   ProxyPassReverse / http://127.0.0.1:{Port}/
   <Proxy *>
@@ -433,7 +456,7 @@ class EnvironmentApache(EnvironmentHTTP):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http'
     super(EnvironmentApache, self).__init__(conf)
-    self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP"}]
+    self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : []}]
 
     if not Param.isValidDomain(self.ServerName) :
       raise Exception('ServerName is missing or invalid')
@@ -651,5 +674,7 @@ class EnvironmentDrupal6(EnvironmentPHP):
 #######################################
 
 configuration = Configuration()
+print '##########'
 configuration.check()
-configuration.apply()
+print '##########'
+#configuration.apply()
