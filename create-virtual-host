@@ -2,12 +2,15 @@
 
 # An application for automatic managment of docker images
 
+import argparse
 import collections
+import docker
 import json
 import os
 import re
 import stat
 import subprocess
+import time
 
 class HTTPReverseProxy(object):
   portNumber = 8020
@@ -91,11 +94,22 @@ class Configuration:
     for account in self.accounts:
       errors = account.check(duplDomains, duplPorts, duplNames, names)
       if len(errors) > 0 :
-        print account.name, ': ', errors
+        print '  ' + account.name, ': ', errors
 
-  def apply(self):
+  def buildImages(self, users, names, verbose):
     for account in self.accounts:
-      account.apply()
+      if len(users) == 0 or users.count(account.name) > 0 :
+        account.buildImages(names, verbose)
+
+  def runContainers(self, users, names, verbose):
+    for account in self.accounts:
+      if len(users) == 0 or users.count(account.name) > 0 :
+        account.runContainers(names, verbose)
+
+  def runHooks(self, users, names, verbose):
+    for account in self.accounts:
+      if len(users) == 0 or users.count(account.name) > 0 :
+        account.runHooks(names, verbose)
 
 class Account:
   base         = '/home'
@@ -117,10 +131,14 @@ class Account:
     self.gid = os.stat(path).st_gid
   
   def readConfig(self):
-    print self.name
+    print '  ' + self.name
     confFileName = self.base + '/' + self.name + '/config2.json'
     if os.path.isfile(confFileName):
-      self.processConfig(json.load(open(confFileName, 'r')))
+      try:
+        config = json.load(open(confFileName, 'r'))
+        self.processConfig(config)
+      except Exception as e:
+        print '  Configuration file ' + confFileName + ' is not a valid JSON: ' + str(e)
 
   def processConfig(self, conf):
     if not isinstance(conf, list) :
@@ -162,10 +180,23 @@ class Account:
         errors[env.Name] = tmp
     return errors
 
-  def apply(self):
+  def buildImages(self, names, verbose):
     for env in self.environments:
-      if env.ready :
-        env.apply()
+      if env.ready and (len(names) == 0 or names.count(env.Name) > 0):
+        try:
+          env.buildImage(verbose)
+        except Exception as e:
+          print e
+
+  def runContainers(self, names, verbose):
+    for env in self.environments:
+      if env.ready and (len(names) == 0 or names.count(env.Name) > 0):
+        env.runContainer(verbose)
+
+  def runHooks(self, names, verbose):
+    for env in self.environments:
+      if env.ready and (len(names) == 0 or names.count(env.Name) > 0):
+        env.runHooks(verbose)
 
   def getDomains(self):
     domains = []
@@ -336,19 +367,41 @@ class Environment(object):
       self.ready = True
     return errors
 
-  def apply(self):
-    if not self.ready :
-      raise Exception('Environment is not ready - it was not checked or there were errord during check')
-    dockerOpts = self.getDockerOpts()
+  def buildImage(self, verbose):
     if Param.isValidFile(self.BaseDir + '/' + self.DockerfileDir + '/Dockerfile') :
       dockerfileDir = self.BaseDir + '/' + self.DockerfileDir
     elif Param.isValidFile(self.DockerImgBase + '/' + self.DockerfileDir + '/Dockerfile') : 
       dockerfileDir = self.DockerImgBase + '/' + self.DockerfileDir
     else :
       raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
+    print '  ' + self.Name
+    proc = subprocess.Popen(['docker', 'build', '--force-rm=true', '-t', 'acdh/' + self.Name, dockerfileDir], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    output, err = proc.communicate()
+    if proc.returncode != 0 or verbose :
+      raise Exception('Build failed.\n\nStdOut:\n\n' + output + '\nStdError:\n\n' + err)
 
-    print ['docker-install-container', self.Name, dockerfileDir, dockerOpts]
-    subprocess.call(['docker-install-container', self.Name, dockerfileDir, dockerOpts])
+
+  def runContainer(self, verbose):
+    if not self.ready :
+      raise Exception('Environment is not ready - it was not checked or there were errord during check')
+
+    print '  ' + self.Name
+
+    dockerOpts = self.getDockerOpts()
+    proc = subprocess.Popen(['docker', 'rm', '-f', '-v', self.Name], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    out, err = proc.communicate()
+
+    if verbose :
+      proc = subprocess.Popen(['docker', 'run', '--name', self.Name] + dockerOpts + ['acdh/' + self.Name])
+    else:
+      proc = subprocess.Popen(['docker', 'run', '--name', self.Name] + dockerOpts + ['acdh/' + self.Name], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    proc.communicate()
+
+    proc = subprocess.Popen(['docker-mount-volumes', '-c', self.Name], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    out, err = proc.communicate()
+
+  def runHooks(self, verbose):
+    print '  ' + self.Name
 
   def getPorts(self):
     ports = []
@@ -360,15 +413,15 @@ class Environment(object):
     return []
 
   def getDockerOpts(self):
-    dockerOpts = ' -d'
+    dockerOpts = ['-d']
     for mount in self.Mounts:
-      dockerOpts += ' -v ' + self.BaseDir + '/' + mount['Host'] + ':' + mount['Guest'] + ':' + mount['Rights']
+      dockerOpts += ['-v',  self.BaseDir + '/' + mount['Host'] + ':' + mount['Guest'] + ':' + mount['Rights']]
     for port in self.Ports:
-      dockerOpts += ' -p ' + str(port['Host']) + ':' + str(port['Guest'])
+      dockerOpts += ['-p', str(port['Host']) + ':' + str(port['Guest'])]
     for link in self.Links:
-      dockerOpts += ' --link ' + link['Name'] + ':' + link['Alias']
+      dockerOpts += ['--link', link['Name'] + ':' + link['Alias']]
     for host in self.Hosts:
-      dockerOpts += ' --add-host ' + host['Name'] + ':' + host['IP']
+      dockerOpts += ['--add-host', host['Name'] + ':' + host['IP']]
     return dockerOpts
 
 class EnvironmentHTTP(Environment):
@@ -409,11 +462,14 @@ class EnvironmentHTTP(Environment):
       self.ready = False
     return errors
 
-  def apply(self):
-    super(EnvironmentHTTP, self).apply()
-    self.configureProxy()
+  def runHooks(self, verbose):
+    super(EnvironmentHTTP, self).runHooks(verbose)
+    self.configureProxy(verbose)
 
-  def configureProxy(self):
+  def configureProxy(self, verbose):
+    if verbose :
+      print '    Setting up reverse proxy'
+
     HTTPPort = self.getHTTPPort()
     websockets = ''
     for ws in HTTPPort['ws']:
@@ -547,10 +603,14 @@ class EnvironmentApache(EnvironmentHTTP):
         raise Exception('Alias path is missing or invalid')
     self.Aliases = conf
 
-  def apply(self):
-    super(EnvironmentApache, self).apply()
+  def runHooks(self, verbose):
+    super(EnvironmentApache, self).runHooks(verbose)
+
+    if verbose :
+      print '    Configuring Apache in guest'
+
     self.apacheConfigure()
-    self.apacheRestart()
+    self.apacheRestart(verbose)
 
   def apacheConfigure(self):
     vhFile = self.getApacheVHConfFile()
@@ -565,12 +625,13 @@ class EnvironmentApache(EnvironmentHTTP):
     ))
     vhFile.close()
 
-  def apacheRestart(self):
-    subprocess.call(['docker', 'exec', self.Name, 'supervisorctl', 'restart', 'apache2'])
+  def apacheRestart(self, verbose):
+    proc = subprocess.Popen(['docker', 'exec', self.Name, 'supervisorctl', 'restart', 'apache2'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    proc.communicate()
 
   def getDockerOpts(self):
     dockerOpts = super(EnvironmentApache, self).getDockerOpts()
-    dockerOpts += ' --cap-add=SYS_NICE --cap-add=DAC_READ_SEARCH'
+    dockerOpts += ['--cap-add=SYS_NICE', '--cap-add=DAC_READ_SEARCH']
     return dockerOpts
 
   def getApacheVHConfFile(self):
@@ -695,10 +756,44 @@ class EnvironmentDrupal6(EnvironmentPHP):
       conf['DockerfileDir'] = 'http_drupal6'
     super(EnvironmentDrupal6, self).__init__(conf)
 
-#######################################
+###########################################################
 
+parser = argparse.ArgumentParser(description='Script for maintiaining docker images and containers')
+parser.add_argument('-u', '--user', action = 'append', nargs = '*', required = False, help = 'User whose environments should be processed')
+parser.add_argument('-e', '--environment', action = 'append', nargs = '*', required = False, help = 'Names of environments to proccess')
+parser.add_argument('-a', '--action', action = 'store', nargs = 1, required = False, choices = ['check', 'build', 'run', 'hooks'],  help = 'Action to perform')
+parser.add_argument('-v', '--verbose', action = 'store_true', required = False,  help = 'Enable verbose output')
+args = parser.parse_args()
+print args
+if args.user is None :
+  args.user = [[]]
+args.user = reduce(lambda x, y: x + y, args.user)
+if args.environment is None :
+  args.environment = [[]]
+args.environment = reduce(lambda x, y: x + y, args.environment)
+print args
+
+print 'Loading config...'
 configuration = Configuration()
-print '##########'
+
+print 'Checking conflicts between environments...'
 configuration.check()
-print '##########'
-#configuration.apply()
+
+if args.action is None or args.action.count('build') > 0 :
+  print 'Building images...'
+  configuration.buildImages(args.user, args.environment, args.verbose)
+
+if args.action is None or args.action.count('run') > 0 :
+  print 'Running containers...'
+  configuration.runContainers(args.user, args.environment, args.verbose)
+
+if args.action is None or args.action.count('run') > 0 or args.action.count('hooks') > 0 :
+  print 'Running hooks...'
+
+  if not args.action is None and args.action.count('run') > 0 :
+    # give container(s) time to start before executing hooks
+    time.sleep(5)
+
+  configuration.runHooks(args.user, args.environment, args.verbose)
+
+###########################################################
