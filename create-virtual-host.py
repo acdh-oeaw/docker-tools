@@ -56,6 +56,14 @@ class Param(object):
   def isValidAlias(p):
     return re.search('^/[-_.a-zA-Z0-9/]+$', str(p))
 
+  @staticmethod
+  def isValidHostName(p):
+    return re.search('^([-a-zA-Z0-9][.]?)+$', p)
+
+  @staticmethod
+  def isValidIP(p):
+    return re.search('^[0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9]$', str(p))
+
 class Configuration:
   accounts = None
 
@@ -92,7 +100,6 @@ class Configuration:
 class Account:
   base         = '/home'
   name         = ''
-  path         = ''
   uid          = -1
   gid          = -1
   environments = None
@@ -113,7 +120,6 @@ class Account:
     print self.name
     confFileName = self.base + '/' + self.name + '/config2.json'
     if os.path.isfile(confFileName):
-      print self.path
       self.processConfig(json.load(open(confFileName, 'r')))
 
   def processConfig(self, conf):
@@ -192,19 +198,16 @@ class Environment(object):
   Mounts        = None
   Links         = None
   Ports         = None
-  DockerOpts    = ''
+  Hosts         = None
 
   def __init__(self, conf):
-    self.Mounts      = []
-    self.Links       = []
-    self.Ports       = []
+    self.Mounts = []
+    self.Links  = []
+    self.Ports  = []
+    self.Hosts  = []
 
     if not isinstance(conf, dict) :
       raise Exception('configuration is of a wrong type')
-
-    #TODO
-    if 'DockerOpts' in conf :
-      self.DockerOpts = conf['DockerOpts']
 
     if not 'Account' in conf or not Param.isValidName(conf['Account']) :
       raise Exception('Account name is missing or invalid')
@@ -244,6 +247,9 @@ class Environment(object):
 
     if 'Ports' in conf :
       self.processPorts(conf['Ports'])
+
+    if 'Hosts' in conf :
+      self.processHosts(conf['Hosts'])
 
   def processMounts(self, conf):
     if not isinstance(conf, list):
@@ -303,6 +309,19 @@ class Environment(object):
             raise Exception(str(len(self.Ports) + 1) + ' port forwarding websockets paths are invalid')
       self.Ports.append(port)
 
+  def processHosts(self, conf):
+    if not isinstance(conf, list) :
+      conf = [conf]
+
+    for host in conf:
+      if not isinstance(host, dict) :
+        raise Exception(str(len(self.Hosts) + 1) + ' host name definition is not a directory')
+      if not 'Name' in host or not Param.isValidHostName(host['Name']) :
+        raise Exception(str(len(self.Hosts) + 1) + ' host name definition - host name is missing or invalid ')
+      if not 'IP' in host or not Param.isValidIP(host['IP']) :
+        raise Exception(str(len(self.Hosts) + 1) + ' host name definition - IP number is missing or invalid ')
+      self.Hosts.append(host)
+
   def check(self, duplDomains, duplPorts, duplNames, names):
     errors = []
     if self.Name in duplNames :
@@ -328,9 +347,6 @@ class Environment(object):
     else :
       raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
 
-    #TODO
-    dockerOpts += ' ' + self.DockerOpts
-
     print ['docker-install-container', self.Name, dockerfileDir, dockerOpts]
     subprocess.call(['docker-install-container', self.Name, dockerfileDir, dockerOpts])
 
@@ -351,6 +367,8 @@ class Environment(object):
       dockerOpts += ' -p ' + str(port['Host']) + ':' + str(port['Guest'])
     for link in self.Links:
       dockerOpts += ' --link ' + link['Name'] + ':' + link['Alias']
+    for host in self.Hosts:
+      dockerOpts += ' --add-host ' + host['Name'] + ':' + host['IP']
     return dockerOpts
 
 class EnvironmentHTTP(Environment):
