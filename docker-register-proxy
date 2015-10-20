@@ -1,0 +1,20 @@
+#!/bin/bash
+# $1 env name
+# $2 ServerName
+# $3 ServerAlias
+# $4 Port
+# $5 Websockets
+
+echo "<VirtualHost *:80>
+  ServerName $2
+  ServerAlias $3
+
+  ProxyPreserveHost On
+  $5
+  ProxyPass        / http://127.0.0.1:$4/
+  ProxyPassReverse / http://127.0.0.1:$4/
+  <Proxy *>
+    Require all granted
+  </Proxy>
+</VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
+systemctl reload httpd

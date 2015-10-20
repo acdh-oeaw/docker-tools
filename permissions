@@ -2,12 +2,9 @@
 
 sed -i -e 's/dockerroot/docker/' /etc/group
 
-# set /etc/apache2/conf.d/sites-enabled to be writable by docker group
-chgrp -R docker /etc/httpd/conf.d/sites-enabled
-chmod g+w -R /etc/httpd/conf.d/sites-enabled
-
 # to enable volumes access for normal users
 chmod +x /var/lib/docker
 
 # SELinux context to allow docker access external mounts
 semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
+

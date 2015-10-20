@@ -1,3 +1,4 @@
 %users  ALL=(:docker) NOPASSWD: /usr/sbin/docker-manage
-%docker ALL=(root)    NOPASSWD: /usr/bin/systemctl reload httpd
 %docker ALL=(root)    NOPASSWD: /usr/sbin/docker-mount-volumes
+%docker ALL=(root)    NOPASSWD: /usr/sbin/docker-register-systemd
+%docker ALL=(root)    NOPASSWD: /usr/sbin/docker-register-proxy

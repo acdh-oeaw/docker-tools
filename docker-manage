@@ -425,10 +425,7 @@ class Environment(object):
       print out + '\n' + err
 
     # create systemd script
-    script = open('/usr/lib/systemd/system/docker-' + self.Name + '.service', 'w')
-    script.write(self.SystemdTemplate.format(name = self.Name))
-    script.close()
-    proc = subprocess.Popen(['systemctl', 'enable', 'docker-' + self.Name + '.service'])
+    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-systemd', self.Name])
     out, err = proc.communicate()
 
   def runHooks(self, verbose):
@@ -457,21 +454,6 @@ class Environment(object):
     for host in self.Hosts:
       dockerOpts += ['--add-host', host['Name'] + ':' + host['IP']]
     return dockerOpts
-
-  SystemdTemplate = """
-[Unit]
-Description={name}
-Requires=docker.service
-After=docker.service
-
-[Service]
-Restart=always
-ExecStart=/usr/bin/docker start -a {name}
-ExecStop=/usr/bin/docker stop {name}
-
-[Install]
-WantedBy=multi-user.target
-"""
 
 class EnvironmentHTTP(Environment):
   ServerName    = None
@@ -524,16 +506,8 @@ class EnvironmentHTTP(Environment):
     for ws in HTTPPort['ws']:
       websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
       websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-    vhFileName = '/etc/httpd/conf.d/sites-enabled/' + self.Name + '.conf'
-    vhFile = open(vhFileName, 'w')
-    vhFile.write(self.ReverseProxyTemplate.format(
-      ServerName = self.ServerName,
-      ServerAlias = self.getServerAlias(),
-      Port = str(HTTPPort['Host']),
-      Websockets = websockets
-    ))
-    vhFile.close()
-    subprocess.call(['sudo', '-u', 'root', 'systemctl', 'reload', 'httpd'])
+    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-proxy', self.Name, self.ServerName, self.getServerAlias(), str(HTTPPort['Host']), websockets])
+    out, err = proc.communicate()
 
   def getDockerOpts(self):
     dockerOpts = super(EnvironmentHTTP, self).getDockerOpts()
@@ -557,21 +531,6 @@ class EnvironmentHTTP(Environment):
       if port['Type'] == 'HTTP' :
         return port
     raise Exception('No HTTP port')
-
-  ReverseProxyTemplate = """
-<VirtualHost *:80>
-  ServerName {ServerName}
-  ServerAlias {ServerAlias}
-
-  ProxyPreserveHost On
-  {Websockets}
-  ProxyPass        / http://127.0.0.1:{Port}/
-  ProxyPassReverse / http://127.0.0.1:{Port}/
-  <Proxy *>
-    Require all granted
-  </Proxy>
-</VirtualHost>
-"""
 
 class EnvironmentApache(EnvironmentHTTP):
   DocumentRootMount  = '/var/www/html'
