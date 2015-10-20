@@ -2,3 +2,4 @@
 %docker ALL=(root)    NOPASSWD: /usr/sbin/docker-mount-volumes
 %docker ALL=(root)    NOPASSWD: /usr/sbin/docker-register-systemd
 %docker ALL=(root)    NOPASSWD: /usr/sbin/docker-register-proxy
+%docker ALL=(root)    NOPASSWD: /usr/sbin/docker-clean

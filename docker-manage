@@ -111,6 +111,11 @@ class Configuration:
       if len(users) == 0 or users.count(account.name) > 0 :
         account.runHooks(names, verbose)
 
+  def clean(self, users, names, verbose):
+    for account in self.accounts:
+      if len(users) == 0 or users.count(account.name) > 0 :
+        account.clean(names, verbose)
+
 class Account:
   base         = '/home'
   name         = ''
@@ -202,6 +207,12 @@ class Account:
     for env in self.environments:
       if env.ready and (len(names) == 0 or names.count(env.Name) > 0):
         env.runHooks(verbose)
+
+  def clean(self, names, verbose):
+    subprocess.call(['sudo', '-u', 'root', 'docker-clean', self.name])
+    self.buildImages(names, verbose)
+    self.runContainers(names, verbose)
+    self.runHooks(names, verbose)
 
   def getDomains(self):
     domains = []
@@ -422,11 +433,13 @@ class Environment(object):
     proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-mount-volumes', '-v', '-c', self.Name], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     out, err = proc.communicate()
     if verbose :
-      print out + '\n' + err
+      print str(out) + '\n' + str(err)
 
     # create systemd script
     proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-systemd', self.Name])
     out, err = proc.communicate()
+    if verbose :
+      print '    Registering in systemd'
 
   def runHooks(self, verbose):
     if not self.owner :
@@ -788,7 +801,7 @@ class EnvironmentDrupal6(EnvironmentPHP):
 parser = argparse.ArgumentParser(description='Script for maintiaining docker images and containers')
 parser.add_argument('-u', '--user', action = 'append', nargs = '*', required = False, help = 'User whose environments should be processed')
 parser.add_argument('-e', '--environment', action = 'append', nargs = '*', required = False, help = 'Names of environments to proccess')
-parser.add_argument('-a', '--action', action = 'store', nargs = 1, required = False, choices = ['check', 'build', 'run'],  help = 'Action to perform')
+parser.add_argument('-a', '--action', action = 'store', nargs = 1, required = False, choices = ['check', 'build', 'run', 'clean'],  help = 'Action to perform')
 parser.add_argument('-v', '--verbose', action = 'store_true', required = False,  help = 'Enable verbose output')
 args = parser.parse_args()
 if args.user is None :
@@ -816,5 +829,9 @@ if args.action is None or args.action.count('run') > 0 :
   # give container(s) time to start before executing hooks
   time.sleep(5)
   configuration.runHooks(args.user, args.environment, args.verbose)
+
+if not args.action is None and args.action.count('clean') > 0 :
+  configuration.clean(args.user, args.environment, args.verbose)
+
 
 ###########################################################

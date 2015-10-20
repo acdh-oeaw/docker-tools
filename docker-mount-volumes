@@ -41,6 +41,11 @@ for container in host.containers():
     if args.verbose == True :
       print 'Creating symlinks for container ' + name 
 
+    if os.path.exists(rootBase + '/' + name) :
+      for fileName in os.listdir(rootBase + '/' + name) :
+        if os.path.islink(rootBase + '/' + name + '/' + fileName) :
+          os.remove(rootBase + '/' + name + '/' + fileName)
+
     for guestPath, hostPath in host.inspect_container(container['Id'])['Volumes'].iteritems():
       if args.verbose == True :
         print '\t' + guestPath + ':' + hostPath

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ -z $1 ]; then
+	echo "usage: $0 accountName"
+	exit
+fi
+
+# apache
+rm -f /etc/httpd/conf.d/sites-enabled/$1*.conf
+
+# systemd
+for i in `ls -1 /usr/lib/systemd/system/docker-${1}-*.service`; do
+	rm -f $i
+done
+for i in `find /etc/systemd/system -name docker-${1}*.service`; do
+	rm -f $i
+done
+
+# docker
+for i in `docker ps -f name=${1}-* -q`; do
+	docker rm -fv $i
+done
+docker-remove-unused-containers
+docker-remove-unused-images
