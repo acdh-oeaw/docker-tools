@@ -1,0 +1,3 @@
+#!/bin/bash
+USER=`logname`
+sudo -g docker /usr/sbin/docker-manage -u $USER $@
