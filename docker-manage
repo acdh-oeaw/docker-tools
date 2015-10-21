@@ -116,6 +116,15 @@ class Configuration:
       if len(users) == 0 or users.count(account.name) > 0 :
         account.clean(names, verbose)
 
+  def runConsole(self, name, user):
+    res = False
+    for account in self.accounts:
+      res = account.runConsole(name, user)
+      if res :
+        break
+    if not res :
+      print "  Given environment not found"
+
 class Account:
   base         = '/home'
   name         = ''
@@ -207,6 +216,19 @@ class Account:
     for env in self.environments:
       if env.ready and (len(names) == 0 or names.count(env.Name) > 0):
         env.runHooks(verbose)
+
+  def runConsole(self, name, user):
+    if not self.owner :
+      return False
+
+    for env in self.environments:
+      if env.Name == name and env.ready :
+        try:
+          return env.runConsole(name, user)
+        except Exception as e:
+          print '  ' + str(e)
+        return True
+    return False
 
   def clean(self, names, verbose):
     subprocess.call(['sudo', '-u', 'root', 'docker-clean', self.name])
@@ -436,16 +458,29 @@ class Environment(object):
       print str(out) + '\n' + str(err)
 
     # create systemd script
-    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-systemd', self.Name])
-    out, err = proc.communicate()
     if verbose :
       print '    Registering in systemd'
+    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-systemd', self.Name])
+    out, err = proc.communicate()
 
   def runHooks(self, verbose):
     if not self.owner :
       raise Exception('Must be environment owner to run hooks')
 
     print '  ' + self.Name
+
+  def runConsole(self, name, user):
+    if not self.ready :
+      return False
+
+    if user == 'user' :
+      subprocess.call(['docker', 'exec', '-ti', '-u', self.getUser(), self.Name, '/bin/bash'])
+    elif user == 'root' :
+      subprocess.call(['docker', 'exec', '-ti', self.Name, '/bin/bash'])
+    else:
+      raise Exception("Unknown console type - only root and user are supported")
+
+    return True
 
   def getPorts(self):
     ports = []
@@ -467,6 +502,14 @@ class Environment(object):
     for host in self.Hosts:
       dockerOpts += ['--add-host', host['Name'] + ':' + host['IP']]
     return dockerOpts
+
+  def getUser(self):
+    proc = subprocess.Popen(['docker', 'exec', self.Name, 'grep', ':' + str(self.UID) + ':', '/etc/passwd'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    out, err = proc.communicate()
+    out = out.split(':')
+    if(len(out) < 7) :
+      raise Exception('User account is not defined in the environment')
+    return out[0]
 
 class EnvironmentHTTP(Environment):
   ServerName    = None
@@ -801,7 +844,7 @@ class EnvironmentDrupal6(EnvironmentPHP):
 parser = argparse.ArgumentParser(description='Script for maintiaining docker images and containers')
 parser.add_argument('-u', '--user', action = 'append', nargs = '*', required = False, help = 'User whose environments should be processed')
 parser.add_argument('-e', '--environment', action = 'append', nargs = '*', required = False, help = 'Names of environments to proccess')
-parser.add_argument('-a', '--action', action = 'store', nargs = 1, required = False, choices = ['check', 'build', 'run', 'clean'],  help = 'Action to perform')
+parser.add_argument('-a', '--action', action = 'store', nargs = 1, required = False, choices = ['check', 'build', 'run', 'clean', 'root', 'user'],  help = 'Action to perform')
 parser.add_argument('-v', '--verbose', action = 'store_true', required = False,  help = 'Enable verbose output')
 args = parser.parse_args()
 if args.user is None :
@@ -833,5 +876,11 @@ if args.action is None or args.action.count('run') > 0 :
 if not args.action is None and args.action.count('clean') > 0 :
   configuration.clean(args.user, args.environment, args.verbose)
 
+if not args.action is None and (args.action.count('root') > 0 or args.action.count('user') > 0 ):
+  print 'Running console...'
+  if len(args.environment) == 1 :
+    configuration.runConsole(args.environment[0], args.action[0])
+  else:
+    print "  Please choose exactly one environment"
 
 ###########################################################
