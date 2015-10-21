@@ -1,3 +1,50 @@
 # docker-tools
 
 Set of tools to make Docker administration easier
+
+## Installation
+
+Important remark - all paths according to CentOs 7
+
+* Make sure docker is already installed
+* Set up system permissions:
+  ./permissions
+* Set up required sudo rules:
+  cp etc-sudoers.d-docker /etc/sudoers.d/docker
+* Adjust docker-useradd to meet your requirements
+* Copy scripts to the location included in PATH
+  cp docker-* run-docker-manage /usr/sbin
+* Register clean-up scripts in cron:
+  cp etc-cron.daily-docker /etc/cron.daily/docker
+* Enjoy
+
+
+## Usage
+
+Included scripts are:
+
+* docker-manage
+  Our workhorse for checking configuration, building images, running containers 
+  and accessing guest console
+* run-docker-manage 
+  Alias for docker-manage for unprivileged users so they do not have to type 
+  "sudo -g docker docker-manage"
+* docker-adduser
+  Script which properly adds new system user taking care of setting up quota, 
+  files required for ssh access, etc.
+  You should use it instead of normal "useradd" or "adduser"
+* docker-clean, docker-mount-volumes, docker-register-proxy, docker-register-systemd
+  Helper scripts run by docker-manage
+  There is no need to run them directly but if you are root, you can do it
+* docker-remove-unused-images, docker-remove-unused-containers
+  Clean-up scripts removing obsolete containers and images
+  They are run by docker-manage and by cron, you can also run them manually
+* docker-install-container
+  An old script used for building and running a given container on the basis of 
+  Dockerfile
+  It takes care of a removal of the previous version of the container, 
+  registers created container in systemd and mounts all container volumes under
+  /srv/docker/containerName/
+  In general you should use a json configuration file and docker-manage 
+  instead.
+

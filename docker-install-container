@@ -27,5 +27,5 @@ if [ $? != 0 ]; then
   exit
 fi
 
-docker-mount-volumes
+docker-mount-volumes $NAME
 docker-register-systemd $NAME

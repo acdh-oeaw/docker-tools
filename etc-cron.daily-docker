@@ -1,0 +1,4 @@
+#!/bin/bash
+
+/usr/sbin/docker-remove-unused-images
+/usr/sbin/docker-remove-unused-containers
