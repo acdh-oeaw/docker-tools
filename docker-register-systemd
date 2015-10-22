@@ -12,5 +12,6 @@ ExecStop=/usr/bin/docker stop $1
 
 [Install]
 WantedBy=multi-user.target" > /usr/lib/systemd/system/docker-${1}.service
+systemctl daemon-reload
 systemctl enable docker-${1}.service
 

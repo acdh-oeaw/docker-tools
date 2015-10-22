@@ -1,9 +1,0 @@
-#!/bin/bash
-
-if [ "$1" == "help" ] ; then
-  /usr/sbin/docker-manage -h
-  exit
-fi;
-
-USER=`logname`
-sudo -g docker /usr/sbin/docker-manage -u $USER $@
