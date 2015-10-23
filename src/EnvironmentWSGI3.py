@@ -1,4 +1,4 @@
-class EnvironmentWSGI3(EnvironmentApache):
+class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
   PythonPath      = None
   WSGIScriptAlias = None
 

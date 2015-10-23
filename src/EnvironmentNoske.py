@@ -1,7 +1,7 @@
 from distutils import dir_util
 import subprocess
 
-class EnvironmentNoske(EnvironmentHTTP):
+class EnvironmentNoske(EnvironmentHTTP, IEnvironment):
   DataPath = 'data'
   BonitoPath = 'bonito'
   RegistryPath = 'registry'

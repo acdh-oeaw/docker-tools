@@ -1,4 +1,4 @@
-class EnvironmentWSGI2(EnvironmentWSGI3):
+class EnvironmentWSGI2(EnvironmentWSGI3, IEnvironment):
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_wsgi2'

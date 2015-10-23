@@ -1,4 +1,4 @@
-class Environment(object):
+class Environment(IEnvironment, object):
   DockerImgBase = '/var/lib/docker/images'
   DockerMntBase = '/srv/docker'
 

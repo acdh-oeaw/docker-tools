@@ -1,4 +1,4 @@
-class EnvironmentApache(EnvironmentHTTP):
+class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   DocumentRootMount  = '/var/www/html'
   DocumentRoot       = None
   AllowOverride      = 'All'

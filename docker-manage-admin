@@ -10,6 +10,112 @@ import stat
 import subprocess
 import time
 
+import abc
+
+class IEnvironment():
+  """An interface for environment type classes.
+
+  In general you should derive (directly or indirectly) your environment type
+  class from the Environment class because it provides a lot of useful defaults
+  (especially implements the whole IEnvironment iterface).
+  Anyway, if you really want to write your environment type class from scratch, 
+  it will be sufficient if your class implements the IEnvironment interface.
+  """
+  __metaclass__ = abc.ABCMeta
+
+  @abc.abstractmethod
+  def __init__(self, conf, owner): 
+    """Environment constructor
+
+    If you derive your class from other, please remember to call a parent 
+    constructor!
+
+    Args:
+      conf (dict): Dictionary with a configuration to process
+      owner (boolean): Indicates if you have rights to access environment files.
+        If you don't, you shouldn't check e.g. for the existence of paths in 
+        the host (because such checks will always fail).
+    """
+    pass
+  
+  @abc.abstractmethod
+  def check(self, duplDomains, duplPorts, duplNames, names): 
+    """Cheks environment for conflicts and reports them.
+
+    For (at least) 99% of cases class Environment provides a right
+    implementation for this method, so please just derive 
+
+    For (at least) 99% of cases class Environment provides a right 
+    implementation of this method, so please just derive (directly or 
+    indirectly) your class from the Environment one.
+
+    If you really want to implement it on yourself, please remember to set the
+    ``ready`` object property to ``False`` if the check will fail.
+
+    Args:
+      duplDomains (list): List of duplicated domains.
+      duplPorts (list): List of duplicated host ports.
+      duplNames (list): List of duplicated environment names.
+      names (list): List of all defined environment names. 
+        Useful to check e.g. if all links point to existing environments.
+    """
+    pass
+  
+  @abc.abstractmethod
+  def buildImage(self, verbose): 
+    """Runs 'docker build'
+    
+    For (at least) 99% of cases class Environment provides a right 
+    implementation of this method, so please just derive (directly or 
+    indirectly) your class from the Environment one.
+
+    Args:
+      verbose (boolean): If method should produce a verbose output.
+    """
+    pass
+  
+  @abc.abstractmethod
+  def runContainer(self, verbose): 
+    """Runs 'docker run'
+
+    For (at least) 99% of cases class Environment provides a right 
+    implementation of this method, so please just derive (directly or 
+    indirectly) your class from the Environment one.
+    Implementation profided in the Environment class relies on the
+    ``getDockerOpts()`` method to obtain all parameters to be passed to 
+    "docker run", so if you need to adjust these parameters, override
+    ``getDockerOpts()`` rather the ``runContainer()``.
+
+    If you really want to implement it yourself, please remember to:
+    - check, if the ``ready`` property is set to ``True`` before spawning 
+      the container;
+    - remove a previous instance of a container (with its volumes);
+    - run ``docker-mount-volumes containerName`` after container creation.
+
+    Args:
+      verbose (boolean): If method should produce a verbose output.
+    """
+    pass
+  
+  @abc.abstractmethod
+  def runHooks(self, verbose):
+    """Adjusts container after it was created.
+
+    A docker image provides all the stuff which is common for every instance
+    of an environment type but typically there are also many things which
+    should be "personalized" for every instance (user and group to run
+    application in guest, ServerName in Apache config in guest, etc.).
+    This method provides a way to do that. 
+    It is always invoked just after ``runContainer()``
+
+    If you derive your class form other, please check carefully which actions
+    are taken in parent clasees ``runHooks()`` methods before adding new acions
+    on your own.
+
+    Args:
+      verbose (boolean): If method should produce a verbose output.
+    """ 
+    pass
 class HTTPReverseProxy(object):
   portNumber = 8020
 
@@ -226,7 +332,6 @@ class Account:
   def findEnvironments(self, names, readyOnly = True):
     envs = []
     for env in self.environments:
-#      print [env.Name, env.owner, env.ready, names.count(env.Name) > 0]
       if (
         env.owner 
         and (env.ready or readyOnly == False)
@@ -242,7 +347,7 @@ class Account:
       env.runContainer(verbose)
       env.runHooks(verbose)
 
-class Environment(object):
+class Environment(IEnvironment, object):
   DockerImgBase = '/var/lib/docker/images'
   DockerMntBase = '/srv/docker'
 
@@ -501,7 +606,7 @@ class Environment(object):
   def getGuestHomeDir(self):
     return '/'
 
-class EnvironmentHTTP(Environment):
+class EnvironmentHTTP(Environment, IEnvironment):
   ServerName    = None
   ServerAlias   = None
 
@@ -578,7 +683,7 @@ class EnvironmentHTTP(Environment):
         return port
     raise Exception('No HTTP port')
 
-class EnvironmentApache(EnvironmentHTTP):
+class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   DocumentRootMount  = '/var/www/html'
   DocumentRoot       = None
   AllowOverride      = 'All'
@@ -725,19 +830,19 @@ class EnvironmentApache(EnvironmentHTTP):
 </VirtualHost>   
 """
 
-class EnvironmentPHP(EnvironmentApache):
+class EnvironmentPHP(EnvironmentApache, IEnvironment):
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_php'
     super(EnvironmentPHP, self).__init__(conf, owner)
 
-class EnvironmentDrupal7(EnvironmentPHP):
+class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_drupal7'
     super(EnvironmentDrupal6, self).__init__(conf, owner)
 
-class EnvironmentWSGI3(EnvironmentApache):
+class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
   PythonPath      = None
   WSGIScriptAlias = None
 
@@ -817,7 +922,7 @@ class EnvironmentWSGI3(EnvironmentApache):
 </VirtualHost>
 """
 
-class EnvironmentWSGI2(EnvironmentWSGI3):
+class EnvironmentWSGI2(EnvironmentWSGI3, IEnvironment):
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_wsgi2'
@@ -826,7 +931,7 @@ class EnvironmentWSGI2(EnvironmentWSGI3):
 from distutils import dir_util
 import subprocess
 
-class EnvironmentNoske(EnvironmentHTTP):
+class EnvironmentNoske(EnvironmentHTTP, IEnvironment):
   DataPath = 'data'
   BonitoPath = 'bonito'
   RegistryPath = 'registry'
@@ -838,9 +943,13 @@ class EnvironmentNoske(EnvironmentHTTP):
     self.Mounts.append({"Host" : self.BaseDir + '/' + self.DataPath, "Guest" : "/data", "Rights" : "ro"})
     self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : []}]
 
+    #TODO It would be nice to allow users to provide DataPath, BonitoPath and RegistryPath through the conf variable
+    # Of course values provided by the user should be checked - the Param class provides useful methods to perform such checks
+
   def runHooks(self, verbose):
     super(EnvironmentNoske, self).runHooks(verbose)
 
+    #TODO we should rather use self.runProcess() instead of subprocess.call() to handle verbose flag and error handling in an easy way
     subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/usr/lib/python2.7/dist-packages/bonito'])
     dir_util.copy_tree(self.BaseDir + '/' + self.BonitoPath, self.DockerMntBase + '/' + self.Name + '/usr-lib-python2.7-dist-packages-bonito')
     subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/usr/lib/python2.7/dist-packages/bonito'])

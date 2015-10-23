@@ -79,7 +79,6 @@ class Account:
   def findEnvironments(self, names, readyOnly = True):
     envs = []
     for env in self.environments:
-#      print [env.Name, env.owner, env.ready, names.count(env.Name) > 0]
       if (
         env.owner 
         and (env.ready or readyOnly == False)

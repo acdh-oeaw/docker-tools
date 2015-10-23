@@ -1,4 +1,4 @@
-class EnvironmentHTTP(Environment):
+class EnvironmentHTTP(Environment, IEnvironment):
   ServerName    = None
   ServerAlias   = None
 

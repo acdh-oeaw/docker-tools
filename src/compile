@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat import.py HTTPReverseProxy.py Param.py Configuration.py Account.py Environment.py EnvironmentHTTP.py EnvironmentApache.py EnvironmentPHP.py EnvironmentDrupal7.py EnvironmentWSGI3.py EnvironmentWSGI2.py EnvironmentNoske.py main.py > ../docker-manage-admin 
+cat import.py IEnvironment.py HTTPReverseProxy.py Param.py Configuration.py Account.py Environment.py EnvironmentHTTP.py EnvironmentApache.py EnvironmentPHP.py EnvironmentDrupal7.py EnvironmentWSGI3.py EnvironmentWSGI2.py EnvironmentNoske.py main.py > ../docker-manage-admin 
 chmod +x ../docker-manage-admin
 cp -f ../docker-manage-admin /usr/sbin/docker-manage-admin
 
