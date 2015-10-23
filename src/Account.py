@@ -56,6 +56,10 @@ class Account:
             env = EnvironmentDrupal6(envConf, self.owner)
           elif envConf['Type'] == 'Generic' :
             env = Environment(envConf, self.owner)
+          elif envConf['Type'] == 'noske' :
+            env = EnvironmentNoske(envConf, self.owner)
+          elif envConf['Type'] == 'noskePatched' :
+            env = EnvironmentNoskePatched(envConf, self.owner)
           else :
             raise Exception('environment is of unsupported type (' + envConf['Type'] + ')')
         else :
@@ -75,7 +79,7 @@ class Account:
   def findEnvironments(self, names, readyOnly = True):
     envs = []
     for env in self.environments:
-      print [env.Name, env.owner, env.ready, names.count(env.Name) > 0]
+#      print [env.Name, env.owner, env.ready, names.count(env.Name) > 0]
       if (
         env.owner 
         and (env.ready or readyOnly == False)

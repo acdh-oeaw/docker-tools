@@ -203,6 +203,10 @@ class Account:
             env = EnvironmentDrupal6(envConf, self.owner)
           elif envConf['Type'] == 'Generic' :
             env = Environment(envConf, self.owner)
+          elif envConf['Type'] == 'noske' :
+            env = EnvironmentNoske(envConf, self.owner)
+          elif envConf['Type'] == 'noskePatched' :
+            env = EnvironmentNoskePatched(envConf, self.owner)
           else :
             raise Exception('environment is of unsupported type (' + envConf['Type'] + ')')
         else :
@@ -222,7 +226,7 @@ class Account:
   def findEnvironments(self, names, readyOnly = True):
     envs = []
     for env in self.environments:
-      print [env.Name, env.owner, env.ready, names.count(env.Name) > 0]
+#      print [env.Name, env.owner, env.ready, names.count(env.Name) > 0]
       if (
         env.owner 
         and (env.ready or readyOnly == False)
@@ -819,6 +823,34 @@ class EnvironmentWSGI2(EnvironmentWSGI3):
       conf['DockerfileDir'] = 'http_wsgi2'
     super(EnvironmentWSGI2, self).__init__(conf, owner)
 
+from distutils import dir_util
+import subprocess
+
+class EnvironmentNoske(EnvironmentHTTP):
+  DataPath = 'data'
+  BonitoPath = 'bonito'
+  RegistryPath = 'registry'
+
+  def __init__(self, conf, owner):
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'noske'
+    super(EnvironmentNoske, self).__init__(conf, owner)
+    self.Mounts.append({"Host" : self.BaseDir + '/' + self.DataPath, "Guest" : "/data", "Rights" : "ro"})
+    self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : []}]
+
+  def runHooks(self, verbose):
+    super(EnvironmentNoske, self).runHooks(verbose)
+
+    subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/usr/lib/python2.7/dist-packages/bonito'])
+    dir_util.copy_tree(self.BaseDir + '/' + self.BonitoPath, self.DockerMntBase + '/' + self.Name + '/usr-lib-python2.7-dist-packages-bonito')
+    subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/usr/lib/python2.7/dist-packages/bonito'])
+    subprocess.call(['docker', 'exec', self.Name, 'chmod', '+rX', '-R', '/usr/lib/python2.7/dist-packages/bonito'])
+    subprocess.call(['docker', 'exec', self.Name, 'python', '-m', 'compileall', '/usr/lib/python2.7/dist-packages/bonito']) 
+
+    subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/var/lib/manatee/registry/'])
+    dir_util.copy_tree(self.BaseDir + '/' + self.RegistryPath, self.DockerMntBase + '/' + self.Name + '/var-lib-manatee-registry/')
+    subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/var/lib/manatee/registry/'])
+    subprocess.call(['docker', 'exec', self.Name, 'chmod', '+rX', '-R', '/var/lib/manatee/registry/'])
 parser = argparse.ArgumentParser(description='Script for maintiaining docker images and containers')
 parser.add_argument('-p', '--project', action = 'append', nargs = '*', required = False, help = 'Project whose environments should be processed')
 parser.add_argument('-e', '--environment', action = 'append', nargs = '*', required = False, help = 'Names of environments to proccess')
@@ -838,7 +870,7 @@ configuration = Configuration()
 print 'Checking conflicts between environments...'
 configuration.check()
 
-for i in configuration.findEnvironments([], [], False):
+for i in configuration.findEnvironments([], [], True):
   print i.Name + ' ' + str(i.ready)
   
 if args.action is None or args.action.count('build') > 0 :
