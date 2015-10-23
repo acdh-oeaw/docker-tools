@@ -4,8 +4,31 @@
 # $3 ServerAlias
 # $4 Port
 # $5 Websockets
+# $6 SSL ("true"/"false")
 
-echo "<VirtualHost *:80>
+if [ "$6" == "true" ]; then
+  echo "<VirtualHost *:80>
+  ServerName $2
+  ServerAlias $3
+
+  Redirect / https://$2/
+</VirtualHost>
+<VirtualHost *:443>
+  ServerName $2
+  ServerAlias $3
+
+  Include /etc/httpd/conf.d/shared/ssl.conf
+
+  ProxyPreserveHost On
+  $5
+  ProxyPass        / http://127.0.0.1:$4/
+  ProxyPassReverse / http://127.0.0.1:$4/
+  <Proxy *>
+    Require all granted
+  </Proxy>
+</VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
+else
+  echo "<VirtualHost *:80>
   ServerName $2
   ServerAlias $3
 
@@ -17,4 +40,6 @@ echo "<VirtualHost *:80>
     Require all granted
   </Proxy>
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
+
+fi
 systemctl reload httpd
