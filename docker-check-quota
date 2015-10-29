@@ -1,0 +1,22 @@
+#!/bin/bash
+# Checks if sum of soft quota limits does not extend partition size
+# Assumes that /home is a separate partition with only one quota type enabled
+
+homeSize=`df /home | tail -n 1 | awk '{print $2}'`
+skipUsers="^(`grep wheel /etc/group | awk -F ':' '{print $4}' | sed -e 's/,/|/g'`)"
+quotaSize=`xfs_quota -x -c 'report' /home | grep -v -E "$skipUsers" | awk '{s+=$3} END {print s}'`
+free=$(( (homeSize - quotaSize) / 1024 ))
+
+if [ ! -z $1 ]; then
+  userQuota=`xfs_quota -x -c 'report' /home | grep "^$1" | awk '{print $3}'`
+  userUsage=`xfs_quota -x -c 'report' /home | grep "^$1" | awk '{print $2}'`
+  userQuota=$(($userQuota / 1024))
+  userUsage=$(($userUsage / 1024))
+  echo "User $1 has soft quota of $userQuota MB and uses $userUsage MB" 
+fi;
+if (($free < 0)); then
+  echo "No space left to extend quota in a secure way ($free MB)"
+else
+  echo "You can safely extend quota by $free MB"
+fi;
+

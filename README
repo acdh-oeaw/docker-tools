@@ -39,6 +39,9 @@ Included scripts are:
 * docker-remove-unused-images, docker-remove-unused-containers
   Clean-up scripts removing obsolete containers and images
   They are run by docker-manage and by cron, you can also run them manually
+* docker-check-quota
+  Script for quickly checking if we can safely extend quota limit or maybe we
+  should ask ARZ to extend disk space first
 * docker-install-container
   An old script used for building and running a given container on the basis of 
   Dockerfile
