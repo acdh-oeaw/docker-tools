@@ -1,4 +1,6 @@
 class EnvironmentApache(EnvironmentHTTP, IEnvironment):
+  skipDocumentRoot   = False # used by derived classes
+
   DocumentRootMount  = '/var/www/html'
   DocumentRoot       = None
   AllowOverride      = 'All'
@@ -10,21 +12,25 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_http'
     super(EnvironmentApache, self).__init__(conf, owner)
-    self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : []}]
+    try:
+      self.getHTTPPort()
+    except:
+      self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : []}]
 
     if not Param.isValidDomain(self.ServerName) :
       raise Exception('ServerName is missing or invalid')
 
-    if (
-      not 'DocumentRoot' in conf 
-      or self.owner and (
-        not Param.isValidRelPath(conf['DocumentRoot'])
-        or not Param.isValidDir(self.BaseDir + '/' + conf['DocumentRoot'])
-      )
-    ) :
-      raise Exception('DocumentRoot is missing or invalid')
-    self.DocumentRoot = conf['DocumentRoot']
-    self.Mounts.append({ "Host" : self.DocumentRoot, "Guest" : self.DocumentRootMount, "Rights" : "rw" })
+    if not self.skipDocumentRoot :
+      if (
+        not 'DocumentRoot' in conf 
+        or self.owner and (
+          not Param.isValidRelPath(conf['DocumentRoot'])
+          or not Param.isValidDir(self.BaseDir + '/' + conf['DocumentRoot'])
+        )
+      ) :
+        raise Exception('DocumentRoot is missing or invalid')
+      self.DocumentRoot = conf['DocumentRoot']
+      self.Mounts.append({ "Host" : self.DocumentRoot, "Guest" : self.DocumentRootMount, "Rights" : "rw" })
 
     if 'AllowOverride' in conf :
       self.processAllowOverride(conf['AllowOverride'])
@@ -68,10 +74,17 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     for alias in conf:
       if not isinstance(alias, dict) :
         raise Exception('Alias definition is not a dictionary')
-      if not 'Alias' in alias or not Param.isValidAlias(alias['Alias']) :
-        raise Exception('Alias name is missing or invalid')
+      if not 'Alias' in alias or not isinstance(alias['Alias'], basestring):
+        raise Exception('Alias name is missing or is not a string')
+      if alias['Alias'][0] != '/' :
+        alias['Alias'] = '/' + alias['Alias']
+      if alias['Alias'][-1] == '/' :
+        alias['Alias'] = alias['Alias'][0:-1]
+      if not Param.isValidAlias(alias['Alias']) :
+        raise Exception('Alias name is invalid')
       if (
         not 'Path' in alias 
+        or not isinstance(alias['Path'], basestring)
         or self.owner and not (
           Param.isValidAbsPath(alias['Path']) 
           or Param.isValidRelPath(alias['Path']) and (
@@ -81,6 +94,8 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
         )
       ) :
         raise Exception('Alias path is missing or invalid')
+      if alias['Path'][-1] == '/' :
+        alias['Path'] = alias['Path'][0:-1]
     self.Aliases = conf
 
   def runHooks(self, verbose):
