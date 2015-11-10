@@ -281,7 +281,7 @@ class Account:
         config = json.load(open(confFileName, 'r'))
         self.processConfig(config)
       except Exception as e:
-        print '  Configuration file ' + confFileName + ' is not a valid JSON: ' + str(e)
+        print '    Configuration file ' + confFileName + ' is not a valid JSON: ' + str(e)
 
   def processConfig(self, conf):
     if not isinstance(conf, list) :
@@ -305,8 +305,8 @@ class Account:
             env = EnvironmentWSGI3(envConf, self.owner)
           elif envConf['Type'] == 'WSGI2' :
             env = EnvironmentWSGI2(envConf, self.owner)
-          elif envConf['Type'] == 'Drupal6' :
-            env = EnvironmentDrupal6(envConf, self.owner)
+          elif envConf['Type'] == 'Drupal7' :
+            env = EnvironmentDrupal7(envConf, self.owner)
           elif envConf['Type'] == 'Generic' :
             env = Environment(envConf, self.owner)
           elif envConf['Type'] == 'noske' :
@@ -319,7 +319,7 @@ class Account:
           raise Exception('environment has no type')
         self.environments.append(env)
       except Exception as e:
-        print '  Error in ', (1 + len(self.environments)), ' environment: ', e
+        print '    Error in ', (1 + len(self.environments)), ' environment: ', e
 
   def check(self, duplDomains, duplPorts, duplNames, names):
     errors = {}
@@ -609,7 +609,7 @@ class Environment(IEnvironment, object):
 class EnvironmentHTTP(Environment, IEnvironment):
   ServerName    = None
   ServerAlias   = None
-  HTTPS         = True
+  HTTPS         = "true"
 
   def __init__(self, conf, owner):
     self.ServerAlias = []
@@ -624,7 +624,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
     if 'HTTPS' in conf :
       if not isinstance(conf['HTTPS'], basestring) or not ['true', 'false'].count(conf['HTTPS']) > 0 :
         raise Exception('HTTPS is not a string or has value other then true/false')
-      self.HTTPS = True if conf['HTTPS'] == 'true' else False
+      self.HTTPS = conf['HTTPS']
 
   def processServerAlias(self, conf):
     if not isinstance(conf, list):
@@ -663,7 +663,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
     for ws in HTTPPort['ws']:
       websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
       websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-proxy', self.Name, self.ServerName, self.getServerAlias(), str(HTTPPort['Host']), websockets, 'true' if self.HTTPS else 'false'])
+    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-proxy', self.Name, self.ServerName, self.getServerAlias(), str(HTTPPort['Host']), websockets, self.HTTPS])
     out, err = proc.communicate()
 
   def getDockerOpts(self):
@@ -690,6 +690,8 @@ class EnvironmentHTTP(Environment, IEnvironment):
     raise Exception('No HTTP port')
 
 class EnvironmentApache(EnvironmentHTTP, IEnvironment):
+  skipDocumentRoot   = False # used by derived classes
+
   DocumentRootMount  = '/var/www/html'
   DocumentRoot       = None
   AllowOverride      = 'All'
@@ -701,21 +703,25 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_http'
     super(EnvironmentApache, self).__init__(conf, owner)
-    self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : []}]
+    try:
+      self.getHTTPPort()
+    except:
+      self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : []}]
 
     if not Param.isValidDomain(self.ServerName) :
       raise Exception('ServerName is missing or invalid')
 
-    if (
-      not 'DocumentRoot' in conf 
-      or self.owner and (
-        not Param.isValidRelPath(conf['DocumentRoot'])
-        or not Param.isValidDir(self.BaseDir + '/' + conf['DocumentRoot'])
-      )
-    ) :
-      raise Exception('DocumentRoot is missing or invalid')
-    self.DocumentRoot = conf['DocumentRoot']
-    self.Mounts.append({ "Host" : self.DocumentRoot, "Guest" : self.DocumentRootMount, "Rights" : "rw" })
+    if not self.skipDocumentRoot :
+      if (
+        not 'DocumentRoot' in conf 
+        or self.owner and (
+          not Param.isValidRelPath(conf['DocumentRoot'])
+          or not Param.isValidDir(self.BaseDir + '/' + conf['DocumentRoot'])
+        )
+      ) :
+        raise Exception('DocumentRoot is missing or invalid')
+      self.DocumentRoot = conf['DocumentRoot']
+      self.Mounts.append({ "Host" : self.DocumentRoot, "Guest" : self.DocumentRootMount, "Rights" : "rw" })
 
     if 'AllowOverride' in conf :
       self.processAllowOverride(conf['AllowOverride'])
@@ -759,10 +765,17 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     for alias in conf:
       if not isinstance(alias, dict) :
         raise Exception('Alias definition is not a dictionary')
-      if not 'Alias' in alias or not Param.isValidAlias(alias['Alias']) :
-        raise Exception('Alias name is missing or invalid')
+      if not 'Alias' in alias or not isinstance(alias['Alias'], basestring):
+        raise Exception('Alias name is missing or is not a string')
+      if alias['Alias'][0] != '/' :
+        alias['Alias'] = '/' + alias['Alias']
+      if alias['Alias'][-1] == '/' :
+        alias['Alias'] = alias['Alias'][0:-1]
+      if not Param.isValidAlias(alias['Alias']) :
+        raise Exception('Alias name is invalid')
       if (
         not 'Path' in alias 
+        or not isinstance(alias['Path'], basestring)
         or self.owner and not (
           Param.isValidAbsPath(alias['Path']) 
           or Param.isValidRelPath(alias['Path']) and (
@@ -772,6 +785,8 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
         )
       ) :
         raise Exception('Alias path is missing or invalid')
+      if alias['Path'][-1] == '/' :
+        alias['Path'] = alias['Path'][0:-1]
     self.Aliases = conf
 
   def runHooks(self, verbose):
@@ -843,10 +858,43 @@ class EnvironmentPHP(EnvironmentApache, IEnvironment):
     super(EnvironmentPHP, self).__init__(conf, owner)
 
 class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
+  skipDocumentRoot = True
+
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_drupal7'
-    super(EnvironmentDrupal6, self).__init__(conf, owner)
+
+    super(EnvironmentDrupal7, self).__init__(conf, owner)
+
+    if self.HTTPS == "true" :
+      self.guestVHTemplate = self.guestVHTemplate.replace('<VirtualHost *:80>', '<VirtualHost *:80>\n' + self.guestVHTemplateSSL)
+
+    if not 'SiteDir' in conf or not Param.isValidRelPath(conf['SiteDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['SiteDir']) :
+      raise Exception('SiteDir is missing or invalid')
+    self.Mounts.append({ "Host" : conf['SiteDir'], "Guest" : '/var/www/html/sites/default', "Rights" : "rw" })
+
+    if not 'AllDir' in conf or not Param.isValidRelPath(conf['AllDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['AllDir']) :
+      raise Exception('AllDir is missing or invalid')
+    self.Mounts.append({ "Host" : conf['AllDir'], "Guest" : '/var/www/html/sites/all', "Rights" : "rw" })
+    
+  # as Drupal environment does not have DocumentRoot it is not clear what
+  # should be a base dir for aliases
+  def processAliases(self, conf):
+    pass
+
+  def runHooks(self, verbose):
+    super(EnvironmentDrupal7, self).runHooks(verbose)
+
+    if verbose :
+      print '    Setting up drupal permissions'
+    self.runProcess(['docker', 'exec', self.Name, 'chown', '-R', 'user:user', '/var/www/html'], verbose, '', 'Setting up permissions failed')
+
+  guestVHTemplateSSL = """
+  SetEnv HTTPS on
+  SetEnv REQUEST_SCHEME https
+  SetEnv protossl s
+"""
+
 
 class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
   PythonPath      = None
@@ -986,7 +1034,7 @@ print 'Checking conflicts between environments...'
 configuration.check()
 
 for i in configuration.findEnvironments([], [], True):
-  print i.Name + ' ' + str(i.ready)
+  print '  ' + i.Name + ' ' + str(i.ready)
   
 if args.action is None or args.action.count('build') > 0 :
   print 'Building images...'

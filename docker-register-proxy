@@ -4,9 +4,19 @@
 # $3 ServerAlias
 # $4 Port
 # $5 Websockets
-# $6 SSL ("true"/"false")
+# $6 SSL ("true"/"false"/"both")
 
-if [ "$6" == "true" ]; then
+PROT="http"
+SSLPROXY=""
+if [ "$6" == "both" ]; then
+  PROT="https"
+  SSLPROXY="SSLProxyEngine on
+  SSLProxyVerify none
+  SSLProxyCheckPeerCN off
+  SSLProxyCheckPeerName off"
+fi
+
+if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   echo "<VirtualHost *:80>
   ServerName $2
   ServerAlias $3
@@ -20,9 +30,10 @@ if [ "$6" == "true" ]; then
   Include /etc/httpd/conf.d/shared/ssl.conf
 
   ProxyPreserveHost On
+  $SSLPROXY
   $5
-  ProxyPass        / http://127.0.0.1:$4/
-  ProxyPassReverse / http://127.0.0.1:$4/
+  ProxyPass        / $PROT://127.0.0.1:$4/
+  ProxyPassReverse / $PROT://127.0.0.1:$4/
   <Proxy *>
     Require all granted
   </Proxy>
@@ -34,8 +45,8 @@ else
 
   ProxyPreserveHost On
   $5
-  ProxyPass        / http://127.0.0.1:$4/
-  ProxyPassReverse / http://127.0.0.1:$4/
+  ProxyPass        / $PROT://127.0.0.1:$4/
+  ProxyPassReverse / $PROT://127.0.0.1:$4/
   <Proxy *>
     Require all granted
   </Proxy>

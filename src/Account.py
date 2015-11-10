@@ -28,7 +28,7 @@ class Account:
         config = json.load(open(confFileName, 'r'))
         self.processConfig(config)
       except Exception as e:
-        print '  Configuration file ' + confFileName + ' is not a valid JSON: ' + str(e)
+        print '    Configuration file ' + confFileName + ' is not a valid JSON: ' + str(e)
 
   def processConfig(self, conf):
     if not isinstance(conf, list) :
@@ -52,8 +52,8 @@ class Account:
             env = EnvironmentWSGI3(envConf, self.owner)
           elif envConf['Type'] == 'WSGI2' :
             env = EnvironmentWSGI2(envConf, self.owner)
-          elif envConf['Type'] == 'Drupal6' :
-            env = EnvironmentDrupal6(envConf, self.owner)
+          elif envConf['Type'] == 'Drupal7' :
+            env = EnvironmentDrupal7(envConf, self.owner)
           elif envConf['Type'] == 'Generic' :
             env = Environment(envConf, self.owner)
           elif envConf['Type'] == 'noske' :
@@ -66,7 +66,7 @@ class Account:
           raise Exception('environment has no type')
         self.environments.append(env)
       except Exception as e:
-        print '  Error in ', (1 + len(self.environments)), ' environment: ', e
+        print '    Error in ', (1 + len(self.environments)), ' environment: ', e
 
   def check(self, duplDomains, duplPorts, duplNames, names):
     errors = {}

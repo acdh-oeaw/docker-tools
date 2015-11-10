@@ -1,7 +1,7 @@
 class EnvironmentHTTP(Environment, IEnvironment):
   ServerName    = None
   ServerAlias   = None
-  HTTPS         = True
+  HTTPS         = "true"
 
   def __init__(self, conf, owner):
     self.ServerAlias = []
@@ -16,7 +16,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
     if 'HTTPS' in conf :
       if not isinstance(conf['HTTPS'], basestring) or not ['true', 'false'].count(conf['HTTPS']) > 0 :
         raise Exception('HTTPS is not a string or has value other then true/false')
-      self.HTTPS = True if conf['HTTPS'] == 'true' else False
+      self.HTTPS = conf['HTTPS']
 
   def processServerAlias(self, conf):
     if not isinstance(conf, list):
@@ -55,7 +55,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
     for ws in HTTPPort['ws']:
       websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
       websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-proxy', self.Name, self.ServerName, self.getServerAlias(), str(HTTPPort['Host']), websockets, 'true' if self.HTTPS else 'false'])
+    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-proxy', self.Name, self.ServerName, self.getServerAlias(), str(HTTPPort['Host']), websockets, self.HTTPS])
     out, err = proc.communicate()
 
   def getDockerOpts(self):

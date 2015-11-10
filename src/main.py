@@ -18,7 +18,7 @@ print 'Checking conflicts between environments...'
 configuration.check()
 
 for i in configuration.findEnvironments([], [], True):
-  print i.Name + ' ' + str(i.ready)
+  print '  ' + i.Name + ' ' + str(i.ready)
   
 if args.action is None or args.action.count('build') > 0 :
   print 'Building images...'
