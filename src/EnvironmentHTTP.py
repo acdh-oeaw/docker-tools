@@ -2,6 +2,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
   ServerName    = None
   ServerAlias   = None
   HTTPS         = "true"
+  Require       = "all granted"
 
   def __init__(self, conf, owner):
     self.ServerAlias = []
@@ -17,6 +18,20 @@ class EnvironmentHTTP(Environment, IEnvironment):
       if not isinstance(conf['HTTPS'], basestring) or not ['true', 'false'].count(conf['HTTPS']) > 0 :
         raise Exception('HTTPS is not a string or has value other then true/false')
       self.HTTPS = conf['HTTPS']
+
+    if 'Require' in conf :
+      self.processRequire(conf['Require'])
+
+  def processRequire(self, conf):
+    if not isinstance(conf, list):
+      if not isinstance(conf, basestring):
+        raise Exception('Require is not a string nor list')
+      conf = [conf]
+
+    for ip in conf:
+      if not Param.isValidRequireIP(ip) :
+        raise Exception(ip + ' is not a valid Require entry')
+    self.Require = 'ip ' + ' '.join(conf)
 
   def processServerAlias(self, conf):
     if not isinstance(conf, list):
@@ -55,7 +70,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
     for ws in HTTPPort['ws']:
       websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
       websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-proxy', self.Name, self.ServerName, self.getServerAlias(), str(HTTPPort['Host']), websockets, self.HTTPS])
+    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-proxy', self.Name, self.ServerName, self.getServerAlias(), str(HTTPPort['Host']), websockets, self.HTTPS, self.Require])
     out, err = proc.communicate()
 
   def getDockerOpts(self):

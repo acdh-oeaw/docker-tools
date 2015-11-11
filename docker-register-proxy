@@ -5,6 +5,7 @@
 # $4 Port
 # $5 Websockets
 # $6 SSL ("true"/"false"/"both")
+# $7 Require
 
 PROT="http"
 SSLPROXY=""
@@ -35,7 +36,7 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   ProxyPass        / $PROT://127.0.0.1:$4/
   ProxyPassReverse / $PROT://127.0.0.1:$4/
   <Proxy *>
-    Require all granted
+    Require $7
   </Proxy>
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 else
@@ -48,7 +49,7 @@ else
   ProxyPass        / $PROT://127.0.0.1:$4/
   ProxyPassReverse / $PROT://127.0.0.1:$4/
   <Proxy *>
-    Require all granted
+    Require $7
   </Proxy>
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 
