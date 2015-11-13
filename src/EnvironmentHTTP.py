@@ -31,6 +31,8 @@ class EnvironmentHTTP(Environment, IEnvironment):
     for ip in conf:
       if not Param.isValidRequireIP(ip) :
         raise Exception(ip + ' is not a valid Require entry')
+    # append monitoring server
+    conf.append('193.170.85.88')
     self.Require = 'ip ' + ' '.join(conf)
 
   def processServerAlias(self, conf):
