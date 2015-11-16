@@ -6,6 +6,7 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   AllowOverride      = 'All'
   Options            = 'None'
   Aliases            = None
+  ImitateHTTPS       = 'false'
 
   def __init__(self, conf, owner):
     self.Aliases = []
@@ -31,6 +32,13 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
         raise Exception('DocumentRoot is missing or invalid')
       self.DocumentRoot = conf['DocumentRoot']
       self.Mounts.append({ "Host" : self.DocumentRoot, "Guest" : self.DocumentRootMount, "Rights" : "rw" })
+
+    if 'ImitateHTTPS' in conf :
+      if not isinstance(conf['ImitateHTTPS'], basestring) or not ['true', 'false'].count(conf['ImitateHTTPS']) > 0 :
+        raise Exception('ImitateHTTPS is not a string or has value other then true/false')
+      self.ImitateHTTPS = conf['ImitateHTTPS']
+    else:
+      self.ImitateHTTPS = self.HTTPS
 
     if 'AllowOverride' in conf :
       self.processAllowOverride(conf['AllowOverride'])
@@ -117,7 +125,8 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
       DocumentRootMount = self.DocumentRootMount,
       AllowOverride = self.AllowOverride,
       Options = self.Options,
-      Aliases = self.getAliases()
+      Aliases = self.getAliases(),
+      ImitateHTTPS = self.imitateHTTPSTemplate if self.ImitateHTTPS == 'true' else ''
     ))
     vhFile.close()
 
@@ -143,6 +152,12 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   def getGuestHomeDir(self):
     return '/var/www/html'
 
+  imitateHTTPSTemplate = """
+  SetEnv HTTPS on
+  SetEnv REQUEST_SCHEME https
+  SetEnv protossl s
+"""
+
   guestVHTemplate = """
 <VirtualHost *:80>
   ServerName {ServerName}
@@ -157,6 +172,7 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   </Directory>
 
   {Aliases}
+  {ImitateHTTPS}
 </VirtualHost>   
 """
 

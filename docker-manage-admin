@@ -721,6 +721,7 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   AllowOverride      = 'All'
   Options            = 'None'
   Aliases            = None
+  ImitateHTTPS       = 'false'
 
   def __init__(self, conf, owner):
     self.Aliases = []
@@ -746,6 +747,13 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
         raise Exception('DocumentRoot is missing or invalid')
       self.DocumentRoot = conf['DocumentRoot']
       self.Mounts.append({ "Host" : self.DocumentRoot, "Guest" : self.DocumentRootMount, "Rights" : "rw" })
+
+    if 'ImitateHTTPS' in conf :
+      if not isinstance(conf['ImitateHTTPS'], basestring) or not ['true', 'false'].count(conf['ImitateHTTPS']) > 0 :
+        raise Exception('ImitateHTTPS is not a string or has value other then true/false')
+      self.ImitateHTTPS = conf['ImitateHTTPS']
+    else:
+      self.ImitateHTTPS = self.HTTPS
 
     if 'AllowOverride' in conf :
       self.processAllowOverride(conf['AllowOverride'])
@@ -832,7 +840,8 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
       DocumentRootMount = self.DocumentRootMount,
       AllowOverride = self.AllowOverride,
       Options = self.Options,
-      Aliases = self.getAliases()
+      Aliases = self.getAliases(),
+      ImitateHTTPS = self.imitateHTTPSTemplate if self.ImitateHTTPS == 'true' else ''
     ))
     vhFile.close()
 
@@ -858,6 +867,12 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   def getGuestHomeDir(self):
     return '/var/www/html'
 
+  imitateHTTPSTemplate = """
+  SetEnv HTTPS on
+  SetEnv REQUEST_SCHEME https
+  SetEnv protossl s
+"""
+
   guestVHTemplate = """
 <VirtualHost *:80>
   ServerName {ServerName}
@@ -872,6 +887,7 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   </Directory>
 
   {Aliases}
+  {ImitateHTTPS}
 </VirtualHost>   
 """
 
@@ -887,11 +903,9 @@ class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_drupal7'
+    self.ImitateHTTPS = self.HTTPS
 
     super(EnvironmentDrupal7, self).__init__(conf, owner)
-
-    if self.HTTPS == "true" :
-      self.guestVHTemplate = self.guestVHTemplate.replace('<VirtualHost *:80>', '<VirtualHost *:80>\n' + self.guestVHTemplateSSL)
 
     if not 'SiteDir' in conf or not Param.isValidRelPath(conf['SiteDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['SiteDir']) :
       raise Exception('SiteDir is missing or invalid')
@@ -912,13 +926,6 @@ class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
     if verbose :
       print '    Setting up drupal permissions'
     self.runProcess(['docker', 'exec', self.Name, 'chown', '-R', 'user:user', '/var/www/html'], verbose, '', 'Setting up permissions failed')
-
-  guestVHTemplateSSL = """
-  SetEnv HTTPS on
-  SetEnv REQUEST_SCHEME https
-  SetEnv protossl s
-"""
-
 
 class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
   PythonPath      = None
