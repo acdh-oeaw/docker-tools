@@ -11,7 +11,7 @@ class EnvironmentNoske(EnvironmentHTTP, IEnvironment):
       conf['DockerfileDir'] = 'noske'
     super(EnvironmentNoske, self).__init__(conf, owner)
     self.Mounts.append({"Host" : self.BaseDir + '/' + self.DataPath, "Guest" : "/data", "Rights" : "ro"})
-    self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : []}]
+    self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : [], "Alias" : ""}]
 
     #TODO It would be nice to allow users to provide DataPath, BonitoPath and RegistryPath through the conf variable
     # Of course values provided by the user should be checked - the Param class provides useful methods to perform such checks

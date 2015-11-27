@@ -6,6 +6,7 @@
 # $5 Websockets
 # $6 SSL ("true"/"false"/"both")
 # $7 Require
+# $8 InternalAlias
 
 PROT="http"
 SSLPROXY=""
@@ -33,8 +34,8 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   ProxyPreserveHost On
   $SSLPROXY
   $5
-  ProxyPass        / $PROT://127.0.0.1:$4/
-  ProxyPassReverse / $PROT://127.0.0.1:$4/
+  ProxyPass        / $PROT://127.0.0.1:$4/$8
+  ProxyPassReverse / $PROT://127.0.0.1:$4/$8
   <Proxy *>
     Require $7
   </Proxy>
@@ -46,8 +47,8 @@ else
 
   ProxyPreserveHost On
   $5
-  ProxyPass        / $PROT://127.0.0.1:$4/
-  ProxyPassReverse / $PROT://127.0.0.1:$4/
+  ProxyPass        / $PROT://127.0.0.1:$4/$8
+  ProxyPassReverse / $PROT://127.0.0.1:$4/$8
   <Proxy *>
     Require $7
   </Proxy>

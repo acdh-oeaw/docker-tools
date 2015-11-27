@@ -107,15 +107,19 @@ class Environment(IEnvironment, object):
     for port in conf:
       if not isinstance(port, dict) :
         raise Exception(str(len(self.Ports) + 1) + ' port forwarding description is not a dictionary')
+
       if not 'Type' in port or not port['Type'] in ['HTTP', 'tunnel'] :
         raise Exception(str(len(self.Ports) + 1) + ' port forwarding type is missing or invalid')
+
       if not 'Host' in port or not Param.isValidNumber(port['Host']) or int(port['Host']) < 1000 or int(port['Host']) > 65535 :
         if 'Host' in port and port['Type'] == 'HTTP' and int(port['Host']) == 0 :
           port['Host'] = HTTPReverseProxy.getPort()
         else :
           raise Exception (str(len(self.Ports) + 1) + ' port forwarding host port is missing or invalid')
+
       if not 'Guest' in port or not Param.isValidNumber(port['Guest']) or int(port['Guest']) < 1 or int(port['Guest']) > 65535 :
         raise Exception(str(len(self.Ports) + 1) + ' port forwarding guest port is missing or invalid')
+
       if port['Type'] == 'HTTP' :
         if not 'ws' in port :
           port['ws'] = []
@@ -124,6 +128,13 @@ class Environment(IEnvironment, object):
         for ws in port['ws']:
           if not isinstance(ws, basestring) or not Param.isValidAlias(ws) :
             raise Exception(str(len(self.Ports) + 1) + ' port forwarding websockets paths are invalid')
+
+        if not 'Alias' in port :
+          port['Alias'] = ''
+        elif not Param.isValidAlias(port['Alias']) :
+          raise Exception(str(len(self.Ports) + 1) + ' port alias is invalid')
+        port['Alias'] = re.sub('/$', '', re.sub('^/', '', port['Alias'])) + '/'
+
       self.Ports.append(port)
 
   def processHosts(self, conf):
