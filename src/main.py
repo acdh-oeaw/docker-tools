@@ -2,6 +2,7 @@ parser = argparse.ArgumentParser(description='Script for maintiaining docker ima
 parser.add_argument('-p', '--project', action = 'append', nargs = '*', required = False, help = 'Project whose environments should be processed')
 parser.add_argument('-e', '--environment', action = 'append', nargs = '*', required = False, help = 'Names of environments to proccess')
 parser.add_argument('-a', '--action', action = 'store', nargs = 1, required = False, choices = ['check', 'build', 'run', 'clean', 'enter-as-root', 'enter', 'logs'],  help = 'Action to perform')
+parser.add_argument('-c', '--command', action = 'append', nargs = '*', required = False,  help = 'Commmand to run inside guest (only if action=enter or arction=enter-as-root)')
 parser.add_argument('-v', '--verbose', action = 'store_true', required = False,  help = 'Enable verbose output')
 args = parser.parse_args()
 if args.project is None :
@@ -10,6 +11,9 @@ args.project = reduce(lambda x, y: x + y, args.project)
 if args.environment is None :
   args.environment = [[]]
 args.environment = reduce(lambda x, y: x + y, args.environment)
+if args.command is None :
+  args.command = [[]]
+args.command = reduce(lambda x, y: x + y, args.command)
 
 print 'Loading config...'
 configuration = Configuration()
@@ -42,7 +46,7 @@ if not args.action is None :
   else:
     if   args.action.count('enter-as-root') > 0 or args.action.count('enter') > 0 :
       print 'Running console...'
-      configuration.runConsole(args.project, args.environment[0], args.action[0])
+      configuration.runCommand(args.project, args.environment[0], args.action[0], args.command)
     elif args.action.count('logs') > 0 :
       print 'Printing logs...'
       configuration.showLogs(args.project, args.environment[0])

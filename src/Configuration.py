@@ -46,7 +46,7 @@ class Configuration:
       except Exception as e:
         print e
 
-  def runConsole(self, projects, name, action):
+  def runCommand(self, projects, name, action, command):
     envs = self.findEnvironments(projects, [name])
     if len(envs) == 1 :
       try:
@@ -56,7 +56,7 @@ class Configuration:
           root = True
         else :
           raise Exception('Unsupported action')
-        return envs[0].runConsole(root)
+        return envs[0].runCommand(root, command)
       except Exception as e:
         print '  ' + str(e)
         return

@@ -209,11 +209,13 @@ class Environment(IEnvironment, object):
     cmd += 'echo "user:*:16231:0:99999:7:::" >> /etc/shadow'
     self.runProcess(['docker', 'exec', self.Name, 'bash', '-c', cmd], verbose, '    Registering user', None)
 
-  def runConsole(self, root):
+  def runCommand(self, root, command = None):
     if not self.ready :
       return False
+    if command is None or not isinstance(command, list) or len(command) == 0:
+      command = ['/bin/bash']
 
-    args = ['docker', 'exec', '-ti', '-u', 'root', self.Name, '/bin/bash']
+    args = ['docker', 'exec', '-ti', '-u', 'root', self.Name] + command
     if not root :
       args[4] = 'user'
     subprocess.call(args)
