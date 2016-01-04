@@ -72,7 +72,17 @@ class EnvironmentHTTP(Environment, IEnvironment):
     for ws in HTTPPort['ws']:
       websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
       websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-    proc = subprocess.Popen(['sudo', '-u', 'root', 'docker-register-proxy', self.Name, self.ServerName, self.getServerAlias(), str(HTTPPort['Host']), websockets, self.HTTPS, self.Require, HTTPPort['Alias']])
+    proc = subprocess.Popen([
+      'sudo', '-u', 'root', 'docker-register-proxy', 
+      self.Name, 
+      self.ServerName, 
+      self.getServerAlias(), 
+      str(HTTPPort['Host']), 
+      websockets, 
+      self.HTTPS, 
+      self.Require, 
+      HTTPPort['Alias']
+    ])
     out, err = proc.communicate()
 
   def getDockerOpts(self):

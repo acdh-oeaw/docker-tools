@@ -133,7 +133,8 @@ class Environment(IEnvironment, object):
           port['Alias'] = ''
         elif not Param.isValidAlias(port['Alias']) :
           raise Exception(str(len(self.Ports) + 1) + ' port alias is invalid')
-        port['Alias'] = re.sub('/$', '', re.sub('^/', '', port['Alias'])) + '/'
+        port['Alias'] = re.sub('/$', '', re.sub('^/', '', port['Alias']))
+        port['Alias'] += '/' if port['Alias'] != '' else ''
 
       self.Ports.append(port)
 

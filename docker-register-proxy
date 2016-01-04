@@ -10,6 +10,7 @@
 
 PROT="http"
 SSLPROXY=""
+
 if [ "$6" == "both" ]; then
   PROT="https"
   SSLPROXY="SSLProxyEngine on
