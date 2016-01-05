@@ -923,19 +923,21 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     self.apacheRestart(verbose)
 
   def apacheConfigure(self):
-    vhFile = self.getApacheVHConfFile()
-    vhFile.write(self.guestVHTemplate.format(
-      ServerName = self.ServerName,
-      ServerAlias = self.getServerAlias(),
-      UID = '#' + str(self.UID),
-      GID = '#' + str(self.GID),
-      DocumentRootMount = self.DocumentRootMount,
-      AllowOverride = self.AllowOverride,
-      Options = self.Options,
-      Aliases = self.getAliases(),
-      ImitateHTTPS = self.imitateHTTPSTemplate if self.ImitateHTTPS == 'true' else ''
-    ))
-    vhFile.close()
+    tmpFile = '/tmp/' + self.Name
+    with open(tmpFile, 'w') as vhFile:
+      vhFile.write(self.guestVHTemplate.format(
+        ServerName = self.ServerName,
+        ServerAlias = self.getServerAlias(),
+        UID = '#' + str(self.UID),
+        GID = '#' + str(self.GID),
+        DocumentRootMount = self.DocumentRootMount,
+        AllowOverride = self.AllowOverride,
+        Options = self.Options,
+        Aliases = self.getAliases(),
+        ImitateHTTPS = self.imitateHTTPSTemplate if self.ImitateHTTPS == 'true' else ''
+      ))
+    self.runProcess(['docker', 'cp', tmpFile, self.Name + ':/etc/apache2/sites-enabled/000-default.conf'], False, '', 'Apache config update in guest failed')
+    os.remove(tmpFile)
 
   def apacheRestart(self, verbose):
     self.runProcess(['docker', 'exec', self.Name, 'supervisorctl', 'restart', 'apache2'], verbose, '', 'Apache restart failed')
@@ -944,11 +946,6 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     dockerOpts = super(EnvironmentApache, self).getDockerOpts()
     dockerOpts += ['--cap-add=SYS_NICE', '--cap-add=DAC_READ_SEARCH']
     return dockerOpts
-
-  def getApacheVHConfFile(self):
-    vhFileName = self.DockerMntBase + '/' + self.Name + '/etc/apache2/sites-enabled/000-default.conf'
-    vhFile = open(vhFileName, 'w')
-    return vhFile
 
   def getAliases(self):
     aliases = ''
@@ -1058,20 +1055,22 @@ class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
     self.PythonPath = conf
 
   def apacheConfigure(self):
-    vhFile = self.getApacheVHConfFile()
-    vhFile.write(self.guestVHTemplate.format(
-      ServerName = self.ServerName,
-      ServerAlias = self.getServerAlias(),
-      UID = '#' + str(self.UID),
-      GID = '#' + str(self.GID),
-      DocumentRootMount = self.DocumentRootMount,
-      PythonPath = self.getPythonPath(),
-      WSGIScriptAlias = self.DocumentRootMount + '/' + self.WSGIScriptAlias,
-      AllowOverride = self.AllowOverride,
-      Options = self.Options,
-      Aliases = self.getAliases()
-    ))
-    vhFile.close()
+    tmpFile = '/tmp/' + self.Name
+    with open(tmpFile, 'w') as vhFile:
+      vhFile.write(self.guestVHTemplate.format(
+        ServerName = self.ServerName,
+        ServerAlias = self.getServerAlias(),
+        UID = '#' + str(self.UID),
+        GID = '#' + str(self.GID),
+        DocumentRootMount = self.DocumentRootMount,
+        PythonPath = self.getPythonPath(),
+        WSGIScriptAlias = self.DocumentRootMount + '/' + self.WSGIScriptAlias,
+        AllowOverride = self.AllowOverride,
+        Options = self.Options,
+        Aliases = self.getAliases()
+      ))
+    self.runProcess(['docker', 'cp', tmpFile, self.Name + ':/etc/apache2/sites-enabled/000-default.conf'], False, '', 'Apache config update in guest failed')
+    os.remove(tmpFile)
 
   def getPythonPath(self):
     pythonPath = ''
@@ -1143,6 +1142,7 @@ import subprocess
 class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
   JavaParams = None
   JavaUser   = 'user'
+  JavaDir    = '/opt'
 
   def __init__(self, conf, owner):
     JavaParams = []
@@ -1158,6 +1158,11 @@ class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
     if 'JavaUser' in conf :
       self.JavaUser = conf['JavaUser']
 
+    if 'JavaDir' in conf :
+      if not Param.isValidAbsPath(conf['JavaDir']) :
+        raise Exception('JavaDir is not a valid absolute path')
+      self.JavaDir = conf['JavaDir']
+
   def runHooks(self, verbose):
     super(EnvironmentJava8, self).runHooks(verbose)
 
@@ -1166,8 +1171,9 @@ class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
     confPath = '/tmp/' + self.Name
     with open(confPath, 'w') as config:
       config.write(self.supervisorConfigTemplate.format(
-        User = self.JavaUser,
-        Params = ' '.join(self.JavaParams)
+        Params = ' '.join(self.JavaParams),
+        Dir    = self.JavaDir,
+        User   = self.JavaUser
       ))
     self.runProcess(['docker', 'cp', confPath, self.Name+':/etc/supervisor/conf.d/supervisord.conf'], verbose, '', 'Copying supervisor config file failed')
     self.runProcess(['docker', 'exec', self.Name, 'supervisorctl', 'update'], verbose, '', 'Reloading supervisor config failed')
@@ -1179,7 +1185,7 @@ nodaemon=true
 
 [program:java]
 command=/usr/bin/java {Params}
-directory=/opt
+directory={Dir}
 user={User}
 """
 parser = argparse.ArgumentParser(description='Script for maintiaining docker images and containers')

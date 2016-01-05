@@ -37,20 +37,22 @@ class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
     self.PythonPath = conf
 
   def apacheConfigure(self):
-    vhFile = self.getApacheVHConfFile()
-    vhFile.write(self.guestVHTemplate.format(
-      ServerName = self.ServerName,
-      ServerAlias = self.getServerAlias(),
-      UID = '#' + str(self.UID),
-      GID = '#' + str(self.GID),
-      DocumentRootMount = self.DocumentRootMount,
-      PythonPath = self.getPythonPath(),
-      WSGIScriptAlias = self.DocumentRootMount + '/' + self.WSGIScriptAlias,
-      AllowOverride = self.AllowOverride,
-      Options = self.Options,
-      Aliases = self.getAliases()
-    ))
-    vhFile.close()
+    tmpFile = '/tmp/' + self.Name
+    with open(tmpFile, 'w') as vhFile:
+      vhFile.write(self.guestVHTemplate.format(
+        ServerName = self.ServerName,
+        ServerAlias = self.getServerAlias(),
+        UID = '#' + str(self.UID),
+        GID = '#' + str(self.GID),
+        DocumentRootMount = self.DocumentRootMount,
+        PythonPath = self.getPythonPath(),
+        WSGIScriptAlias = self.DocumentRootMount + '/' + self.WSGIScriptAlias,
+        AllowOverride = self.AllowOverride,
+        Options = self.Options,
+        Aliases = self.getAliases()
+      ))
+    self.runProcess(['docker', 'cp', tmpFile, self.Name + ':/etc/apache2/sites-enabled/000-default.conf'], False, '', 'Apache config update in guest failed')
+    os.remove(tmpFile)
 
   def getPythonPath(self):
     pythonPath = ''

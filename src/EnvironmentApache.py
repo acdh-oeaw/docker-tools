@@ -116,19 +116,21 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     self.apacheRestart(verbose)
 
   def apacheConfigure(self):
-    vhFile = self.getApacheVHConfFile()
-    vhFile.write(self.guestVHTemplate.format(
-      ServerName = self.ServerName,
-      ServerAlias = self.getServerAlias(),
-      UID = '#' + str(self.UID),
-      GID = '#' + str(self.GID),
-      DocumentRootMount = self.DocumentRootMount,
-      AllowOverride = self.AllowOverride,
-      Options = self.Options,
-      Aliases = self.getAliases(),
-      ImitateHTTPS = self.imitateHTTPSTemplate if self.ImitateHTTPS == 'true' else ''
-    ))
-    vhFile.close()
+    tmpFile = '/tmp/' + self.Name
+    with open(tmpFile, 'w') as vhFile:
+      vhFile.write(self.guestVHTemplate.format(
+        ServerName = self.ServerName,
+        ServerAlias = self.getServerAlias(),
+        UID = '#' + str(self.UID),
+        GID = '#' + str(self.GID),
+        DocumentRootMount = self.DocumentRootMount,
+        AllowOverride = self.AllowOverride,
+        Options = self.Options,
+        Aliases = self.getAliases(),
+        ImitateHTTPS = self.imitateHTTPSTemplate if self.ImitateHTTPS == 'true' else ''
+      ))
+    self.runProcess(['docker', 'cp', tmpFile, self.Name + ':/etc/apache2/sites-enabled/000-default.conf'], False, '', 'Apache config update in guest failed')
+    os.remove(tmpFile)
 
   def apacheRestart(self, verbose):
     self.runProcess(['docker', 'exec', self.Name, 'supervisorctl', 'restart', 'apache2'], verbose, '', 'Apache restart failed')
@@ -137,11 +139,6 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     dockerOpts = super(EnvironmentApache, self).getDockerOpts()
     dockerOpts += ['--cap-add=SYS_NICE', '--cap-add=DAC_READ_SEARCH']
     return dockerOpts
-
-  def getApacheVHConfFile(self):
-    vhFileName = self.DockerMntBase + '/' + self.Name + '/etc/apache2/sites-enabled/000-default.conf'
-    vhFile = open(vhFileName, 'w')
-    return vhFile
 
   def getAliases(self):
     aliases = ''
