@@ -34,7 +34,8 @@ if args.action is None or args.action.count('run') > 0 :
 
   print 'Running hooks...'
   # give container(s) time to start before executing hooks
-  time.sleep(5)
+  if len(configuration.findEnvironments([], [], True)) > 0 :
+    time.sleep(5)
   configuration.runHooks(args.project, args.environment, args.verbose)
 
 if not args.action is None and args.action.count('clean') > 0 :

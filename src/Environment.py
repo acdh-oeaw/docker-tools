@@ -1,3 +1,5 @@
+import shutil
+
 class Environment(IEnvironment, object):
   DockerImgBase = '/var/lib/docker/images'
   DockerMntBase = '/srv/docker'
@@ -7,19 +9,22 @@ class Environment(IEnvironment, object):
   Name          = None
   UID           = None
   GID           = None
+  UserName      = ''
   BaseDir       = None
   DockerfileDir = None
   Mounts        = None
   Links         = None
   Ports         = None
   Hosts         = None
+  EnvVars       = None
 
   def __init__(self, conf, owner):
-    self.Mounts = []
-    self.Links  = []
-    self.Ports  = []
-    self.Hosts  = []
-    self.owner  = owner
+    self.Mounts  = []
+    self.Links   = []
+    self.Ports   = []
+    self.Hosts   = []
+    self.EnvVars = {}
+    self.owner   = owner
 
     if not isinstance(conf, dict) :
       raise Exception('configuration is of a wrong type')
@@ -41,6 +46,11 @@ class Environment(IEnvironment, object):
     if not 'GID' in conf or not Param.isValidNumber(conf['GID']) :
       raise Exception('GID is missing or invalid')
     self.GID = conf['GID']
+
+    if 'UserName' in conf :
+      if not isinstance(conf['UserName'], basestring) :
+        raise Exception('UserName is not a string')
+      self.UserName = conf['UserName']
 
     if (
       not 'DockerfileDir' in conf
@@ -67,6 +77,9 @@ class Environment(IEnvironment, object):
 
     if 'Hosts' in conf :
       self.processHosts(conf['Hosts'])
+
+    if 'EnvVars' in conf :
+      self.processEnvVars(conf['EnvVars'])
 
   def processMounts(self, conf):
     if not isinstance(conf, list):
@@ -151,6 +164,17 @@ class Environment(IEnvironment, object):
         raise Exception(str(len(self.Hosts) + 1) + ' host name definition - IP number is missing or invalid ')
       self.Hosts.append(host)
 
+  def processEnvVars(self, conf):
+    if not isinstance(conf, dict) :
+      raise Exception('Environment variables definition is not a dictionary')
+
+    for name, value in conf.iteritems():
+      if not Param.isValidVarName(name) :
+        raise Exception(str(len(self.EnvVars) + 1) + ' environment variable name is invalid')
+      if not isinstance(value, basestring) :
+        raise Exception(str(len(self.EnvVars) + 1) + ' environment variable value is not a string')
+      self.EnvVars[name] = value
+
   def check(self, duplDomains, duplPorts, duplNames, names):
     errors = []
     if self.Name in duplNames :
@@ -171,16 +195,31 @@ class Environment(IEnvironment, object):
     if not self.ready :
       raise Exception('Environment is not ready - it was not checked or there were errord during check')
 
+    # prepare place for a final dockerfileDir
+    tmpDir = self.DockerImgBase + '/tmp/' + self.Name
+    shutil.rmtree(tmpDir, True)
+
+    # check dockerfile
     if Param.isValidFile(self.BaseDir + '/' + self.DockerfileDir + '/Dockerfile') :
       dockerfileDir = self.BaseDir + '/' + self.DockerfileDir
+      # make a copy of the dockerfileDir and inject data to the Dockerfile
+      shutil.copytree(dockerfileDir, tmpDir)
     elif Param.isValidFile(self.DockerImgBase + '/' + self.DockerfileDir + '/Dockerfile') : 
       dockerfileDir = self.DockerImgBase + '/' + self.DockerfileDir
+      # create a simple Dockerfile based on provided one
+      os.mkdir(tmpDir)
+      with open(tmpDir + '/Dockerfile', 'w') as dockerfile:
+        dockerfile.write('FROM acdh/' + self.DockerfileDir + '\n')
+        dockerfile.write('MAINTAINER acdh-tech <acdh-tech@oeaw.ac.at>\n')
     else :
       env.ready = False
       raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
 
     print '  ' + self.Name
-    self.runProcess(['docker', 'build', '--force-rm=true', '-t', 'acdh/' + self.Name, dockerfileDir], verbose, '', 'Build failed')
+
+    self.injectUserEnv(tmpDir + '/Dockerfile')
+    self.runProcess(['docker', 'build', '--force-rm=true', '-t', 'acdh/' + self.Name, tmpDir], verbose, '', 'Build failed')
+    shutil.rmtree(tmpDir)
 
   def runContainer(self, verbose):
     if not self.owner :
@@ -203,12 +242,6 @@ class Environment(IEnvironment, object):
       raise Exception('Must be environment owner to run hooks')
 
     print '  ' + self.Name
-
-    # register system user and group for UID and GID used in host
-    cmd =  'echo "user:x:' + str(self.UID) + ':' + str(self.GID) + '::' + self.getGuestHomeDir() + ':/bin/bash" >> /etc/passwd ;'
-    cmd += 'echo "user:x:' + str(self.GID) + ':" >> /etc/group ;'
-    cmd += 'echo "user:*:16231:0:99999:7:::" >> /etc/shadow'
-    self.runProcess(['docker', 'exec', self.Name, 'bash', '-c', cmd], verbose, '    Registering user', None)
 
   def runCommand(self, root, command = None):
     if not self.ready :
@@ -243,6 +276,27 @@ class Environment(IEnvironment, object):
         print out + '\n' + err
       raise Exception(errorMsg)
     return ret
+
+  def injectUserEnv(self, dockerfilePath):
+    if self.UserName != '' :
+      # adjusting existing guest user to meet UID and GID used in host
+      cmd =  'sed -i -r -e "s/^' + self.UserName + ':x:[0-9]+:[0-9]+:/' + self.UserName + ':x:' + str(self.UID) + ':' + str(self.GID) + ':/" /etc/passwd;'
+      cmd += 'sed -i -r -e "s/^' + self.UserName + ':x:[0-9]+:/' + self.UserName + ':x:' + str(self.GID) + ':/" /etc/group;'
+    else :
+      # adding generic system user and group for UID and GID used in host
+      cmd =  'echo "user:x:' + str(self.UID) + ':' + str(self.GID) + '::' + self.getGuestHomeDir() + ':/bin/bash" >> /etc/passwd;'
+      cmd += 'echo "user:x:' + str(self.GID) + ':" >> /etc/group;'
+      cmd += 'echo "user:*:16231:0:99999:7:::" >> /etc/shadow;'
+    cmd = 'RUN ' + cmd + '\n'
+
+    for name, value in self.EnvVars.iteritems():
+      cmd += 'ENV ' + name + ' ' + value + '\n'
+
+    with open(dockerfilePath, 'r') as dockerfile:
+      commands = dockerfile.read()
+      commands = re.sub('\\n(MAINTAINER[^\\n]*)', '\n\\1\n' + cmd, commands) 
+    with open(dockerfilePath, 'w') as dockerfile:
+      dockerfile.write(commands)
 
   def getName(self):
     return self.Name

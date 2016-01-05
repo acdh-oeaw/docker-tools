@@ -7,6 +7,8 @@ Set of tools to make Docker administration easier
 Important remark - all paths according to CentOs 7
 
 * Make sure docker is already installed
+* Copy environment types Dockerfiles to /var/lib/docker/images:
+  cp -pR images /var/lib/docker
 * Set up system permissions:
   ./permissions
 * Set up required sudo rules:

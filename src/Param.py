@@ -46,3 +46,15 @@ class Param(object):
       or re.search('^[0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9]/(3[0-2]|[12][0-9]|[0-9])$', str(p))
     )
 
+  @staticmethod
+  def isValidParamsList(p):
+    if not isinstance(p, list) :
+      return False
+    for i in p:
+      if not isinstance(i, basestring) :
+        return False
+    return True
+
+  @staticmethod
+  def isValidVarName(p):
+    return re.search('^[_a-zA-Z][_a-zA-Z0-9]*$', str(p))

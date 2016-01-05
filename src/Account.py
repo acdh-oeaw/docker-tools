@@ -52,6 +52,8 @@ class Account:
             env = EnvironmentWSGI3(envConf, self.owner)
           elif envConf['Type'] == 'WSGI2' :
             env = EnvironmentWSGI2(envConf, self.owner)
+          elif envConf['Type'] == 'Java8' :
+            env = EnvironmentJava8(envConf, self.owner)
           elif envConf['Type'] == 'Drupal7' :
             env = EnvironmentDrupal7(envConf, self.owner)
           elif envConf['Type'] == 'Generic' :
