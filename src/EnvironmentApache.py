@@ -4,7 +4,7 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   DocumentRootMount  = '/var/www/html'
   DocumentRoot       = None
   AllowOverride      = 'All'
-  Options            = 'None'
+  Options            = 'All'
   Aliases            = None
   ImitateHTTPS       = 'false'
 
