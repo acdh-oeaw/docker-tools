@@ -1,10 +1,9 @@
 import subprocess
 
-from Environment import Environment
-from IEnvironment import IEnvironment
-from src.Param import Param
+from . import *
+from ..Param import Param
 
-class EnvironmentHTTP(Environment, IEnvironment):
+class EnvironmentHTTP(EnvironmentGeneric, IEnvironment):
   ServerName    = None
   ServerAlias   = None
   HTTPS         = "true"

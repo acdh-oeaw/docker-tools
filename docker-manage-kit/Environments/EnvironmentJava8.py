@@ -1,10 +1,9 @@
-from distutils import dir_util
+import os
+import distutils
 import subprocess
 
-from Environment import Environment
-from IEnvironment import IEnvironment
-from EnvironmentHTTP import EnvironmentHTTP
-from src.Param import Param
+from . import *
+from ..Param import Param
 
 class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
   JavaParams = None

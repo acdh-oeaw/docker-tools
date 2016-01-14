@@ -7,7 +7,7 @@ from .IEnvironment import IEnvironment
 from ..Param import Param
 from ..HTTPReverseProxy import HTTPReverseProxy
 
-class Environment(IEnvironment, object):
+class EnvironmentGeneric(IEnvironment, object):
   DockerImgBase = '/var/lib/docker/images'
   DockerMntBase = '/srv/docker'
 

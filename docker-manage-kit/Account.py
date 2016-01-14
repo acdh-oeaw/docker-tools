@@ -1,3 +1,12 @@
+import json
+import subprocess
+
+import os
+
+from .Param import Param
+from .Environments import *
+
+
 class Account:
   base         = '/home'
   name         = ''
@@ -17,7 +26,7 @@ class Account:
       raise Exception('account does not exist')
     self.uid = os.stat(path).st_uid
     self.gid = os.stat(path).st_gid
-
+    # owner? writeable? why?
     self.owner = os.access(path, os.W_OK)
   
   def readConfig(self):
@@ -41,27 +50,13 @@ class Account:
         envConf['UID']     = self.uid
         envConf['GID']     = self.gid
         envConf['Account'] = self.name
+
         if 'Type' in envConf :
-          if   envConf['Type'] == 'HTTP' :
-            env = EnvironmentHTTP(envConf, self.owner)
-          elif envConf['Type'] == 'Apache' :
-            env = EnvironmentApache(envConf, self.owner)
-          elif envConf['Type'] == 'PHP' :
-            env = EnvironmentPHP(envConf, self.owner)
-          elif envConf['Type'] == 'WSGI3' :
-            env = EnvironmentWSGI3(envConf, self.owner)
-          elif envConf['Type'] == 'WSGI2' :
-            env = EnvironmentWSGI2(envConf, self.owner)
-          elif envConf['Type'] == 'Java8' :
-            env = EnvironmentJava8(envConf, self.owner)
-          elif envConf['Type'] == 'Drupal7' :
-            env = EnvironmentDrupal7(envConf, self.owner)
-          elif envConf['Type'] == 'Generic' :
-            env = Environment(envConf, self.owner)
-          elif envConf['Type'] == 'noske' :
-            env = EnvironmentNoske(envConf, self.owner)
-          elif envConf['Type'] == 'noskePatched' :
-            env = EnvironmentNoskePatched(envConf, self.owner)
+          envName = 'Environment' + envConf['Type']
+          for envType in IEnvironment.__subclasses__():
+            if envName == envType.__name__:
+              env = envType(envConf, self.owner)
+              break
           else :
             raise Exception('environment is of unsupported type (' + envConf['Type'] + ')')
         else :
