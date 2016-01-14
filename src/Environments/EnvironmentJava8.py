@@ -1,6 +1,11 @@
 from distutils import dir_util
 import subprocess
 
+from Environment import Environment
+from IEnvironment import IEnvironment
+from EnvironmentHTTP import EnvironmentHTTP
+from src.Param import Param
+
 class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
   JavaParams = None
   JavaUser   = 'user'

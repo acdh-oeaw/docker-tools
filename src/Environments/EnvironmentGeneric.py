@@ -1,4 +1,11 @@
+import os
 import shutil
+import subprocess
+import re
+
+from .IEnvironment import IEnvironment
+from ..Param import Param
+from ..HTTPReverseProxy import HTTPReverseProxy
 
 class Environment(IEnvironment, object):
   DockerImgBase = '/var/lib/docker/images'
@@ -212,7 +219,7 @@ class Environment(IEnvironment, object):
         dockerfile.write('FROM acdh/' + self.DockerfileDir + '\n')
         dockerfile.write('MAINTAINER acdh-tech <acdh-tech@oeaw.ac.at>\n')
     else :
-      env.ready = False
+      self.ready = False
       raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
 
     print '  ' + self.Name
@@ -233,7 +240,7 @@ class Environment(IEnvironment, object):
     # run
     self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose, '    Creating container...', 'Container creation failed')
     # mount exported volumes
-    self.runProcess(['sudo', '-u', 'root', 'docker-mount-volumes', '-v', '-c', self.Name], verbose, '', None)
+    self.runProcess(['sudo', '-u', 'root', 'docker-mount-volumes', '-v', '-c', self.Name], verbose, '    Mounting docker volumes', 'Volume mounting failed')
     # create systemd script
     self.runProcess(['sudo', '-u', 'root', 'docker-register-systemd', self.Name], verbose, '    Registering in systemd', 'Systemd script creation failed')
 
