@@ -10,7 +10,7 @@ import stat
 import subprocess
 import time
 
-from src import *
+from docker_manage import *
 
 parser = argparse.ArgumentParser(description='Script for maintiaining docker images and containers')
 parser.add_argument('-p', '--project', action = 'append', nargs = '*', required = False, help = 'Project whose environments should be processed')
