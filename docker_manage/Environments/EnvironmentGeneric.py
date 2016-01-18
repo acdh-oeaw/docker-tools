@@ -294,7 +294,7 @@ class EnvironmentGeneric(IEnvironment, object):
       cmd =  'echo "user:x:' + str(self.UID) + ':' + str(self.GID) + '::' + self.getGuestHomeDir() + ':/bin/bash" >> /etc/passwd;'
       cmd += 'echo "user:x:' + str(self.GID) + ':" >> /etc/group;'
       cmd += 'echo "user:*:16231:0:99999:7:::" >> /etc/shadow;'
-    cmd = 'RUN ' + cmd + '\n'
+    cmd = 'USER root\nRUN ' + cmd + '\n'
 
     for name, value in self.EnvVars.iteritems():
       cmd += 'ENV ' + name + ' ' + value + '\n'
@@ -304,6 +304,8 @@ class EnvironmentGeneric(IEnvironment, object):
       commands = re.sub('\\n(MAINTAINER[^\\n]*)', '\n\\1\n' + cmd, commands) 
     with open(dockerfilePath, 'w') as dockerfile:
       dockerfile.write(commands)
+    with open(dockerfilePath, 'a') as dockerfile:
+      dockerfile.write('\nUSER user\n')
 
   def getName(self):
     return self.Name
