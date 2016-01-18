@@ -24,6 +24,7 @@ class EnvironmentGeneric(IEnvironment, object):
   Ports         = None
   Hosts         = None
   EnvVars       = None
+  runAsUser     = False
 
   def __init__(self, conf, owner):
     self.Mounts  = []
@@ -58,6 +59,10 @@ class EnvironmentGeneric(IEnvironment, object):
       if not isinstance(conf['UserName'], basestring) :
         raise Exception('UserName is not a string')
       self.UserName = conf['UserName']
+
+    if 'runAsUser' in conf:
+      if not isinstance(conf['runAsUser'], basestring) or not ['true', 'false'].count(conf['runAsUser']) > 0 :
+        raise Exception('runAsUser is not a string or has value other then true/false')
 
     if (
       not 'DockerfileDir' in conf
@@ -294,7 +299,7 @@ class EnvironmentGeneric(IEnvironment, object):
       cmd =  'echo "user:x:' + str(self.UID) + ':' + str(self.GID) + '::' + self.getGuestHomeDir() + ':/bin/bash" >> /etc/passwd;'
       cmd += 'echo "user:x:' + str(self.GID) + ':" >> /etc/group;'
       cmd += 'echo "user:*:16231:0:99999:7:::" >> /etc/shadow;'
-    cmd = 'USER root\nRUN ' + cmd + '\n'
+    cmd = 'RUN ' + cmd + '\n'
 
     for name, value in self.EnvVars.iteritems():
       cmd += 'ENV ' + name + ' ' + value + '\n'
@@ -304,8 +309,9 @@ class EnvironmentGeneric(IEnvironment, object):
       commands = re.sub('\\n(MAINTAINER[^\\n]*)', '\n\\1\n' + cmd, commands) 
     with open(dockerfilePath, 'w') as dockerfile:
       dockerfile.write(commands)
-    with open(dockerfilePath, 'a') as dockerfile:
-      dockerfile.write('\nUSER user\n')
+    if self.runAsUser:
+      with open(dockerfilePath, 'a') as dockerfile:
+        dockerfile.write('\nUSER user\n')
 
   def getName(self):
     return self.Name
