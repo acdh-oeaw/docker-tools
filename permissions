@@ -7,4 +7,8 @@ chmod +x /var/lib/docker
 
 # SELinux context to allow docker access external mounts
 semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
+restorecon -RvF /home
 
+# As apache is the reverse proxy it has to be able to connect
+# via network
+setsebool -P httpd_can_network_connect true
