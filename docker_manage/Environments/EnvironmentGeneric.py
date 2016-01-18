@@ -63,6 +63,7 @@ class EnvironmentGeneric(IEnvironment, object):
     if 'runAsUser' in conf:
       if not isinstance(conf['runAsUser'], basestring) or not ['true', 'false'].count(conf['runAsUser']) > 0 :
         raise Exception('runAsUser is not a string or has value other then true/false')
+      self.runAsUser = conf['runAsUser'] == 'true'
 
     if (
       not 'DockerfileDir' in conf
