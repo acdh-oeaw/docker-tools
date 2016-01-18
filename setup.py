@@ -21,7 +21,7 @@ setup(
     url = "",
     packages=['docker_manage', "docker_manage.Environments"],
     scripts=['docker-manage'],
-    data_files=[('/sbin', ['docker-manage-admin', 'docker-add-project', 'docker-check-quota',
+    data_files=[('/usr/sbin', ['docker-manage-admin', 'docker-add-project', 'docker-check-quota',
                            'docker-clean', 'docker-install-container', 'docker-mount-volumes',
                            'docker-register-proxy', 'docker-register-systemd', 'docker-remove-unused-containers',
                            'docker-remove-unused-images'])],
