@@ -17,7 +17,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
     if 'HTTPS' in conf :
       if not isinstance(conf['HTTPS'], basestring) or not ['true', 'false'].count(conf['HTTPS']) > 0 :
         raise Exception('HTTPS is not a string or has value other then true/false')
-      self.HTTPS = conf['HTTPS']
+      self.HTTPS = conf['HTTPS'] == 'true'
 
     if 'Require' in conf :
       self.processRequire(conf['Require'])
