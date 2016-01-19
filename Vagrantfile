@@ -86,14 +86,14 @@ local=/localdomain/
 address=/.localdomain/127.0.0.1
 address=/.localdomain/::1
 EOF
-     sudo sed -i -e '/.main./ a\
+     sudo sed -i -e '/^.main.$/ a\
 dns=dnsmasq' /etc/NetworkManager/NetworkManager.conf     
      sudo sed -i -e 's/dockerroot/docker/' /etc/group
      # to enable volumes access for normal users
      sudo chmod +x /var/lib/docker
      # SELinux context to allow docker access external mounts
      sudo semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
-     sudo semanage fcontext -d -t ssh_home_t "/home/[^/]*/\.ssh(/.*)?"
+     sudo semanage fcontext -a -t ssh_home_t "/home/[^/]*/\.ssh(/.*)?"
      sudo restorecon -RvF /home
      (cat | sudo tee /etc/sudoers.d/docker-admin) > /dev/null <<"EOF"
 %users  ALL=(:docker) NOPASSWD: /usr/sbin/docker-manage-admin
