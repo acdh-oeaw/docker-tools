@@ -76,7 +76,9 @@ Vagrant.configure(2) do |config|
      sudo yum groups install -y "X Window System"
      sudo systemctl set-default graphical.target
      sudo yum install -y dnsmasq java-1.7.0-openjdk wget git patch httpd docker docker-python
+     sudo systemctl enable docker
      sudo usermod -a -G docker vagrant
+     sudo usermod -a -G users vagrant
      # vagrant itself needs sudo to not requiretty so this default is already reverted 
      (cat | sudo tee /etc/NetworkManager/dnsmasq.d/localdomain-wildcard.conf) > /dev/null <<"EOF"
 # Add local-only domains here, queries in these domains are answered
