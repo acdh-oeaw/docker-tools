@@ -86,7 +86,8 @@ local=/localdomain/
 address=/.localdomain/127.0.0.1
 address=/.localdomain/::1
 EOF
-     sudo sed -i -e '/\[main\]/a dns=dnsmasq' /etc/NetworkManager/NetworkManager.conf     
+     sudo sed -i -e '/.main./ a\
+dns=dnsmasq' /etc/NetworkManager/NetworkManager.conf     
      sudo sed -i -e 's/dockerroot/docker/' /etc/group
      # to enable volumes access for normal users
      sudo chmod +x /var/lib/docker
