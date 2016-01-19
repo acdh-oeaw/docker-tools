@@ -70,8 +70,8 @@ Vagrant.configure(2) do |config|
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
+     sudo yum install -y yum-plugin-fastestmirror deltarpm epel-release
      sudo yum update -y
-     sudo yum install -y epel-release
      sudo yum groups install -y "MATE Desktop"
      sudo yum groups install -y "X Window System"
      sudo systemctl set-default graphical.target
@@ -93,6 +93,7 @@ dns=dnsmasq' /etc/NetworkManager/NetworkManager.conf
      sudo chmod +x /var/lib/docker
      # SELinux context to allow docker access external mounts
      sudo semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
+     sudo semanage fcontext -d -t ssh_home_t "/home/[^/]*/\.ssh(/.*)?"
      sudo restorecon -RvF /home
      (cat | sudo tee /etc/sudoers.d/docker-admin) > /dev/null <<"EOF"
 %users  ALL=(:docker) NOPASSWD: /usr/sbin/docker-manage-admin
