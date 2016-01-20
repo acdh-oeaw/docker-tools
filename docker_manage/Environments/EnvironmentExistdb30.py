@@ -1,5 +1,4 @@
 from . import *
-from ..Param import Param
 
 class EnvironmenteXistdb30(EnvironmentHTTP, IEnvironment):
   DataDirMount       = '/opt/exist/webapp/WEB-INF/data'

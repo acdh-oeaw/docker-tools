@@ -3,11 +3,9 @@ import shutil
 import subprocess
 import re
 
-from .IEnvironment import IEnvironment
-from ..Param import Param
-from ..HTTPReverseProxy import HTTPReverseProxy
+from . import *
 
-class EnvironmentGeneric(IEnvironment, object):
+class Environment(IEnvironment, object):
   DockerImgBase = '/var/lib/docker/images'
   DockerMntBase = '/srv/docker'
 
@@ -76,7 +74,7 @@ class EnvironmentGeneric(IEnvironment, object):
         )
       )
     ) :
-      raise Exception('DockerfileDir is missing or invalid')
+      raise Exception('DockerfileDir ' + conf['DockerfileDir'] + ' is missing or invalid')
     self.DockerfileDir = conf['DockerfileDir']
 
     if 'Mounts' in conf and self.owner:
@@ -341,3 +339,5 @@ class EnvironmentGeneric(IEnvironment, object):
   def getGuestHomeDir(self):
     return '/'
 
+class EnvironmentGeneric(Environment, IEnvironment):
+  pass

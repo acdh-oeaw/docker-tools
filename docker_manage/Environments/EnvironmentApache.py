@@ -1,8 +1,6 @@
 import os
 
 from . import *
-from ..HTTPReverseProxy import HTTPReverseProxy
-from ..Param import Param
 
 class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   skipDocumentRoot   = False # used by derived classes

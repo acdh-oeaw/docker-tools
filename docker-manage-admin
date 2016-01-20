@@ -10,7 +10,7 @@ import stat
 import subprocess
 import time
 
-from docker_manage import *
+import docker_manage
 
 parser = argparse.ArgumentParser(description='Script for maintiaining docker images and containers')
 parser.add_argument('-p', '--project', action = 'append', nargs = '*', required = False, help = 'Project whose environments should be processed')
@@ -30,7 +30,7 @@ if args.command is None :
 args.command = reduce(lambda x, y: x + y, args.command)
 
 print 'Loading config...'
-configuration = Configuration()
+configuration = docker_manage.Configuration()
 
 print 'Checking conflicts between environments...'
 configuration.check()
@@ -56,7 +56,7 @@ if not args.action is None and args.action.count('clean') > 0 :
   configuration.clean(args.project, args.environment, args.verbose)
 
 if not args.action is None :
-  if len(args.environment) != 1 :
+  if len(args.action) != 1 :
     print "  Please choose exactly one environment"
   else:
     if   args.action.count('enter-as-root') > 0 or args.action.count('enter') > 0 :
@@ -65,3 +65,4 @@ if not args.action is None :
     elif args.action.count('logs') > 0 :
       print 'Printing logs...'
       configuration.showLogs(args.project, args.environment[0])
+

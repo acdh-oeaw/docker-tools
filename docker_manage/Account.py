@@ -1,11 +1,8 @@
+import os
 import json
 import subprocess
 
-import os
-
-from .Param import Param
 from .Environments import *
-
 
 class Account:
   base         = '/home'
@@ -26,7 +23,7 @@ class Account:
       raise Exception('account does not exist')
     self.uid = os.stat(path).st_uid
     self.gid = os.stat(path).st_gid
-    # owner? writeable? why?
+
     self.owner = os.access(path, os.W_OK)
   
   def readConfig(self):
@@ -50,7 +47,6 @@ class Account:
         envConf['UID']     = self.uid
         envConf['GID']     = self.gid
         envConf['Account'] = self.name
-
         if 'Type' in envConf :
           envName = 'Environment' + envConf['Type']
           for envType in IEnvironment.__subclasses__():

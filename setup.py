@@ -24,7 +24,9 @@ setup(
     data_files=[('/usr/sbin', ['docker-manage-admin', 'docker-add-project', 'docker-check-quota',
                            'docker-clean', 'docker-install-container', 'docker-mount-volumes',
                            'docker-register-proxy', 'docker-register-systemd', 'docker-remove-unused-containers',
-                           'docker-remove-unused-images'])],
+                           'docker-remove-unused-images']),
+                ('/etc/sudoers.d', ['etc/sudoers.d/docker'])
+                ],
     long_description=read('README'),
     classifiers=[
         "Development Status :: 3 - Alpha",
