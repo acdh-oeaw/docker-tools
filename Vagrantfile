@@ -93,17 +93,13 @@ dns=dnsmasq' /etc/NetworkManager/NetworkManager.conf
      sudo sed -i -e 's/dockerroot/docker/' /etc/group
      # to enable volumes access for normal users
      sudo chmod +x /var/lib/docker
+     sudo mkdir -p /var/lib/docker/images/tmp
+     sudo chmod g+w /var/lib/docker/images/tmp
+     sudo chgrp users /var/lib/docker/images/tmp
      # SELinux context to allow docker access external mounts
      sudo semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
      sudo semanage fcontext -a -t ssh_home_t "/home/[^/]*/\.ssh(/.*)?"
      sudo restorecon -RvF /home
-     (cat | sudo tee /etc/sudoers.d/docker-admin) > /dev/null <<"EOF"
-%users  ALL=(:docker) NOPASSWD: /usr/sbin/docker-manage-admin
-%docker ALL=(root)    NOPASSWD: /usr/sbin/docker-mount-volumes
-%docker ALL=(root)    NOPASSWD: /usr/sbin/docker-register-systemd
-%docker ALL=(root)    NOPASSWD: /usr/sbin/docker-register-proxy
-%docker ALL=(root)    NOPASSWD: /usr/sbin/docker-clean
-EOF
      sudo mkdir /etc/httpd/conf.d/sites-enabled
      sudo mkdir /etc/httpd/conf.d/sites-available
      sudo mkdir /etc/httpd/conf.d/shared
