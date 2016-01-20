@@ -129,7 +129,35 @@ class HTTPReverseProxy(object):
       HTTPReverseProxy.portNumber += 1
 
     return HTTPReverseProxy.portNumber
+import re
+import os
+
 class Param(object):
+  # see http://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses#17871737
+  # there are comments on small shortcommings
+  IPV4SEG  = "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])"
+  IPV4ADDR = "(%(IPV4SEG)s\.){3,3}%(IPV4SEG)s" % {"IPV4SEG": IPV4SEG}
+  IPV6SEG  = "[0-9a-fA-F]{1,4}"
+  IPV6ADDR = ("("
+         "(%(IPV6SEG)s:){7,7}%(IPV6SEG)s|"                # 1:2:3:4:5:6:7:8
+         "(%(IPV6SEG)s:){1,7}:|"                          # 1::                                 1:2:3:4:5:6:7::
+         "(%(IPV6SEG)s:){1,6}:%(IPV6SEG)s|"               # 1::8               1:2:3:4:5:6::8   1:2:3:4:5:6::8
+         "(%(IPV6SEG)s:){1,5}(:%(IPV6SEG)s){1,2}|"        # 1::7:8             1:2:3:4:5::7:8   1:2:3:4:5::8
+         "(%(IPV6SEG)s:){1,4}(:%(IPV6SEG)s){1,3}|"        # 1::6:7:8           1:2:3:4::6:7:8   1:2:3:4::8
+         "(%(IPV6SEG)s:){1,3}(:%(IPV6SEG)s){1,4}|"        # 1::5:6:7:8         1:2:3::5:6:7:8   1:2:3::8
+         "(%(IPV6SEG)s:){1,2}(:%(IPV6SEG)s){1,5}|"        # 1::4:5:6:7:8       1:2::4:5:6:7:8   1:2::8
+         "%(IPV6SEG)s:((:%(IPV6SEG)s){1,6})|"             # 1::3:4:5:6:7:8     1::3:4:5:6:7:8   1::8
+         ":((:%(IPV6SEG)s){1,7}|:)|"                      # ::2:3:4:5:6:7:8    ::2:3:4:5:6:7:8  ::8       ::
+         "fe80:(:%(IPV6SEG)s){0,4}%%[0-9a-zA-Z]{1,}|"     # fe80::7:8%eth0     fe80::7:8%1  (link-local IPv6 addresses with zone index)
+         "::(ffff(:0{1,4}){0,1}:){0,1}%(IPV4ADDR)s|"      # ::255.255.255.255  ::ffff:255.255.255.255  ::ffff:0:255.255.255.255 (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
+         "(%(IPV6SEG)s:){1,4}:%(IPV4ADDR)s"               # 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33 (IPv4-Embedded IPv6 Address)
+         ")") % {"IPV6SEG": IPV6SEG, "IPV4ADDR": IPV4ADDR}
+  reIPV6ADDR = re.compile("^"+IPV6ADDR+"$")
+  reIPV4ADDR = re.compile("^"+IPV4ADDR+"$")
+  IPV4NETMASK = IPV4ADDR+"/(3[0-2]|[12][0-9]|[0-9])"
+  reIPV4NETMASK = re.compile("^"+IPV4NETMASK+"$")
+  IPV6NETMASK = IPV6ADDR+"/(1[0-2][0-8]|1[0-1]9|[0-9][0-9])"
+  reIPV6NETMASK = re.compile("^"+IPV6NETMASK+"$")
   @staticmethod
   def isValidAbsPath(p):
     return not re.search('/[.][.]/', p) and re.search('^/[-_.a-zA-Z0-9]+$', p)
@@ -173,8 +201,10 @@ class Param(object):
   @staticmethod
   def isValidRequireIP(p):
     return (
-      re.search('^[0-9]?[0-9]?[0-9]([.][0-9]?[0-9]?[0-9])?([.][0-9]?[0-9]?[0-9])?([.][0-9]?[0-9]?[0-9])?$', str(p))
-      or re.search('^[0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9]/(3[0-2]|[12][0-9]|[0-9])$', str(p))
+      Param.reIPV4ADDR.search(str(p))
+      or Param.reIPV4NETMASK.search(str(p))
+      or Param.reIPV6ADDR.search(str(p))
+      or Param.reIPV6NETMASK.search(str(p))
     )
 
   @staticmethod
@@ -314,26 +344,11 @@ class Account:
         envConf['GID']     = self.gid
         envConf['Account'] = self.name
         if 'Type' in envConf :
-          if   envConf['Type'] == 'HTTP' :
-            env = EnvironmentHTTP(envConf, self.owner)
-          elif envConf['Type'] == 'Apache' :
-            env = EnvironmentApache(envConf, self.owner)
-          elif envConf['Type'] == 'PHP' :
-            env = EnvironmentPHP(envConf, self.owner)
-          elif envConf['Type'] == 'WSGI3' :
-            env = EnvironmentWSGI3(envConf, self.owner)
-          elif envConf['Type'] == 'WSGI2' :
-            env = EnvironmentWSGI2(envConf, self.owner)
-          elif envConf['Type'] == 'Java8' :
-            env = EnvironmentJava8(envConf, self.owner)
-          elif envConf['Type'] == 'Drupal7' :
-            env = EnvironmentDrupal7(envConf, self.owner)
-          elif envConf['Type'] == 'Generic' :
-            env = Environment(envConf, self.owner)
-          elif envConf['Type'] == 'noske' :
-            env = EnvironmentNoske(envConf, self.owner)
-          elif envConf['Type'] == 'noskePatched' :
-            env = EnvironmentNoskePatched(envConf, self.owner)
+          envName = 'Environment' + envConf['Type']
+          for envType in IEnvironment.__subclasses__():
+            if envName == envType.__name__:
+              env = envType(envConf, self.owner)
+              break
           else :
             raise Exception('environment is of unsupported type (' + envConf['Type'] + ')')
         else :
@@ -368,7 +383,10 @@ class Account:
       env.runContainer(verbose)
       env.runHooks(verbose)
 
+import os
 import shutil
+import subprocess
+import re
 
 class Environment(IEnvironment, object):
   DockerImgBase = '/var/lib/docker/images'
@@ -387,6 +405,7 @@ class Environment(IEnvironment, object):
   Ports         = None
   Hosts         = None
   EnvVars       = None
+  runAsUser     = False
 
   def __init__(self, conf, owner):
     self.Mounts  = []
@@ -422,6 +441,11 @@ class Environment(IEnvironment, object):
         raise Exception('UserName is not a string')
       self.UserName = conf['UserName']
 
+    if 'runAsUser' in conf:
+      if not isinstance(conf['runAsUser'], basestring) or not ['true', 'false'].count(conf['runAsUser']) > 0 :
+        raise Exception('runAsUser is not a string or has value other then true/false')
+      self.runAsUser = conf['runAsUser'] == 'true'
+
     if (
       not 'DockerfileDir' in conf
       or not isinstance(conf['DockerfileDir'], basestring) 
@@ -433,7 +457,7 @@ class Environment(IEnvironment, object):
         )
       )
     ) :
-      raise Exception('DockerfileDir is missing or invalid')
+      raise Exception('DockerfileDir ' + conf['DockerfileDir'] + ' is missing or invalid')
     self.DockerfileDir = conf['DockerfileDir']
 
     if 'Mounts' in conf and self.owner:
@@ -582,7 +606,7 @@ class Environment(IEnvironment, object):
         dockerfile.write('FROM acdh/' + self.DockerfileDir + '\n')
         dockerfile.write('MAINTAINER acdh-tech <acdh-tech@oeaw.ac.at>\n')
     else :
-      env.ready = False
+      self.ready = False
       raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
 
     print '  ' + self.Name
@@ -603,7 +627,7 @@ class Environment(IEnvironment, object):
     # run
     self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose, '    Creating container...', 'Container creation failed')
     # mount exported volumes
-    self.runProcess(['sudo', '-u', 'root', 'docker-mount-volumes', '-v', '-c', self.Name], verbose, '', None)
+    self.runProcess(['sudo', '-u', 'root', 'docker-mount-volumes', '-v', '-c', self.Name], verbose, '    Mounting docker volumes', 'Volume mounting failed')
     # create systemd script
     self.runProcess(['sudo', '-u', 'root', 'docker-register-systemd', self.Name], verbose, '    Registering in systemd', 'Systemd script creation failed')
 
@@ -667,6 +691,9 @@ class Environment(IEnvironment, object):
       commands = re.sub('\\n(MAINTAINER[^\\n]*)', '\n\\1\n' + cmd, commands) 
     with open(dockerfilePath, 'w') as dockerfile:
       dockerfile.write(commands)
+    if self.runAsUser:
+      with open(dockerfilePath, 'a') as dockerfile:
+        dockerfile.write('\nUSER user\n')
 
   def getName(self):
     return self.Name
@@ -695,6 +722,8 @@ class Environment(IEnvironment, object):
   def getGuestHomeDir(self):
     return '/'
 
+class EnvironmentGeneric(Environment, IEnvironment):
+  pass
 class EnvironmentHTTP(Environment, IEnvironment):
   ServerName    = None
   ServerAlias   = None
@@ -1188,6 +1217,68 @@ command=/usr/bin/java {Params}
 directory={Dir}
 user={User}
 """
+class EnvironmenteXistdb30(EnvironmentHTTP, IEnvironment):
+  DataDirMount       = '/opt/exist/webapp/WEB-INF/data'
+  DataDir            = None
+  LogDirMount        = '/var/log/exist'
+  LogDir             = None
+  AutodeployDirMount = '/opt/exist/autodeploy'
+  AutodeployDir      = None
+
+  def __init__(self, conf, owner):
+    self.runAsUser = True
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'existdb30'
+    super(EnvironmenteXistdb30, self).__init__(conf, owner)
+    if (
+        not 'DataDir' in conf
+        or self.owner and (
+          not Param.isValidRelPath(conf['DataDir'])
+          or not Param.isValidDir(self.BaseDir + '/' + conf['DataDir'])
+        )
+      ) :
+        raise Exception('DataDir is missing or invalid')
+    self.DataDir = conf['DataDir']
+    if (
+        not 'LogDir' in conf
+        or self.owner and (
+          not Param.isValidRelPath(conf['LogDir'])
+          or not Param.isValidDir(self.BaseDir + '/' + conf['LogDir'])
+        )
+      ) :
+        raise Exception('LogDir is missing or invalid')
+    self.LogDir = conf['LogDir']
+    if 'AutodeployDir' in conf:
+      if (self.owner and (
+            not Param.isValidRelPath(conf['AutodeployDir'])
+            or not Param.isValidDir(self.BaseDir + '/' + conf['AutodeployDir'])
+          )
+        ) :
+          raise Exception('AutodeployDir is missing or invalid')
+      self.AutodeployDir = conf['AutodeployDir']
+    self.Mounts.append({ "Host" : self.DataDir, "Guest" : self.DataDirMount, "Rights" : "rw" })
+    self.Mounts.append({ "Host" : self.LogDir, "Guest" : self.LogDirMount, "Rights" : "rw" })
+    if (self.AutodeployDir is not None): self.Mounts.append({ "Host" : self.AutodeployDir, "Guest" : self.AutodeployDirMount, "Rights" : "rw" })
+
+class EnvironmentRHELexistdb30(EnvironmenteXistdb30, IEnvironment):
+
+  def __init__(self, conf, owner):
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = self.DistrPrefix + 'rhel_existdb30'
+    super(EnvironmentRHELexistdb30, self).__init__(conf, owner)
+class Environmentcrxqmets(EnvironmenteXistdb30, IEnvironment):
+
+  def __init__(self, conf, owner):
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'cr-xq-mets'
+    super(Environmentcrxqmets, self).__init__(conf, owner)
+
+class EnvironmentRHELcrxqmets(Environmentcrxqmets, IEnvironment):
+
+  def __init__(self, conf, owner):
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'rhel_cr-xq-mets'
+    super(EnvironmentRHELcrxqmets, self).__init__(conf, owner)
 parser = argparse.ArgumentParser(description='Script for maintiaining docker images and containers')
 parser.add_argument('-p', '--project', action = 'append', nargs = '*', required = False, help = 'Project whose environments should be processed')
 parser.add_argument('-e', '--environment', action = 'append', nargs = '*', required = False, help = 'Names of environments to proccess')

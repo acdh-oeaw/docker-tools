@@ -5,5 +5,5 @@ if [ "$1" == "help" ] ; then
   exit
 fi;
 
-PROJECT=`logname`
+PROJECT=$(whoami)
 sudo -g docker /usr/sbin/docker-manage-admin -p $PROJECT $@

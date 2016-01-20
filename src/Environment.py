@@ -1,4 +1,7 @@
+import os
 import shutil
+import subprocess
+import re
 
 class Environment(IEnvironment, object):
   DockerImgBase = '/var/lib/docker/images'
@@ -17,6 +20,7 @@ class Environment(IEnvironment, object):
   Ports         = None
   Hosts         = None
   EnvVars       = None
+  runAsUser     = False
 
   def __init__(self, conf, owner):
     self.Mounts  = []
@@ -52,6 +56,11 @@ class Environment(IEnvironment, object):
         raise Exception('UserName is not a string')
       self.UserName = conf['UserName']
 
+    if 'runAsUser' in conf:
+      if not isinstance(conf['runAsUser'], basestring) or not ['true', 'false'].count(conf['runAsUser']) > 0 :
+        raise Exception('runAsUser is not a string or has value other then true/false')
+      self.runAsUser = conf['runAsUser'] == 'true'
+
     if (
       not 'DockerfileDir' in conf
       or not isinstance(conf['DockerfileDir'], basestring) 
@@ -63,7 +72,7 @@ class Environment(IEnvironment, object):
         )
       )
     ) :
-      raise Exception('DockerfileDir is missing or invalid')
+      raise Exception('DockerfileDir ' + conf['DockerfileDir'] + ' is missing or invalid')
     self.DockerfileDir = conf['DockerfileDir']
 
     if 'Mounts' in conf and self.owner:
@@ -212,7 +221,7 @@ class Environment(IEnvironment, object):
         dockerfile.write('FROM acdh/' + self.DockerfileDir + '\n')
         dockerfile.write('MAINTAINER acdh-tech <acdh-tech@oeaw.ac.at>\n')
     else :
-      env.ready = False
+      self.ready = False
       raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
 
     print '  ' + self.Name
@@ -233,7 +242,7 @@ class Environment(IEnvironment, object):
     # run
     self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose, '    Creating container...', 'Container creation failed')
     # mount exported volumes
-    self.runProcess(['sudo', '-u', 'root', 'docker-mount-volumes', '-v', '-c', self.Name], verbose, '', None)
+    self.runProcess(['sudo', '-u', 'root', 'docker-mount-volumes', '-v', '-c', self.Name], verbose, '    Mounting docker volumes', 'Volume mounting failed')
     # create systemd script
     self.runProcess(['sudo', '-u', 'root', 'docker-register-systemd', self.Name], verbose, '    Registering in systemd', 'Systemd script creation failed')
 
@@ -297,6 +306,9 @@ class Environment(IEnvironment, object):
       commands = re.sub('\\n(MAINTAINER[^\\n]*)', '\n\\1\n' + cmd, commands) 
     with open(dockerfilePath, 'w') as dockerfile:
       dockerfile.write(commands)
+    if self.runAsUser:
+      with open(dockerfilePath, 'a') as dockerfile:
+        dockerfile.write('\nUSER user\n')
 
   def getName(self):
     return self.Name
@@ -325,3 +337,5 @@ class Environment(IEnvironment, object):
   def getGuestHomeDir(self):
     return '/'
 
+class EnvironmentGeneric(Environment, IEnvironment):
+  pass
