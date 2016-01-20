@@ -1,3 +1,5 @@
+from . import *
+
 class Environmentcrxqmets(EnvironmenteXistdb30, IEnvironment):
 
   def __init__(self, conf, owner):

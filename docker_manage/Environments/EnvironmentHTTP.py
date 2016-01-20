@@ -1,3 +1,7 @@
+import subprocess
+
+from . import *
+
 class EnvironmentHTTP(Environment, IEnvironment):
   ServerName    = None
   ServerAlias   = None

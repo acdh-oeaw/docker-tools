@@ -1,3 +1,5 @@
+from . import *
+
 class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
   PythonPath      = None
   WSGIScriptAlias = None

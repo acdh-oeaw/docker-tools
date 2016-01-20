@@ -1,3 +1,8 @@
+import collections
+import os
+
+from .Account import Account
+
 class Configuration:
   accounts = None
 

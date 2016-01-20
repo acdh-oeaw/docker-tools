@@ -1,3 +1,6 @@
+import re
+import subprocess
+
 class HTTPReverseProxy(object):
   portNumber = 8020
 
