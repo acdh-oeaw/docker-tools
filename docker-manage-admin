@@ -137,6 +137,7 @@ class Param(object):
   # there are comments on small shortcommings
   IPV4SEG  = "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])"
   IPV4ADDR = "(%(IPV4SEG)s\.){3,3}%(IPV4SEG)s" % {"IPV4SEG": IPV4SEG}
+  IPV4ADDRpart = "(%(IPV4SEG)s\.){1,3}%(IPV4SEG)s" % {"IPV4SEG": IPV4SEG}
   IPV6SEG  = "[0-9a-fA-F]{1,4}"
   IPV6ADDR = ("("
          "(%(IPV6SEG)s:){7,7}%(IPV6SEG)s|"                # 1:2:3:4:5:6:7:8
@@ -153,7 +154,7 @@ class Param(object):
          "(%(IPV6SEG)s:){1,4}:%(IPV4ADDR)s"               # 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33 (IPv4-Embedded IPv6 Address)
          ")") % {"IPV6SEG": IPV6SEG, "IPV4ADDR": IPV4ADDR}
   reIPV6ADDR = re.compile("^"+IPV6ADDR+"$")
-  reIPV4ADDR = re.compile("^"+IPV4ADDR+"$")
+  reIPV4ADDR = re.compile("^"+IPV4ADDRpart+"$")
   IPV4NETMASK = IPV4ADDR+"/(3[0-2]|[12][0-9]|[0-9])"
   reIPV4NETMASK = re.compile("^"+IPV4NETMASK+"$")
   IPV6NETMASK = IPV6ADDR+"/(1[0-2][0-8]|1[0-1]9|[0-9][0-9])"
