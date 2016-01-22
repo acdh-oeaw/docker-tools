@@ -1,7 +1,5 @@
 import subprocess
 
-from . import *
-
 class EnvironmentHTTP(Environment, IEnvironment):
   MandatoryAccessForIPAddress = '193.170.85.88'
 
@@ -152,4 +150,5 @@ class EnvironmentHTTP(Environment, IEnvironment):
       if port['Type'] == 'HTTP' :
         return port
     raise Exception('No HTTP port')
+
 
