@@ -30,8 +30,11 @@ class EnvironmentHTTP(Environment, IEnvironment):
       self.processRequire(conf['Require'])
 
     if 'RequireForPaths' in conf:
-      if not isinstance(conf['RequireForPaths'], dict) :
-        raise Exception('RequireForPaths is not a dictionary')
+      requireforpaths = conf['RequireForPaths']
+      if not isinstance(requireforpaths, dict) :
+        if not isinstance(requireforpaths, list) :
+          raise Exception('RequireForPaths is not a list and not a dictionary')
+        requireforpaths = [requireforpaths]
       self.processRequireForPaths(conf['RequireForPaths'])
 
   def processRequire(self, conf):
@@ -49,8 +52,6 @@ class EnvironmentHTTP(Environment, IEnvironment):
     self.Require = 'ip ' + ' '.join(conf)
 
   def processRequireForPaths(self, conf):
-    if not isinstance(conf, list):
-      conf = [conf]
     idx = 1
     for require in conf:
       pathre = require['PathRe']
