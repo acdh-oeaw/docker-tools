@@ -66,7 +66,10 @@ class Param(object):
 
   @staticmethod
   def isValidIP(p):
-    return re.search('^[0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9][.][0-9]?[0-9]?[0-9]$', str(p))
+    return (
+      Param.reIPV4ADDR.search(str(p))
+      or Param.reIPV6ADDR.search(str(p))
+    )
 
   @staticmethod
   def isValidRequireIP(p):
@@ -89,3 +92,11 @@ class Param(object):
   @staticmethod
   def isValidVarName(p):
     return re.search('^[_a-zA-Z][_a-zA-Z0-9]*$', str(p))
+
+  @staticmethod
+  def isValidRe(p):
+    try:
+      re.compile(p)
+      return True
+    except re.error as e:
+      return False
