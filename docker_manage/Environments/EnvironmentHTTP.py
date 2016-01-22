@@ -3,10 +3,13 @@ import subprocess
 from . import *
 
 class EnvironmentHTTP(Environment, IEnvironment):
+  MandatoryAccessForIPAddress = '193.170.85.88'
+
   ServerName    = None
   ServerAlias   = None
   HTTPS         = "true"
   Require       = "all granted"
+  RequireForPaths = ""
 
   def __init__(self, conf, owner):
     self.ServerAlias = []
@@ -26,6 +29,11 @@ class EnvironmentHTTP(Environment, IEnvironment):
     if 'Require' in conf :
       self.processRequire(conf['Require'])
 
+    if 'RequireForPaths' in conf:
+      if not isinstance(conf['RequireForPaths'], dict) :
+        raise Exception('RequireForPaths is not a dictionary')
+      self.processRequireForPaths(conf['RequireForPaths'])
+
   def processRequire(self, conf):
     if not isinstance(conf, list):
       if not isinstance(conf, basestring):
@@ -35,9 +43,39 @@ class EnvironmentHTTP(Environment, IEnvironment):
     for ip in conf:
       if not Param.isValidRequireIP(ip) :
         raise Exception(ip + ' is not a valid Require entry')
-    # append monitoring server
-    conf.append('193.170.85.88')
+
+    if self.MandatoryAccessForIPAddress is not None:
+      conf.append(self.MandatoryAccessForIPAddress)
     self.Require = 'ip ' + ' '.join(conf)
+
+  def processRequireForPaths(self, conf):
+    if not isinstance(conf, list):
+      conf = [conf]
+    idx = 1
+    for require in conf:
+      pathre = require['PathRe']
+      if not Param.isValidRe(pathre):
+        raise Exception('RequireForPath ' + idx + ' is no valid RegExp')
+      ipconf = require['IPs']
+      if not isinstance(ipconf, list):
+        if not isinstance(ipconf, basestring):
+          raise Exception('RequireForPath ' + idx + ' is not a string nor list')
+        ipconf = [ipconf]
+      ips = []
+      for ip in ipconf:
+        if not Param.isValidRequireIP(ip):
+          raise Exception('RequireForPath ' + str(idx) +
+                          '/IP ' + str(len(ips) + 1) + ' is not a valid Require entry')
+        ips.append(ip)
+      if self.MandatoryAccessForIPAddress is not None:
+        ips.append(self.MandatoryAccessForIPAddress)
+      self.RequireForPaths = self.RequireForPaths + """
+<ProxyMatch "%(pathre)s">
+  Require %(requirestmt)s
+</ProxyMatch>
+""" % {"pathre": pathre, "requirestmt": 'ip ' + ' '.join(ips)}
+      idx += 1
+
 
   def processServerAlias(self, conf):
     if not isinstance(conf, list):
@@ -76,13 +114,15 @@ class EnvironmentHTTP(Environment, IEnvironment):
     for ws in HTTPPort['ws']:
       websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
       websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+    if self.Require == "all granted" and self.RequireForPaths != "":
+      self.Require = ""
     proc = subprocess.Popen([
       'sudo', '-u', 'root', 'docker-register-proxy', 
       self.Name, 
       self.ServerName, 
       self.getServerAlias(), 
       str(HTTPPort['Host']), 
-      websockets, 
+      websockets + self.RequireForPaths,
       self.HTTPS, 
       self.Require, 
       HTTPPort['Alias']
