@@ -19,6 +19,10 @@ if [ "$6" == "both" ]; then
   SSLProxyCheckPeerName off"
 fi
 
+if [ "x$7" != 'x' ]; then
+  REQUIRE="Require $7"
+fi
+
 if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   echo "<VirtualHost *:80>
   ServerName $2
@@ -38,7 +42,7 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   ProxyPass        / $PROT://127.0.0.1:$4/$8 timeout=300
   ProxyPassReverse / $PROT://127.0.0.1:$4/$8
   <Proxy *>
-    Require $7
+    $REQUIRE
   </Proxy>
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 else
@@ -51,7 +55,7 @@ else
   ProxyPass        / $PROT://127.0.0.1:$4/$8 timeout=300
   ProxyPassReverse / $PROT://127.0.0.1:$4/$8
   <Proxy *>
-    Require $7
+    $REQUIRE
   </Proxy>
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 

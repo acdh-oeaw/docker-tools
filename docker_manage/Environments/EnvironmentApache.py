@@ -15,7 +15,7 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   def __init__(self, conf, owner):
     self.Aliases = []
     if 'DockerfileDir' not in conf :
-      conf['DockerfileDir'] = 'http_http'
+      conf['DockerfileDir'] = 'http'
     super(EnvironmentApache, self).__init__(conf, owner)
     try:
       self.getHTTPPort()
