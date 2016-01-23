@@ -78,6 +78,7 @@ Vagrant.configure(2) do |config|
      sudo yum install -y dnsmasq java-1.7.0-openjdk wget git patch httpd mod_ssl docker docker-python python-pip
      sudo systemctl enable httpd
      sudo systemctl enable docker
+     sudo sed -i -e 's/dockerroot/docker/' /etc/group
      sudo usermod -a -G docker vagrant
      sudo usermod -a -G users vagrant
      # vagrant itself needs sudo to not requiretty so this default is already reverted 
