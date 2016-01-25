@@ -1,3 +1,7 @@
+import os
+
+from . import *
+
 class EnvironmentSketchEngine(EnvironmentHTTP, IEnvironment):
   DataDir     = ''
   RegistryDir = ''

@@ -1,3 +1,5 @@
+from . import *
+
 class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
   skipDocumentRoot = True
 

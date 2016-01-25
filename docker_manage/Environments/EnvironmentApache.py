@@ -1,3 +1,7 @@
+import os
+
+from . import *
+
 class EnvironmentApache(EnvironmentHTTP, IEnvironment):
   skipDocumentRoot   = False # used by derived classes
 

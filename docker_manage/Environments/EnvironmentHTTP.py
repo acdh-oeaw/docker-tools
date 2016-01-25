@@ -1,5 +1,7 @@
 import subprocess
 
+from . import *
+
 class EnvironmentHTTP(Environment, IEnvironment):
   MandatoryAccessForIPAddress = '193.170.85.88'
 

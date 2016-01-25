@@ -7,6 +7,10 @@ fi;
 
 useradd -G users $1
 chmod o+x /home/$1
+# for environment development
+usermod -g users $1
+chgrp -R users /home/$1
+chmod g+rwx /home/$1
 
 # ssh
 mkdir /home/$1/.ssh
@@ -18,8 +22,8 @@ chcon -R -t ssh_home_t /home/$1/.ssh;
 
 # quota
 uid=`id -u $1`
-grep -v $1 /etc/projects > /tmp/projects && mv /tmp/projects /etc/projects && echo "$uid:/home/$1" >> /etc/projects
-grep -v $1 /etc/projid > /tmp/projid && mv /tmp/projid /etc/projid && echo "$1:$uid" >> /etc/projid
-xfs_quota -x -c "project -s $1" /home > /dev/null
-xfs_quota -x -c "limit -p bsoft=1000m bhard=1500m $1" /home > /dev/null
+grep -v $1 /etc/projects > /tmp/projects; mv /tmp/projects /etc/projects && echo "$uid:/home/$1" >> /etc/projects
+grep -v $1 /etc/projid > /tmp/projid; mv /tmp/projid /etc/projid && echo "$1:$uid" >> /etc/projid
+xfs_quota -x -c "project -s $1" / > /dev/null
+xfs_quota -x -c "limit -p bsoft=1000m bhard=1500m $1" / > /dev/null
 docker-check-quota
