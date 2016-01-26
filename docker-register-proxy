@@ -38,6 +38,7 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
 
   ProxyPreserveHost On
   RequestHeader set X-Forwarded-Proto \"https\" env=HTTPS
+  RequestHeader set Front-End-Https: \"on\" env=HTTPS
   $SSLPROXY
   $5
   ProxyPass        / $PROT://127.0.0.1:$4/$8 timeout=300
