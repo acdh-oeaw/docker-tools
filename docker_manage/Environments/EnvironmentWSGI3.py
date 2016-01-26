@@ -1,4 +1,5 @@
 from . import *
+import os
 
 class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
   PythonPath      = None
