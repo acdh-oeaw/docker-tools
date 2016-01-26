@@ -8,15 +8,15 @@ fi;
 useradd -G users $1
 chmod o+x /home/$1
 # for environment development
-usermod -g users $1
-chgrp -R users /home/$1
-chmod g+rwx /home/$1
+# usermod -g users $1
+# chgrp -R users /home/$1
+# chmod g+rwx /home/$1
 
 # ssh
 mkdir /home/$1/.ssh
 chmod 700 /home/$1/.ssh
 touch /home/$1/.ssh/authorized_keys
-chmod 644 /home/$1/.ssh/authorized_keys
+chmod 600 /home/$1/.ssh/authorized_keys
 chown $1:$1 -R /home/$1/.ssh
 chcon -R -t ssh_home_t /home/$1/.ssh;
 
