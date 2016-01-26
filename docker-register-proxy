@@ -37,6 +37,7 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   Include /etc/httpd/conf.d/shared/ssl.conf
 
   ProxyPreserveHost On
+  RequestHeader set X-Forwarded-Proto \"https\" env=HTTPS
   $SSLPROXY
   $5
   ProxyPass        / $PROT://127.0.0.1:$4/$8 timeout=300
