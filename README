@@ -10,6 +10,7 @@ Important remark - all paths according to CentOs 7
 * Create these non-standard directories if they don't exist:
 ** /etc/httpd/conf.d/sites-enabled
 ** /etc/httpd/conf.d/shared
+* Install netstat
 * Copy etc-httpd-conf.d-shared-ssl.conf to /etc/httpd/conf.d/shared/ssl.conf
 * Copy environment types Dockerfiles to /var/lib/docker/images:
   cp -pR images /var/lib/docker
