@@ -5,10 +5,10 @@ from . import *
 class EnvironmentHTTP(Environment, IEnvironment):
   MandatoryAccessForIPAddress = '193.170.85.88'
 
-  ServerName    = None
-  ServerAlias   = None
-  HTTPS         = "true"
-  Require       = "all granted"
+  ServerName      = None
+  ServerAlias     = None
+  HTTPS           = "true"
+  Require         = "all granted"
   RequireForPaths = ""
 
   def __init__(self, conf, owner):

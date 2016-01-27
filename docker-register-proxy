@@ -24,6 +24,18 @@ if [ "x$7" != 'x' ]; then
 fi
 
 if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
+  # search for a specific certificate
+  SSL_CONF="Include /etc/httpd/conf.d/shared/ssl.conf"
+  CERT_DOMAIN=`echo $2 | sed -e 's/[.]/_/g'`
+  CERT_FILE=`ls -1 /etc/pki/tls/certs | grep -P "(star_)?${CERT_DOMAIN}.crt$"`
+  KEY_FILE=`ls -1 /etc/pki/tls/private | grep -P "(star_)?${CERT_DOMAIN}.key$"`
+  if [ "$CERT_FILE" != "" ] && [ "$KEY_FILE" != "" ]; then
+    SSL_CONF="
+  Include /etc/httpd/conf.d/shared/ssl_without_certs.conf 
+  SSLCertificateFile /etc/pki/tls/certs/$CERT_FILE
+  SSLCertificateKeyFile /etc/pki/tls/private/$KEY_FILE"
+  fi
+
   echo "<VirtualHost *:80>
   ServerName $2
   ServerAlias $3
@@ -34,7 +46,7 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   ServerName $2
   ServerAlias $3
 
-  Include /etc/httpd/conf.d/shared/ssl.conf
+  $SSL_CONF
 
   ProxyPreserveHost On
   RequestHeader set X-Forwarded-Proto \"https\" env=HTTPS
