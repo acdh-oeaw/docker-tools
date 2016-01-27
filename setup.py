@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name = "docker_manage",
-    version = "0.1.0",
+    version = "0.1.9",
     author = ["Mateusz Żółtak", "Omar Siam"],
     author_email = ["mateusz.zoltak@oeaw.ac.at", "omar.siam@oeaw.ac.at"],
     description = ("Tools to manage docker instances and reverse proxying to them."),
