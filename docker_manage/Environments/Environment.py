@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import re
+from docker import Client
 
 from . import *
 
@@ -232,6 +233,25 @@ class Environment(IEnvironment, object):
     self.runProcess(['docker', 'build', '--force-rm=true', '-t', 'acdh/' + self.Name, tmpDir], verbose, '', 'Build failed')
     shutil.rmtree(tmpDir)
 
+  def checkVolumes(self, cli):
+    volumesToCopy = []
+    volumes = cli.inspect_image('acdh/' + self.Name)['Config']['Volumes']
+    if volumes is None :
+      return
+    for vol, hostPath in volumes.iteritems():
+      vol = '/' + re.sub('^/?(.*)/?$', '\\1', vol) + '/'
+      matched = False
+      for mount in self.Mounts:
+        guest = '/' + re.sub('^/?(.*)/?$', '\\1', mount['Guest']) + '/'
+        if guest == vol :
+          matched = True
+          if len(os.listdir(self.BaseDir + '/' + mount['Host'])) == 0 :
+            volumesToCopy.append({'Host': mount['Host'], 'Volume': vol})
+          break
+      if not matched :
+        raise Exception('No mount point provided for path ' + vol)
+    return volumesToCopy
+
   def runContainer(self, verbose):
     if not self.owner :
       raise Exception('Must be environment owner to run a container')
@@ -241,10 +261,22 @@ class Environment(IEnvironment, object):
     print '  ' + self.Name
     # remove
     self.runProcess(['docker', 'rm', '-f', '-v', self.Name], verbose, '    Removing old container...', None)
+    # check and prepare volumes if necessary
+    cli = Client(base_url = 'unix://var/run/docker.sock')
+    volumesToCopy = self.checkVolumes(cli)
+    if len(volumesToCopy) > 0 :
+      mountsTmp = self.Mounts
+      self.Mounts = []
+      self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose, '    Creating temporary container to copy volumes content...', 'Container creation failed')
+      volumes = cli.inspect_container(self.Name)['Volumes']
+      for v in volumesToCopy:
+        for volume, hostPath in volumes.iteritems(): 
+          volume = '/' + re.sub('^/?(.*)/?$', '\\1', volume) + '/'
+          if volume == v['Volume'] :
+            print 'copying ' + hostPath + ' into ' + v['Host']
+      self.runProcess(['docker', 'rm', '-f', '-v', self.Name], verbose, '    Removing temporary container...', None)
     # run
     self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose, '    Creating container...', 'Container creation failed')
-    # mount exported volumes
-    self.runProcess(['sudo', '-u', 'root', 'docker-mount-volumes', '-v', '-c', self.Name], verbose, '    Mounting docker volumes', 'Volume mounting failed')
     # create systemd script
     self.runProcess(['sudo', '-u', 'root', 'docker-register-systemd', self.Name], verbose, '    Registering in systemd', 'Systemd script creation failed')
 
