@@ -262,7 +262,7 @@ class Environment(IEnvironment, object):
 
     args = ['docker', 'exec', '-ti', '-u', 'root', self.Name] + command
     if not root :
-      args[4] = 'user'
+      args[4] = self.UserName
     subprocess.call(args)
 
   def showLogs(self):
