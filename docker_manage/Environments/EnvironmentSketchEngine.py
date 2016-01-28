@@ -7,6 +7,7 @@ class EnvironmentSketchEngine(EnvironmentHTTP, IEnvironment):
   RegistryDir = ''
   SkeDir      = ''
   Corplist    = None
+  Auth        = False
 
   def __init__(self, conf, owner):
     self.Corplist = []
@@ -63,6 +64,12 @@ class EnvironmentSketchEngine(EnvironmentHTTP, IEnvironment):
     if len(self.Corplist) == 0 :
       print '    Corplist is empty - bonito will not work.\n    Create a corpora, fill in the Corplist configuration property and rerun environment to make bonito work.'
 
+    if 'Auth' in conf :
+      if not isinstance(conf['Auth'], basestring) or not ['true', 'false'].count(conf['Auth']) > 0 :
+        raise Exception('Auth is not a string or has value other then true/false')
+      self.Auth = conf['Auth'] == 'true'
+
+
     self.Mounts.append({"Host" : self.SkeDir,      "Guest" : "/var/lib/ske",          "Rights" : "rw"})
     self.Mounts.append({"Host" : self.RegistryDir, "Guest" : "/var/lib/ske/registry", "Rights" : "rw"})
     self.Mounts.append({"Host" : self.RegistryDir, "Guest" : "/corpora/registry",     "Rights" : "rw"})
@@ -77,6 +84,8 @@ class EnvironmentSketchEngine(EnvironmentHTTP, IEnvironment):
     replace1 = "s/^ *corplist = .*$/    corplist = [u'" + "', u'".join(self.Corplist) + "']/"
     replace2 = "s/^ *corpname = .*$/    corpname = u'" + (self.Corplist[0] if len(self.Corplist) > 0 else '') + "'/"
     self.runProcess(['docker', 'exec', self.Name, 'sed', '-i', '-e', replace1, '-e', replace2, '/var/www/bonito/run.cgi'], False, '', '/var/www/bonito/run.cgi update failed')
+    self.runProcess(['docker', 'exec', self.Name, 'sed', '-i', '-e', 's/DocumentRoot "\/var\/www\/html.*"/DocumentRoot "\/var\/www\/bonito"/', '/etc/httpd/conf/httpd.conf'], False, '', 'Apache reconfiguration failed')
+    self.runProcess(['docker', 'exec', self.Name, 'apachectl', '-k', 'graceful'], False, '', 'Apache reconfiguration failed')
 
     if verbose :
       print '    Adjusting files ownership'
@@ -89,4 +98,10 @@ class EnvironmentSketchEngine(EnvironmentHTTP, IEnvironment):
         os.mkdir(self.BaseDir + '/' + self.SkeDir + '/' + directory)
     if not os.path.isfile(self.BaseDir + '/' + self.SkeDir + '/htpasswd') :
       os.mknod(self.BaseDir + '/' + self.SkeDir + '/htpasswd')
+
+    if self.Auth:
+      if verbose:
+        print '    Enabling authentication'
+      self.runProcess(['docker', 'exec', self.Name, 'sed', '-i', '-e', 's/^#//', '/var/www/bonito/.htaccess'], False, '', 'Authentication enabling failed')
+      
 
