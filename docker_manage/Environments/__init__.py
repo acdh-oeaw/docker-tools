@@ -13,3 +13,4 @@ from .EnvironmentExistdb30 import EnvironmenteXistdb30
 from .Environmentcrxqmets import Environmentcrxqmets
 from .EnvironmentBaseX import EnvironmentBaseX, EnvironmentRHELBaseX
 from .EnvironmentSketchEngine import EnvironmentSketchEngine
+from .EnvironmentNoske import EnvironmentNoSkE
