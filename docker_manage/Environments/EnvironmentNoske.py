@@ -5,6 +5,8 @@ class EnvironmentNoSkE(EnvironmentHTTP, IEnvironment):
   DataDir            = None
   RegistryDirMount   = '/var/lib/manatee/registry'
   RegistryDir        = None
+  OptionsDirMount    = '/var/lib/bonito/options'
+  OptionsDir         = None
   LogDirMount        = '/var/log/lighttpd'
   LogDir             = None
   BonitoDirMount     = '/usr/lib/python2.7/dist-packages/bonito'
@@ -46,6 +48,15 @@ class EnvironmentNoSkE(EnvironmentHTTP, IEnvironment):
       ) :
         raise Exception('RegistryDir is missing or invalid')
     self.RegistryDir = conf['RegistryDir']
+    if (
+        not 'OptionsDir' in conf
+        or self.owner and (
+          not Param.isValidRelPath(conf['OptionsDir'])
+          or not Param.isValidDir(self.BaseDir + '/' + conf['OptionsDir'])
+        )
+      ) :
+        raise Exception('OptionsDir is missing or invalid')
+    self.OptionsDir = conf['OptionsDir']
     if 'BonitoDir' in conf:
       if (self.owner and (
             not Param.isValidRelPath(conf['BonitoDir'])
@@ -71,6 +82,7 @@ class EnvironmentNoSkE(EnvironmentHTTP, IEnvironment):
     self.Mounts.append({ "Host" : self.DataDir, "Guest" : self.DataDirMount, "Rights" : "rw" })
     self.Mounts.append({ "Host" : self.LogDir, "Guest" : self.LogDirMount, "Rights" : "rw" })
     self.Mounts.append({ "Host" : self.RegistryDir, "Guest" : self.RegistryDirMount, "Rights" : "rw" })
+    self.Mounts.append({ "Host" : self.OptionsDir, "Guest" : self.OptionsDirMount, "Rights" : "rw" })
     if (self.BonitoDir is not None): self.Mounts.append({ "Host" : self.BonitoDir, "Guest" : self.BonitoDirMount, "Rights" : "rw" })
 
   def runHooks(self, verbose):
@@ -91,3 +103,10 @@ class EnvironmentNoSkE(EnvironmentHTTP, IEnvironment):
   #   distutils.dir_util.copy_tree(self.BaseDir + '/' + self.RegistryPath, self.DockerMntBase + '/' + self.Name + '/var-lib-manatee-registry/')
   #   subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/var/lib/manatee/registry/'])
   #   subprocess.call(['docker', 'exec', self.Name, 'chmod', '+rX', '-R', '/var/lib/manatee/registry/'])
+
+class EnvironmentNoSkE_patched(EnvironmentNoSkE, IEnvironment):
+  def __init__(self, conf, owner):
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'noske_patched'
+    self.runAsUser = True
+    super(EnvironmentNoSkE_patched, self).__init__(conf, owner)
