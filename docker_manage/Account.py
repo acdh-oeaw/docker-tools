@@ -5,7 +5,7 @@ import subprocess
 from .Environments import *
 
 class Account:
-  base         = '/home'
+  base         = ''
   name         = ''
   uid          = -1
   gid          = -1
@@ -18,17 +18,18 @@ class Account:
     if not Param.isValidName(name) :
       raise Exception('account name contains forbidden characters')
     self.name = name
-    path = self.base + '/' + self.name
-    if not Param.isValidDir(path) :
+    self.base = os.path.expanduser('~' + name)
+    if not Param.isValidDir(self.base) :
       raise Exception('account does not exist')
-    self.uid = os.stat(path).st_uid
-    self.gid = os.stat(path).st_gid
+    self.uid = os.stat(self.base).st_uid
+    self.gid = os.stat(self.base).st_gid
 
-    self.owner = os.access(path, os.W_OK)
+    self.owner = os.access(self.base, os.W_OK)
   
   def readConfig(self):
     print '  ' + self.name
-    confFileName = self.base + '/' + self.name + '/config.json'
+    confFileName = self.base + '/config.json'
+    print '    ' + confFileName
     if os.path.isfile(confFileName):
       try:
         config = json.load(open(confFileName, 'r'))
@@ -43,7 +44,7 @@ class Account:
     self.environments = []
     for envConf in conf:
       try:
-        envConf['BaseDir'] = self.base + '/' + self.name
+        envConf['BaseDir'] = self.base
         envConf['UID']     = self.uid
         envConf['GID']     = self.gid
         envConf['Account'] = self.name
