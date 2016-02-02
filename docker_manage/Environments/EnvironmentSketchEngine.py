@@ -57,8 +57,6 @@ class EnvironmentSketchEngine(EnvironmentHTTP, IEnvironment):
           raise Exception('Corplist is not a string nor list')
         conf['Corplist'] = [conf['Corplist']]
       for corpora in conf['Corplist'] :
-        if self.owner and (not Param.isValidDir(self.BaseDir + '/' + self.DataDir + '/' + corpora)) :
-          raise Exception(corpora + ' corpora subdir is missing in the DataDir')
         if self.owner and (not Param.isValidFile(self.BaseDir + '/' + self.RegistryDir + '/' + corpora)) :
           raise Exception(corpora + ' corpora configuration file is missing in the RegistryDir')
         self.Corplist.append(corpora)
