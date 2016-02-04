@@ -29,7 +29,6 @@ class Account:
   def readConfig(self):
     print '  ' + self.name
     confFileName = self.base + '/config.json'
-    print '    ' + confFileName
     if os.path.isfile(confFileName):
       try:
         config = json.load(open(confFileName, 'r'))
