@@ -171,8 +171,8 @@ EOF
      sudo cp localhost.key /etc/pki/tls/private/localhost.key
      sudo cp localhost.csr /etc/pki/tls/private/localhost.csr
      sudo restorecon -RvF /etc/pki     
-     wget https://download.jetbrains.com/python/pycharm-community-5.0.3.tar.gz
-     tar -xzf pycharm-community-5.0.3.tar.gz
+     wget https://download.jetbrains.com/python/pycharm-community-5.0.4.tar.gz
+     tar -xzf pycharm-community-5.0.4.tar.gz
      mkdir -p .local/share/applications
      cat > .local/share/applications/jetbrains-pycharm-ce.desktop <<"EOF"      
 [Desktop Entry]
