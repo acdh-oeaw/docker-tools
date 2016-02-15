@@ -47,12 +47,12 @@ class EnvironmentRHELexistdb30(EnvironmenteXistdb30, IEnvironment):
 
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
-      conf['DockerfileDir'] = self.DistrPrefix + 'rhel_existdb30'
+      conf['DockerfileDir'] = 'rhel_existdb30'
     super(EnvironmentRHELexistdb30, self).__init__(conf, owner)
 
 class EnvironmenteXistdb22(EnvironmenteXistdb30, IEnvironment):
 
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
-      conf['DockerfileDir'] = self.DistrPrefix + 'existdb22'
+      conf['DockerfileDir'] = 'existdb22'
     super(EnvironmenteXistdb22, self).__init__(conf, owner)
