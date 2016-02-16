@@ -59,7 +59,7 @@ class EnvironmentSkeBase(EnvironmentHTTP, IEnvironment):
         )
       ) :
         raise Exception('BonitoLibDir is invalid')
-        self.BonitoDir = conf['BonitoLibDir']
+      self.BonitoLibDir = conf['BonitoLibDir']
 
     if 'Corplist' in conf :
       if not isinstance(conf['Corplist'], list) :
