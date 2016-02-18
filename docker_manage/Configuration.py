@@ -9,10 +9,15 @@ class Configuration:
   def __init__(self):
     self.accounts = []
 
-    for accName in sorted(os.listdir('/home')):
-      account = Account(accName)
-      account.readConfig()
-      self.accounts.append(account)
+    base = '/home'
+    for accName in sorted(os.listdir(base)):
+      if os.path.isdir(os.path.join(base, accName)) :
+        try:
+          account = Account(accName)
+          account.readConfig()
+          self.accounts.append(account)
+        except Exception as e:
+          pass 
 
   def check(self):
     envs = self.findEnvironments([], [], False)
