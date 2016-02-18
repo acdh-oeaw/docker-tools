@@ -6,17 +6,11 @@ class EnvironmentSketchEngine(EnvironmentSkeBase, IEnvironment):
   BonitoDirMount    = '/var/lib/ske'
   RegistryDirMount  = '/corpora/registry'
   BonitoLibDirMount = '/usr/lib/python2.7/site-packages/bonito'
-  Auth              = False
 
   def __init__(self, conf, owner):
     if not 'DockerfileDir' in conf :
       conf['DockerfileDir'] = 'sketch-engine'
     super(EnvironmentSketchEngine, self).__init__(conf, owner)
-
-    if 'Auth' in conf :
-      if not isinstance(conf['Auth'], basestring) or not ['true', 'false'].count(conf['Auth']) > 0 :
-        raise Exception('Auth is not a string or has value other then true/false')
-      self.Auth = conf['Auth'] == 'true'
 
     try:
       self.getHTTPPort()
@@ -37,8 +31,3 @@ class EnvironmentSketchEngine(EnvironmentSkeBase, IEnvironment):
     if verbose :
       print '    Adjusting files ownership'
     self.runProcess(['docker', 'exec', self.Name, 'chown', '-R', self.UserName, '/var/www/bonito', '/usr/share/httpd'], False, '', 'ownership adjustment failed')
-
-    if self.Auth:
-      if verbose:
-        print '    Enabling authentication'
-      self.runProcess(['docker', 'exec', self.Name, 'sed', '-i', '-e', 's/^#//', '/var/www/bonito/.htaccess'], False, '', 'Authentication enabling failed')
