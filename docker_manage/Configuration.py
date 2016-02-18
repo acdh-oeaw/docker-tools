@@ -40,21 +40,24 @@ class Configuration:
       try:
         env.buildImage(verbose)
       except Exception as e:
-        print e
+        print '    ' + str(e)
 
   def runContainers(self, projects, names, verbose):
+    n = 0
     for env in self.findEnvironments(projects, names):
       try:
         env.runContainer(verbose)
+        n += 1
       except Exception as e:
-        print e
+        print '    ' + str(e)
+    return n
 
   def runHooks(self, projects, names, verbose):
     for env in self.findEnvironments(projects, names):
       try:
         env.runHooks(verbose)
       except Exception as e:
-        print e
+        print '    ' + str(e)
 
   def runCommand(self, projects, name, action, command):
     envs = self.findEnvironments(projects, [name])
