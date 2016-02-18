@@ -44,13 +44,13 @@ if args.action is None or args.action.count('build') > 0 :
 
 if args.action is None or args.action.count('run') > 0 :
   print 'Running containers...'
-  configuration.runContainers(args.project, args.environment, args.verbose)
+  n = configuration.runContainers(args.project, args.environment, args.verbose)
 
-  print 'Running hooks...'
-  # give container(s) time to start before executing hooks
-  if len(configuration.findEnvironments([], [], True)) > 0 :
+  if n > 0 :
+    print 'Running hooks...'
+    # give container(s) time to start before executing hooks
     time.sleep(5)
-  configuration.runHooks(args.project, args.environment, args.verbose)
+    configuration.runHooks(args.project, args.environment, args.verbose)
 
 if not args.action is None and args.action.count('clean') > 0 :
   configuration.clean(args.project, args.environment, args.verbose)

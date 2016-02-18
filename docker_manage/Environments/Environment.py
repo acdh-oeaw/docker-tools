@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import re
+import random
 from docker import Client
 
 from . import *
@@ -273,7 +274,8 @@ class Environment(IEnvironment, object):
         for volume, hostPath in volumes.iteritems(): 
           volume = '/' + re.sub('^/?(.*)/?$', '\\1', volume) + '/'
           if volume == v['Volume'] :
-            print 'copying ' + hostPath + ' into ' + v['Host']
+            os.rmdir(self.BaseDir + '/' + v['Host'])
+            self.runProcess(['docker', 'cp', self.Name + ':' + volume, self.BaseDir + '/' + v['Host']], verbose, '    Copying ' + volume + ' into ' + v['Host'], 'Copying failed')
       self.runProcess(['docker', 'rm', '-f', '-v', self.Name], verbose, '    Removing temporary container...', None)
     # run
     self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose, '    Creating container...', 'Container creation failed')
