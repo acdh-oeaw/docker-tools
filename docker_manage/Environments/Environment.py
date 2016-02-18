@@ -14,7 +14,7 @@ class Environment(IEnvironment, object):
   Name          = None
   UID           = None
   GID           = None
-  UserName      = ''
+  UserName      = 'user'
   BaseDir       = None
   DockerfileDir = None
   Mounts        = None
