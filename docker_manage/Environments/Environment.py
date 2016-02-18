@@ -238,7 +238,7 @@ class Environment(IEnvironment, object):
     volumesToCopy = []
     volumes = cli.inspect_image('acdh/' + self.Name)['Config']['Volumes']
     if volumes is None :
-      return
+      return volumesToCopy
     for vol, hostPath in volumes.iteritems():
       vol = '/' + re.sub('^/?(.*)/?$', '\\1', vol) + '/'
       matched = False
