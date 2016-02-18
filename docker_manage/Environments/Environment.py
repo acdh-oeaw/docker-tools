@@ -297,7 +297,7 @@ class Environment(IEnvironment, object):
       # adding generic system user and group for UID and GID used in host
       cmd =  'echo "user:x:' + str(self.UID) + ':' + str(self.GID) + '::' + self.getGuestHomeDir() + ':/bin/bash" >> /etc/passwd;'
       cmd += 'echo "user:x:' + str(self.GID) + ':" >> /etc/group;'
-      cmd += 'echo "user:*:16231:0:99999:7:::" >> /etc/shadow;'
+      cmd += 'echo "user:$6$04SIq7OY$7PT2WujGKsr6013IByauNo0tYLj/fperYRMC4nrsbODc9z.cnxqXDRkAmh8anwDwKctRUTiGhuoeali4JoeW8/:16231:0:99999:7:::" >> /etc/shadow;'
     cmd = 'USER root\nRUN ' + cmd + '\n'
 
     for name, value in self.EnvVars.iteritems():

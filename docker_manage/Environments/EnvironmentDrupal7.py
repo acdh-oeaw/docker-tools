@@ -30,3 +30,9 @@ class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
       print '    Setting up drupal permissions'
     self.runProcess(['docker', 'exec', self.Name, 'chown', '-R', 'user:user', '/var/www/html'], verbose, '', 'Setting up permissions failed')
 
+class EnvironmentDrupal7old(EnvironmentDrupal7, IEnvironment):
+  def __init__(self, conf, owner):
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'http_drupal7old'
+    super(EnvironmentDrupal7old, self).__init__(conf, owner)
+
