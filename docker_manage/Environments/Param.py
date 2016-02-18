@@ -1,5 +1,6 @@
 import re
 import os
+import subprocess
 
 class Param(object):
   # see http://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses#17871737
@@ -100,3 +101,12 @@ class Param(object):
       return True
     except re.error as e:
       return False
+
+  @staticmethod
+  def getSecurityContext(p):
+    proc = subprocess.Popen(['ls', '-Z', p], stdout = subprocess.PIPE)
+    out = proc.communicate()[0]
+    out = out[:-(2 + len(p))]
+    out = out.split(' ').pop().split(':')[-2:-1][0]
+    return out
+

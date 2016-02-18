@@ -1,18 +1,19 @@
 import subprocess
+import os.path
 
 from . import *
 
 class EnvironmentHTTP(Environment, IEnvironment):
   MandatoryAccessForIPAddress = '193.170.85.88'
 
-  ServerName      = None
-  ServerAlias     = None
-  HTTPS           = "true"
-  Require         = "all granted"
-  RequireForPaths = ""
+  ServerName   = None
+  ServerAlias  = None
+  HTTPS        = "true"
+  Auth         = None
 
   def __init__(self, conf, owner):
     self.ServerAlias = []
+    self.Auth        = []
     super(EnvironmentHTTP, self).__init__(conf, owner)
 
     if 'ServerName' in conf and Param.isValidDomain(conf['ServerName']) :
@@ -26,57 +27,57 @@ class EnvironmentHTTP(Environment, IEnvironment):
         raise Exception('HTTPS is not a string or has value other then true/false')
       self.HTTPS = conf['HTTPS']
 
-    if 'Require' in conf :
-      self.processRequire(conf['Require'])
+    if 'Auth' in conf :
+      self.processAuth(conf['Auth'])
 
-    if 'RequireForPaths' in conf:
-      requireforpaths = conf['RequireForPaths']
-      if not isinstance(requireforpaths, dict) :
-        if not isinstance(requireforpaths, list) :
-          raise Exception('RequireForPaths is not a list and not a dictionary')
-        requireforpaths = [requireforpaths]
-      self.processRequireForPaths(conf['RequireForPaths'])
-
-  def processRequire(self, conf):
-    if not isinstance(conf, list):
-      if not isinstance(conf, basestring):
-        raise Exception('Require is not a string nor list')
+  def processAuth(self, conf):
+    if not isinstance(conf, list) :
       conf = [conf]
-
-    for ip in conf:
-      if not Param.isValidRequireIP(ip) :
-        raise Exception(ip + ' is not a valid Require entry')
-
-    if self.MandatoryAccessForIPAddress is not None:
-      conf.append(self.MandatoryAccessForIPAddress)
-    self.Require = 'ip ' + ' '.join(conf)
-
-  def processRequireForPaths(self, conf):
-    idx = 1
-    for require in conf:
-      pathre = require['PathRe']
-      if not Param.isValidRe(pathre):
-        raise Exception('RequireForPath ' + idx + ' is no valid RegExp')
-      ipconf = require['IPs']
-      if not isinstance(ipconf, list):
-        if not isinstance(ipconf, basestring):
-          raise Exception('RequireForPath ' + idx + ' is not a string nor list')
-        ipconf = [ipconf]
-      ips = []
-      for ip in ipconf:
-        if not Param.isValidRequireIP(ip):
-          raise Exception('RequireForPath ' + str(idx) +
-                          '/IP ' + str(len(ips) + 1) + ' is not a valid Require entry')
-        ips.append(ip)
-      if self.MandatoryAccessForIPAddress is not None:
-        ips.append(self.MandatoryAccessForIPAddress)
-      self.RequireForPaths = self.RequireForPaths + """
-<ProxyMatch "%(pathre)s">
-  Require %(requirestmt)s
+    n = 1
+    htpasswdFiles = []
+    for loc in conf:
+      if not isinstance(loc, dict) :
+        raise Exception('Auth %d is not a dictionary' % n)
+      if 'PathRe' not in loc :
+        loc['PathRe'] = ''
+      if not Param.isValidRe(loc['PathRe']) :
+        raise Exception('Auth %d PathRe is not a valid regular expression' % n)
+      require = htpasswd = ''
+      if 'IPs' in loc :
+        ips = loc['IPs']
+        if not isinstance(ips, list) :
+          ips = [ips]
+        m = 1
+        for ip in ips:
+          if not Param.isValidRequireIP(ip) :
+            raise Exception('Auth %d IP %d is not a valid Require IP' % (n, m))
+          m += 1
+        if self.MandatoryAccessForIPAddress is not None :
+          ips.append(self.MandatoryAccessForIPAddress)
+        require = 'Require ip ' + ' '.join(ips)
+      if 'htpasswdFile' in loc :
+        htFile = loc['htpasswdFile']
+        if not Param.isValidFile(htFile) :
+          raise Exception('Auth %d htpasswdFile is invalid' % n)
+        if Param.getSecurityContext(os.path.join(self.BaseDir, htFile)) != 'httpd_config_t' :
+          raise Exception('Auth %d htpasswdFile has wrong security context - execute "chcon -t httpd_config_t %s"' % (n, self.BaseDir + '/' + htFile))
+        htpasswd = """
+  AuthType basic
+  AuthName "%s"
+  AuthUserFile %s
+  Require valid-user
+""" % (self.Name, self.BaseDir + '/' + htFile)
+      if not 'htpasswdFile' in loc and not 'IPs' in loc :
+        raise Exception('Auth %d IPs or htpasswdFile has to be specified' % n)
+      
+      auth = """
+<ProxyMatch "%s">
+  %s
 </ProxyMatch>
-""" % {"pathre": pathre, "requirestmt": 'ip ' + ' '.join(ips)}
-      idx += 1
+""" % (loc['PathRe'], require + htpasswd)
+      self.Auth.append(auth)
 
+      n += 1
 
   def processServerAlias(self, conf):
     if not isinstance(conf, list):
@@ -115,17 +116,14 @@ class EnvironmentHTTP(Environment, IEnvironment):
     for ws in HTTPPort['ws']:
       websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
       websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-    if self.Require == "all granted" and self.RequireForPaths != "":
-      self.Require = ""
     proc = subprocess.Popen([
       'sudo', '-u', 'root', 'docker-register-proxy', 
       self.Name, 
       self.ServerName, 
       self.getServerAlias(), 
       str(HTTPPort['Host']), 
-      websockets + self.RequireForPaths,
+      websockets + ''.join(self.Auth),
       self.HTTPS, 
-      self.Require, 
       HTTPPort['Alias']
     ])
     out, err = proc.communicate()
