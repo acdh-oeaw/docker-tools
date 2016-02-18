@@ -14,7 +14,7 @@ class Environment(IEnvironment, object):
   Name          = None
   UID           = None
   GID           = None
-  UserName      = 'user'
+  UserName      = ''
   BaseDir       = None
   DockerfileDir = None
   Mounts        = None
@@ -262,7 +262,7 @@ class Environment(IEnvironment, object):
 
     args = ['docker', 'exec', '-ti', '-u', 'root', self.Name] + command
     if not root :
-      args[4] = self.UserName
+      args[4] = self.UserName if self.UserName != '' else 'user'
     subprocess.call(args)
 
   def showLogs(self):
