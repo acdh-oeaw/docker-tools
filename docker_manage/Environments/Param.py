@@ -34,7 +34,7 @@ class Param(object):
 
   @staticmethod
   def isValidRelPath(p):
-    return (not (re.search('^/', p) or re.search('^[.][.]/', p) or re.search('/[.][.]/', p))) and re.search('^[-/_.a-zA-Z0-9]+$', p)
+    return (not (re.search('^/', p) or re.search('^[.][.]/', p) or re.search('/[.][.]/', p))) and re.search('^[-/_.:a-zA-Z0-9]+$', p)
 
   @staticmethod
   def isValidFile(p):

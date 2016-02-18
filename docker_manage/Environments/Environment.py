@@ -294,7 +294,7 @@ class Environment(IEnvironment, object):
 
     args = ['docker', 'exec', '-ti', '-u', 'root', self.Name] + command
     if not root :
-      args[4] = 'user'
+      args[4] = self.UserName
     subprocess.call(args)
 
   def showLogs(self):
@@ -330,7 +330,7 @@ class Environment(IEnvironment, object):
       cmd =  'echo "user:x:' + str(self.UID) + ':' + str(self.GID) + '::' + self.getGuestHomeDir() + ':/bin/bash" >> /etc/passwd;'
       cmd += 'echo "user:x:' + str(self.GID) + ':" >> /etc/group;'
       cmd += 'echo "user:*:16231:0:99999:7:::" >> /etc/shadow;'
-    cmd = 'RUN ' + cmd + '\n'
+    cmd = 'USER root\nRUN ' + cmd + '\n'
 
     for name, value in self.EnvVars.iteritems():
       cmd += 'ENV ' + name + ' ' + value + '\n'
@@ -342,7 +342,7 @@ class Environment(IEnvironment, object):
       dockerfile.write(commands)
     if self.runAsUser:
       with open(dockerfilePath, 'a') as dockerfile:
-        dockerfile.write('\nUSER user\n')
+        dockerfile.write("\nUSER %(user)s\n" % {'user' : self.UserName if self.UserName != '' else 'user'})
 
   def getName(self):
     return self.Name

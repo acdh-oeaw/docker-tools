@@ -1,35 +1,40 @@
-import subprocess
-import distutils
-
 from . import *
-from ..HTTPReverseProxy import HTTPReverseProxy
 
-class EnvironmentNoske(EnvironmentHTTP, IEnvironment):
-  DataPath = 'data'
-  BonitoPath = 'bonito'
-  RegistryPath = 'registry'
+class EnvironmentNoSkE(EnvironmentSkeBase, IEnvironment):
+  DockerfileDir     = 'noske'
+  UserName          = 'www-data'
+  LogDir            = ''
+  LogDirMount       = '/var/log/lighttpd'
+  DataDirMount      = '/var/lib/manatee/data'
+  BonitoDirMount    = '/var/lib/bonito'
+  RegistryDirMount  = '/var/lib/manatee/registry'
+  BonitoLibDirMount = '/usr/lib/python2.7/dist-packages/bonito'
+  runAsUser         = True
 
   def __init__(self, conf, owner):
-    if 'DockerfileDir' not in conf :
+    if not 'DockerfileDir' in conf :
       conf['DockerfileDir'] = 'noske'
-    super(EnvironmentNoske, self).__init__(conf, owner)
-    self.Mounts.append({"Host" : self.BaseDir + '/' + self.DataPath, "Guest" : "/data", "Rights" : "ro"})
-    self.Ports = [{ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : [], "Alias" : ""}]
+    super(EnvironmentNoSkE, self).__init__(conf, owner)
 
-    #TODO It would be nice to allow users to provide DataPath, BonitoPath and RegistryPath through the conf variable
-    # Of course values provided by the user should be checked - the Param class provides useful methods to perform such checks
+    if (
+      not 'LogDir' in conf
+      or self.owner and (
+          not Param.isValidRelPath(conf['LogDir'])
+          or not Param.isValidDir(self.BaseDir + '/' + conf['LogDir'])
+        )
+      ) :
+        raise Exception('LogDir is missing or invalid')
+    self.LogDir = conf['LogDir']
 
-  def runHooks(self, verbose):
-    super(EnvironmentNoske, self).runHooks(verbose)
+    try:
+      self.getHTTPPort()
+    except:
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 8080 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
 
-    #TODO we should rather use self.runProcess() instead of subprocess.call() to handle verbose flag and error handling in an easy way
-    subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/usr/lib/python2.7/dist-packages/bonito'])
-    distutils.dir_util.copy_tree(self.BaseDir + '/' + self.BonitoPath, self.DockerMntBase + '/' + self.Name + '/usr-lib-python2.7-dist-packages-bonito')
-    subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/usr/lib/python2.7/dist-packages/bonito'])
-    subprocess.call(['docker', 'exec', self.Name, 'chmod', '+rX', '-R', '/usr/lib/python2.7/dist-packages/bonito'])
-    subprocess.call(['docker', 'exec', self.Name, 'python', '-m', 'compileall', '/usr/lib/python2.7/dist-packages/bonito']) 
+    self.Mounts.append({ "Host" : self.LogDir,     "Guest" : self.LogDirMount,     "Rights" : "rw" })
 
-    subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/var/lib/manatee/registry/'])
-    distutils.dir_util.copy_tree(self.BaseDir + '/' + self.RegistryPath, self.DockerMntBase + '/' + self.Name + '/var-lib-manatee-registry/')
-    subprocess.call(['docker', 'exec', self.Name, 'chown', 'user:user', '-R', '/var/lib/manatee/registry/'])
-    subprocess.call(['docker', 'exec', self.Name, 'chmod', '+rX', '-R', '/var/lib/manatee/registry/'])
+class EnvironmentNoSkE_patched(EnvironmentNoSkE, IEnvironment):
+  def __init__(self, conf, owner):
+    if not 'DockerfileDir' in conf :
+      conf['DockerfileDir'] = 'noske_patched'
+    super(EnvironmentNoSkE_patched, self).__init__(conf, owner)

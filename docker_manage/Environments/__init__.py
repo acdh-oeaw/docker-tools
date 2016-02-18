@@ -12,3 +12,6 @@ from .EnvironmentJava8 import EnvironmentJava8
 from .EnvironmentExistdb30 import EnvironmenteXistdb30
 from .Environmentcrxqmets import Environmentcrxqmets
 from .EnvironmentBaseX import EnvironmentBaseX, EnvironmentRHELBaseX
+from .EnvironmentSkeBase import EnvironmentSkeBase
+from .EnvironmentSketchEngine import EnvironmentSketchEngine
+from .EnvironmentNoske import EnvironmentNoSkE, EnvironmentNoSkE_patched
