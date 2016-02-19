@@ -56,17 +56,17 @@ class EnvironmentHTTP(Environment, IEnvironment):
           ips.append(self.MandatoryAccessForIPAddress)
         require = 'Require ip ' + ' '.join(ips)
       if 'htpasswdFile' in loc :
-        htFile = loc['htpasswdFile']
+        htFile = os.path.join(self.BaseDir, loc['htpasswdFile'])
         if not Param.isValidFile(htFile) :
           raise Exception('Auth %d htpasswdFile is invalid' % n)
-        if Param.getSecurityContext(os.path.join(self.BaseDir, htFile)) != 'httpd_config_t' :
-          raise Exception('Auth %d htpasswdFile has wrong security context - execute "chcon -t httpd_config_t %s"' % (n, self.BaseDir + '/' + htFile))
+        if Param.getSecurityContext(htFile) != 'httpd_config_t' :
+          raise Exception('Auth %d htpasswdFile has wrong security context - execute "chcon -t httpd_config_t %s"' % (n, htFile))
         htpasswd = """
   AuthType basic
   AuthName "%s"
   AuthUserFile %s
   Require valid-user
-""" % (self.Name, self.BaseDir + '/' + htFile)
+""" % (self.Name, htFile)
       if not 'htpasswdFile' in loc and not 'IPs' in loc :
         raise Exception('Auth %d IPs or htpasswdFile has to be specified' % n)
       
