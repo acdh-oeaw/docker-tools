@@ -5,8 +5,7 @@
 # $4 Port
 # $5 Websockets, Authorization
 # $6 SSL ("true"/"false"/"both")
-# $7 Require
-# $8 InternalAlias
+# $7 InternalAlias
 
 PROT="http"
 SSLPROXY=""
@@ -55,8 +54,8 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   RequestHeader set Front-End-Https: \"on\" env=HTTPS
   $SSLPROXY
   $5
-  ProxyPass        / $PROT://127.0.0.1:$4/$8 timeout=300
-  ProxyPassReverse / $PROT://127.0.0.1:$4/$8
+  ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=300
+  ProxyPassReverse / $PROT://127.0.0.1:$4/$7
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 else
   echo "<VirtualHost *:80>
@@ -65,8 +64,8 @@ else
 
   ProxyPreserveHost On
   $5
-  ProxyPass        / $PROT://127.0.0.1:$4/$8 timeout=300
-  ProxyPassReverse / $PROT://127.0.0.1:$4/$8
+  ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=300
+  ProxyPassReverse / $PROT://127.0.0.1:$4/$7
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 
 fi
