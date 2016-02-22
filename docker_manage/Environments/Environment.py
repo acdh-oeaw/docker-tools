@@ -277,6 +277,7 @@ class Environment(IEnvironment, object):
             os.rmdir(self.BaseDir + '/' + v['Host'])
             self.runProcess(['docker', 'cp', self.Name + ':' + volume, self.BaseDir + '/' + v['Host']], verbose, '    Copying ' + volume + ' into ' + v['Host'], 'Copying failed')
       self.runProcess(['docker', 'rm', '-f', '-v', self.Name], verbose, '    Removing temporary container...', None)
+      self.Mounts = mountsTmp
     # run
     self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose, '    Creating container...', 'Container creation failed')
     # create systemd script
