@@ -78,7 +78,6 @@ class IEnvironment():
     - check, if the ``ready`` property is set to ``True`` before spawning 
       the container;
     - remove a previous instance of a container (with its volumes);
-    - run ``docker-mount-volumes containerName`` after container creation.
 
     Args:
       verbose (boolean): If method should produce a verbose output.

@@ -35,8 +35,8 @@ configuration = docker_manage.Configuration()
 print 'Checking conflicts between environments...'
 configuration.check()
 
-for i in configuration.findEnvironments([], [], True):
-  print '  ' + i.Name + ' ' + str(i.ready)
+print 'Removing obsolete environments...'
+configuration.clean(args.verbose)
 
 if args.action is None or args.action.count('build') > 0 :
   print 'Building images...'
@@ -51,9 +51,6 @@ if args.action is None or args.action.count('run') > 0 :
     # give container(s) time to start before executing hooks
     time.sleep(5)
     configuration.runHooks(args.project, args.environment, args.verbose)
-
-if not args.action is None and args.action.count('clean') > 0 :
-  configuration.clean(args.project, args.environment, args.verbose)
 
 if not args.action is None :
   if len(args.action) != 1 :

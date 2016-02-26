@@ -22,12 +22,12 @@ setup(
     packages=['docker_manage', "docker_manage.Environments"],
     scripts=['docker-manage'],
     data_files=[('/usr/sbin', ['docker-manage-admin', 'docker-add-project', 'docker-check-quota',
-                           'docker-clean', 'docker-install-container', 'docker-mount-volumes',
+                           'docker-clean', 'docker-install-container', 
                            'docker-register-proxy', 'docker-register-systemd', 'docker-remove-unused-containers',
                            'docker-remove-unused-images']),
                 ('/etc/sudoers.d', ['etc/sudoers.d/docker'])
                 ],
-    long_description=read('README'),
+    long_description=read('README.md'),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",

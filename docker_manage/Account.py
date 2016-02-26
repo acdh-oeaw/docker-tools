@@ -1,6 +1,7 @@
 import os
 import json
 import subprocess
+from docker import Client
 
 from .Environments import *
 
@@ -80,10 +81,23 @@ class Account:
         envs.append(env)
     return envs
 
-  def clean(self, names, verbose):
-    subprocess.call(['sudo', '-u', 'root', 'docker-clean', self.name])
-    for env in self.findEnvironments(names):
-      env.buildImage(verbose)
-      env.runContainer(verbose)
-      env.runHooks(verbose)
+  def clean(self, verbose):
+    # search for environments in systemd and apache config as well as in all docker containers
+    envs = []
+    for root, dirs, files in os.walk('/etc/systemd/system'):
+      envs.extend([x[7:-8] for x in files if x.startswith('docker-%s-' % self.name)])
+    for root, dirs, files in os.walk('/etc/httpd/conf.d/sites-enabled'):
+      envs.extend([x[:-5] for x in files if x.startswith('%s-' % self.name)])
+    cli = Client(base_url = 'unix://var/run/docker.sock')
+    envs.extend([y[1:] for x in cli.containers(all = True) for y in x['Names'] if y.startswith('/%s-' % self.name)])
 
+    toBeRemoved = set(envs) - set([e.Name for e in self.environments])
+    if len(toBeRemoved) > 0 and verbose:
+      print '  %s' % self.name
+    for i in toBeRemoved:
+      call = subprocess.Popen(['sudo', '-u', 'root', 'docker-clean', i], stdout = subprocess.PIPE, stderr=subprocess.PIPE)
+      (out, err) = call.communicate()
+      if verbose or err != '':
+        print '    %s' % i
+        print '\n'.join(['      %s' % x for x in out.split('\n')])
+        print '\n'.join(['      %s' % x for x in err.split('\n')])

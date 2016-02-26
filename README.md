@@ -62,7 +62,7 @@ Included scripts are:
   Script which properly adds new system user taking care of setting up quota, 
   files required for ssh access, etc.
   You should use it instead of normal "useradd" or "adduser"
-* docker-clean, docker-mount-volumes, docker-register-proxy, docker-register-systemd
+* docker-clean, docker-register-proxy, docker-register-systemd
   Helper scripts run by docker-manage
   There is no need to run them directly but if you are root, you can do it
 * docker-remove-unused-images, docker-remove-unused-containers

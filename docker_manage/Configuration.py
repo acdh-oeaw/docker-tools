@@ -35,6 +35,11 @@ class Configuration:
         print '  ' + account.name, ': ', errors
         noErrors = False
 
+  def clean(self, verbose):
+    for account in self.accounts:
+      if account.owner:
+        account.clean(verbose)
+
   def buildImages(self, projects, names, verbose):
     for env in self.findEnvironments(projects, names):
       try:
@@ -80,11 +85,6 @@ class Configuration:
     if len(envs) == 1 :
       return envs[0].showLogs()
     print "  Given environment not found or not ready"
-
-  def clean(self, users, names, verbose):
-    for account in self.accounts:
-      if len(users) == 0 or users.count(account.name) > 0 :
-        account.clean(names, verbose)
 
   def findEnvironments(self, projects, names, readyOnly = True):
     envs = []
