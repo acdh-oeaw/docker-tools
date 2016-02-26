@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import re
 import random
+import codecs
 from docker import Client
 
 from . import *
@@ -221,7 +222,7 @@ class Environment(IEnvironment, object):
       dockerfileDir = self.DockerImgBase + '/' + self.DockerfileDir
       # create a simple Dockerfile based on provided one
       os.mkdir(tmpDir)
-      with open(tmpDir + '/Dockerfile', 'w') as dockerfile:
+      with codecs.open(tmpDir + '/Dockerfile', mode='w', encoding='utf-8') as dockerfile:
         dockerfile.write('FROM acdh/' + self.DockerfileDir + '\n')
         dockerfile.write('MAINTAINER acdh-tech <acdh-tech@oeaw.ac.at>\n')
     else :
@@ -338,13 +339,13 @@ class Environment(IEnvironment, object):
     for name, value in self.EnvVars.iteritems():
       cmd += 'ENV ' + name + ' ' + value + '\n'
 
-    with open(dockerfilePath, 'r') as dockerfile:
+    with codecs.open(dockerfilePath, mode='r', encoding='utf-8') as dockerfile:
       commands = dockerfile.read()
       commands = re.sub('\\n(MAINTAINER[^\\n]*)', '\n\\1\n' + cmd, commands) 
-    with open(dockerfilePath, 'w') as dockerfile:
+    with codecs.open(dockerfilePath, mode='w', encoding='utf-8') as dockerfile:
       dockerfile.write(commands)
     if self.runAsUser:
-      with open(dockerfilePath, 'a') as dockerfile:
+      with codecs.open(dockerfilePath, mode='a', encoding='utf-8') as dockerfile:
         dockerfile.write("\nUSER %(user)s\n" % {'user' : self.UserName if self.UserName != '' else 'user'})
 
   def getName(self):
