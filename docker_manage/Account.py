@@ -83,15 +83,27 @@ class Account:
 
   def clean(self, verbose):
     # search for environments in systemd and apache config as well as in all docker containers
-    envs = []
+    envsSystemd = []
     for root, dirs, files in os.walk('/etc/systemd/system'):
-      envs.extend([x[7:-8] for x in files if x.startswith('docker-%s-' % self.name)])
-    for root, dirs, files in os.walk('/etc/httpd/conf.d/sites-enabled'):
-      envs.extend([x[:-5] for x in files if x.startswith('%s-' % self.name)])
-    cli = Client(base_url = 'unix://var/run/docker.sock')
-    envs.extend([y[1:] for x in cli.containers(all = True) for y in x['Names'] if y.startswith('/%s-' % self.name)])
+      envsSystemd.extend([x[7:-8] for x in files if x.startswith('docker-%s-' % self.name)])
 
+    envsApache  = []
+    for root, dirs, files in os.walk('/etc/httpd/conf.d/sites-enabled'):
+      envsApache.extend([x[:-5] for x in files if x.startswith('%s-' % self.name)])
+
+    cli = Client(base_url = 'unix://var/run/docker.sock')
+    envsDocker = []
+    for c in cli.containers(all = True):
+      e = [x[1:] for x in c['Names'] if x.startswith('/%s-' % self.name) and Param.isValidName(x[(2 + len(self.name)):])]
+      if len(e) == 1:
+        envsDocker.extend(e)
+
+    envs = []
+    envs.extend(envsSystemd)
+    envs.extend(envsApache)
+    envs.extend(envsDocker)
     toBeRemoved = set(envs) - set([e.Name for e in self.environments])
+
     if len(toBeRemoved) > 0 and verbose:
       print '  %s' % self.name
     for i in toBeRemoved:
