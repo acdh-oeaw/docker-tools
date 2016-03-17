@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Note: Prerequisite due to build dependencies:
+# In cd /var/lib/docker/images:
+# sudo ln -s java8 base_00java8
+# sudo ln -s http base_00http
+for container in $(ls /var/lib/docker/images);
+do sudo docker build -t acdh/$container /var/lib/docker/images/$container;
+done
