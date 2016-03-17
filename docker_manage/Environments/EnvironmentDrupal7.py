@@ -33,6 +33,6 @@ class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
 class EnvironmentDrupal7old(EnvironmentDrupal7, IEnvironment):
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
-      conf['DockerfileDir'] = 'http_drupal7old'
+      conf['DockerfileDir'] = 'http_drupal7:old'
     super(EnvironmentDrupal7old, self).__init__(conf, owner)
 
