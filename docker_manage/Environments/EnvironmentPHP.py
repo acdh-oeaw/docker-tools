@@ -3,6 +3,7 @@ from . import *
 class EnvironmentPHP(EnvironmentApache, IEnvironment):
   DockerfileDir     = 'http_php'
   UserName          = 'www-data'
+  LogDir            = None
   LogDirMount       = '/var/log/apache2'
   ExecDir           = None
   ExecDirMount       = '/var/www/exec'
@@ -13,15 +14,28 @@ class EnvironmentPHP(EnvironmentApache, IEnvironment):
       conf['DockerfileDir'] = self.DockerfileDir
     super(EnvironmentPHP, self).__init__(conf, owner)
 
-    if (
-      not 'LogDir' in conf
-      or self.owner and (
-        not Param.isValidRelPath(conf['LogDir'])
-        or not Param.isValidDir(self.BaseDir + '/' + conf['LogDir'])
-      )
-    ) :
-      raise Exception('LogDir is missing or invalid')
-    self.LogDir = conf['LogDir']
+# Make this mandatory asap
+#    if (
+#      not 'LogDir' in conf
+#      or self.owner and (
+#        not Param.isValidRelPath(conf['LogDir'])
+#        or not Param.isValidDir(self.BaseDir + '/' + conf['LogDir'])
+#      )
+#    ) :
+#      raise Exception('LogDir is missing or invalid')
+#    self.LogDir = conf['LogDir']
+
+    if 'LogDir' in conf:
+      if (
+        self.owner and (
+          not Param.isValidRelPath(conf['LogDir'])
+          or not Param.isValidDir(self.BaseDir + '/' + conf['LogDir'])
+        )
+      ) :
+        raise Exception('LogDir is invalid')
+      self.LogDir = conf['LogDir']
+    else:
+      print('    Please specify a LogDir! This will be mandatory in the future!')
 
     if 'ExecDir' in conf:
       if (
@@ -43,7 +57,8 @@ class EnvironmentPHP(EnvironmentApache, IEnvironment):
         raise Exception('ConfigDir is invalid')
       self.ConfigDir = conf['ConfigDir']
 
-    self.Mounts.append({ "Host" : self.LogDir, "Guest" : self.LogDirMount, "Rights" : "rw" })
+    if (self.LogDir is not None):
+      self.Mounts.append({ "Host" : self.LogDir, "Guest" : self.LogDirMount, "Rights" : "rw" })
     if (self.ExecDir is not None):
       self.Mounts.append({ "Host" : self.ExecDir, "Guest" : self.ExecDirMount, "Rights" : "rw" })
     if (self.ConfigDir is not None):
