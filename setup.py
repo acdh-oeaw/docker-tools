@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+import time
 from setuptools import setup
 
 # Utility function to read the README file.
@@ -12,7 +13,7 @@ def read(fname):
 
 setup(
     name = "docker_manage",
-    version = "0.1.11",
+    version = time.time(),
     author = ["Mateusz Żółtak", "Omar Siam"],
     author_email = ["mateusz.zoltak@oeaw.ac.at", "omar.siam@oeaw.ac.at"],
     description = ("Tools to manage docker instances and reverse proxying to them."),

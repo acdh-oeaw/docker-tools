@@ -70,12 +70,12 @@ class Account:
         errors[env.Name] = tmp
     return errors
 
-  def findEnvironments(self, names, readyOnly = True):
+  def findEnvironments(self, names, readOnly = True):
     envs = []
     for env in self.environments:
       if (
         env.owner 
-        and (env.ready or readyOnly == False)
+        and (env.ready or readOnly == False)
         and (len(names) == 0 or names.count(env.Name) > 0) 
       ) :
         envs.append(env)

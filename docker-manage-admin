@@ -19,47 +19,51 @@ parser.add_argument('-a', '--action', action = 'store', nargs = 1, required = Fa
 parser.add_argument('-c', '--command', action = 'append', nargs = '*', required = False,  help = 'Commmand to run inside guest (only if action=enter or arction=enter-as-root)')
 parser.add_argument('-v', '--verbose', action = 'store_true', required = False,  help = 'Enable verbose output')
 args = parser.parse_args()
-if args.project is None :
-  args.project = [[]]
-args.project = reduce(lambda x, y: x + y, args.project)
-if args.environment is None :
-  args.environment = [[]]
-args.environment = reduce(lambda x, y: x + y, args.environment)
-if args.command is None :
-  args.command = [[]]
-args.command = reduce(lambda x, y: x + y, args.command)
 
-print 'Loading config...'
+def sanitizeArg(arg):
+  if arg is None:
+    arg = [[]]
+  arg = reduce(lambda x, y: x + y, arg)
+  arg = [unicode(x, 'utf8') for x in arg]
+  return arg
+
+args.project = sanitizeArg(args.project)
+args.environment = sanitizeArg(args.environment)
+args.command = sanitizeArg(args.command)
+
+print(args)
+
+print('Loading config...')
 configuration = docker_manage.Configuration()
 
-print 'Checking conflicts between environments...'
+print('Checking conflicts between environments...')
 configuration.check()
 
-print 'Removing obsolete environments...'
+print('Removing obsolete environments...')
 configuration.clean(args.verbose)
 
 if args.action is None or args.action.count('build') > 0 :
-  print 'Building images...'
+  print('Building images...')
   configuration.buildImages(args.project, args.environment, args.verbose)
 
 if args.action is None or args.action.count('run') > 0 :
-  print 'Running containers...'
+  print('Running containers...')
   n = configuration.runContainers(args.project, args.environment, args.verbose)
 
   if n > 0 :
-    print 'Running hooks...'
+    print('Running hooks...')
     # give container(s) time to start before executing hooks
     time.sleep(5)
     configuration.runHooks(args.project, args.environment, args.verbose)
 
 if not args.action is None :
   if len(args.action) != 1 :
-    print "  Please choose exactly one environment"
+    print('  Please choose exactly one environment')
   else:
     if   args.action.count('enter-as-root') > 0 or args.action.count('enter') > 0 :
-      print 'Running console...'
+      print('Running console...')
       configuration.runCommand(args.project, args.environment[0], args.action[0], args.command)
     elif args.action.count('logs') > 0 :
-      print 'Printing logs...'
+      print('Printing logs...')
       configuration.showLogs(args.project, args.environment[0])
 

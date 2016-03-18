@@ -27,8 +27,8 @@ class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
     super(EnvironmentDrupal7, self).runHooks(verbose)
 
     if verbose :
-      print '    Setting up drupal permissions'
-    self.runProcess(['docker', 'exec', self.Name, 'chown', '-R', 'user:user', '/var/www/html'], verbose, '', 'Setting up permissions failed')
+      print('    Setting up drupal permissions')
+    self.runProcess(['docker', 'exec', self.Name, 'chown', '-R', self.UserName + ':' + self.UserName, '/var/www/html'], verbose, '', 'Setting up permissions failed')
 
 class EnvironmentDrupal7old(EnvironmentDrupal7, IEnvironment):
   def __init__(self, conf, owner):

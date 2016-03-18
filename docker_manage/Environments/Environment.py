@@ -229,7 +229,7 @@ class Environment(IEnvironment, object):
       self.ready = False
       raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
 
-    print '  ' + self.Name
+    print('  ' + self.Name)
 
     self.injectUserEnv(tmpDir + '/Dockerfile')
     self.runProcess(['docker', 'build', '--force-rm=true', '-t', 'acdh/' + self.Name, tmpDir], verbose, '', 'Build failed')
@@ -260,7 +260,7 @@ class Environment(IEnvironment, object):
     if not self.ready :
       raise Exception('Environment is not ready - it was not checked or there were errord during check/build')
 
-    print '  ' + self.Name
+    print('  ' + self.Name)
     # remove
     self.runProcess(['docker', 'rm', '-f', '-v', self.Name], verbose, '    Removing old container...', None)
     # check and prepare volumes if necessary
@@ -288,7 +288,7 @@ class Environment(IEnvironment, object):
     if not self.owner :
       raise Exception('Must be environment owner to run hooks')
 
-    print '  ' + self.Name
+    print('  ' + self.Name)
 
   def runCommand(self, root, command = None):
     if not self.ready :
@@ -310,7 +310,7 @@ class Environment(IEnvironment, object):
   def runProcess(self, args, verbose, header, errorMsg):
     proc = None
     if verbose :
-      print header
+      print(header)
       ret = subprocess.call(args)
     else :
       proc = subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
@@ -320,7 +320,7 @@ class Environment(IEnvironment, object):
     if ret != 0 and not errorMsg is None:
       self.ready = False
       if not proc is None:
-        print out + '\n' + err
+        print(out + '\n' + err)
       raise Exception(errorMsg)
     return ret
 
