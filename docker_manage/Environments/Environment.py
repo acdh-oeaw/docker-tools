@@ -270,7 +270,7 @@ class Environment(IEnvironment, object):
       mountsTmp = self.Mounts
       self.Mounts = []
       self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose, '    Creating temporary container to copy volumes content...', 'Container creation failed')
-      volumes = cli.inspect_container(self.Name)['Volumes']
+      volumes = cli.inspect_container(self.Name)['Config']['Volumes']
       for v in volumesToCopy:
         for volume, hostPath in volumes.iteritems(): 
           volume = '/' + re.sub('^/?(.*)/?$', '\\1', volume) + '/'
