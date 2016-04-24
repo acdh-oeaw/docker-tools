@@ -183,20 +183,22 @@ EOF
      sudo cp localhost.key /etc/pki/tls/private/localhost.key
      sudo cp localhost.csr /etc/pki/tls/private/localhost.csr
      sudo restorecon -RvF /etc/pki     
-     wget https://download.jetbrains.com/python/pycharm-community-2016.1.1.tar.gz
-     tar -xzf pycharm-community-2016.1.1.tar.gz
+     wget https://download.jetbrains.com/python/pycharm-community-2016.1.2.tar.gz
+     tar -xzf pycharm-community-2016.1.2.tar.gz
      mkdir -p .local/share/applications
      cat > .local/share/applications/jetbrains-pycharm-ce.desktop <<"EOF"      
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyCharm Community Edition
-Icon=/home/vagrant/pycharm-community-2016.1.1/bin/pycharm.png
-Exec="/home/vagrant/pycharm-community-2016.1.1/bin/pycharm.sh" %f
+Icon=/home/vagrant/pycharm-community-2016.1.2/bin/pycharm.png
+Exec="/home/vagrant/pycharm-community-2016.1.2/bin/pycharm.sh" %f
 Comment=Develop with pleasure!
 Categories=Development;IDE;
 Terminal=false
 StartupWMClass=jetbrains-pycharm-ce
 EOF
+  cd /home
+  chmod vagrant:vagrant -R vagrant
   SHELL
 end
