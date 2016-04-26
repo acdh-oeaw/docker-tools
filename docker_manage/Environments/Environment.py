@@ -26,6 +26,7 @@ class Environment(IEnvironment, object):
     Ports = None
     Hosts = None
     EnvVars = None
+    Version = None
     runAsUser = False
 
     def __init__(self, conf, owner):
@@ -68,15 +69,15 @@ class Environment(IEnvironment, object):
             self.runAsUser = conf['runAsUser'] == 'true'
 
         if (
-                        not 'DockerfileDir' in conf
-                    or not isinstance(conf['DockerfileDir'], basestring)
-                or self.owner and (
-                            not Param.isValidRelPath(conf['DockerfileDir'])
-                        or not (
-                                    Param.isValidFile(self.BaseDir + '/' + conf['DockerfileDir'] + '/Dockerfile')
-                                or Param.isValidFile(self.DockerImgBase + '/' + conf['DockerfileDir'] + '/Dockerfile')
-                        )
+            not 'DockerfileDir' in conf
+            or not isinstance(conf['DockerfileDir'], basestring)
+            or self.owner and (
+                not Param.isValidRelPath(conf['DockerfileDir'])
+                or not (
+                    Param.isValidFile(self.BaseDir + '/' + conf['DockerfileDir'] + '/Dockerfile')
+                    or Param.isValidFile(self.DockerImgBase + '/' + conf['DockerfileDir'] + '/Dockerfile')
                 )
+            )
         ):
             raise Exception('DockerfileDir ' + conf['DockerfileDir'] + ' is missing or invalid')
         self.DockerfileDir = conf['DockerfileDir']
@@ -95,6 +96,11 @@ class Environment(IEnvironment, object):
 
         if 'EnvVars' in conf:
             self.processEnvVars(conf['EnvVars'])
+
+        if 'Version' in conf:
+            if not isinstance(conf['Version'], basestring):
+                raise Exception('Version is not a string')
+            self.Version = conf['Version']
 
     def processMounts(self, conf):
         if not isinstance(conf, list):
@@ -220,22 +226,18 @@ class Environment(IEnvironment, object):
         # check dockerfile
         if Param.isValidFile(self.BaseDir + '/' + self.DockerfileDir + '/Dockerfile'):
             dockerfileDir = self.BaseDir + '/' + self.DockerfileDir
-            # make a copy of the dockerfileDir and inject data to the Dockerfile
-            shutil.copytree(dockerfileDir, tmpDir)
         elif Param.isValidFile(self.DockerImgBase + '/' + self.DockerfileDir + '/Dockerfile'):
             dockerfileDir = self.DockerImgBase + '/' + self.DockerfileDir
-            # create a simple Dockerfile based on provided one
-            os.mkdir(tmpDir)
-            with codecs.open(tmpDir + '/Dockerfile', mode='w', encoding='utf-8') as dockerfile:
-                dockerfile.write('FROM acdh/' + self.DockerfileDir + '\n')
-                dockerfile.write('MAINTAINER acdh-tech <acdh-tech@oeaw.ac.at>\n')
         else:
             self.ready = False
             raise Exception('There is no Dockerfile ' + self.DockerfileDir + ' ' + self.BaseDir)
+        # make a copy of the dockerfileDir and inject data to the Dockerfile
+        shutil.copytree(dockerfileDir, tmpDir)
 
         print('  ' + self.Name)
 
         self.injectUserEnv(tmpDir + '/Dockerfile')
+        self.adjustVersion(tmpDir + '/Dockerfile')
         self.runProcess(['docker', 'build', '--force-rm=true', '-t', 'acdh/' + self.Name, tmpDir], verbose, '',
                         'Build failed')
         shutil.rmtree(tmpDir)
@@ -361,6 +363,9 @@ class Environment(IEnvironment, object):
         if self.runAsUser:
             with codecs.open(dockerfilePath, mode='a', encoding='utf-8') as dockerfile:
                 dockerfile.write("\nUSER %(user)s\n" % {'user': self.UserName if self.UserName != '' else 'user'})
+
+    def adjustVersion(self, dockerfile):
+        pass
 
     def getName(self):
         return self.Name

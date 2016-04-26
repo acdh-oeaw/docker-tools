@@ -1,43 +1,61 @@
+import codecs
+import re
 from . import *
 
+
 class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
-  skipDocumentRoot = True
+    skipDocumentRoot = True
 
-  def __init__(self, conf, owner):
-    if 'DockerfileDir' not in conf :
-      conf['DockerfileDir'] = 'http_drupal7'
-    self.ImitateHTTPS = self.HTTPS
+    def __init__(self, conf, owner):
+        if 'DockerfileDir' not in conf:
+            conf['DockerfileDir'] = 'http_drupal'
+        self.ImitateHTTPS = self.HTTPS
 
-    super(EnvironmentDrupal7, self).__init__(conf, owner)
+        super(EnvironmentDrupal7, self).__init__(conf, owner)
 
-    if not 'SiteDir' in conf or not Param.isValidRelPath(conf['SiteDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['SiteDir']) :
-      raise Exception('SiteDir is missing or invalid')
-    self.Mounts.append({ "Host" : conf['SiteDir'], "Guest" : '/var/www/html/sites/default', "Rights" : "rw" })
+        if not 'SiteDir' in conf or not Param.isValidRelPath(conf['SiteDir']) or not Param.isValidDir(
+                                self.BaseDir + '/' + conf['SiteDir']):
+            raise Exception('SiteDir is missing or invalid')
+        self.Mounts.append({"Host": conf['SiteDir'], "Guest": '/var/www/html/sites/default', "Rights": "rw"})
 
-    if not 'AllDir' in conf or not Param.isValidRelPath(conf['AllDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['AllDir']) :
-      raise Exception('AllDir is missing or invalid')
-    self.Mounts.append({ "Host" : conf['AllDir'], "Guest" : '/var/www/html/sites/all', "Rights" : "rw" })
-    
-  # as Drupal environment does not have DocumentRoot it is not clear what
-  # should be a base dir for aliases
-  def processAliases(self, conf):
-    pass
+        if not 'AllDir' in conf or not Param.isValidRelPath(conf['AllDir']) or not Param.isValidDir(
+                                self.BaseDir + '/' + conf['AllDir']):
+            raise Exception('AllDir is missing or invalid')
+        self.Mounts.append({"Host": conf['AllDir'], "Guest": '/var/www/html/sites/all', "Rights": "rw"})
 
-  def runHooks(self, verbose):
-    super(EnvironmentDrupal7, self).runHooks(verbose)
+    # as Drupal environment does not have DocumentRoot it is not clear what
+    # should be a base dir for aliases
+    def processAliases(self, conf):
+        pass
 
-    if verbose :
-      print('    Setting up drupal permissions')
-    self.runProcess(['docker', 'exec', self.Name, 'chown', '-R', self.UserName + ':' + self.UserName, '/var/www/html'], verbose, '', 'Setting up permissions failed')
+    def runHooks(self, verbose):
+        super(EnvironmentDrupal7, self).runHooks(verbose)
 
-class EnvironmentDrupal7old(EnvironmentDrupal7, IEnvironment):
-  def __init__(self, conf, owner):
-    if 'DockerfileDir' not in conf :
-      conf['DockerfileDir'] = 'http_drupal7:old'
-    super(EnvironmentDrupal7old, self).__init__(conf, owner)
+        if verbose:
+            print('    Setting up drupal permissions')
+        self.runProcess(
+            ['docker', 'exec', self.Name, 'chown', '-R', self.UserName + ':' + self.UserName, '/var/www/html'], verbose,
+            '', 'Setting up permissions failed')
 
-class EnvironmentDrupal8(EnvironmentDrupal7, IEnvironment):
-  def __init__(self, conf, owner):
-    if 'DockerfileDir' not in conf :
-      conf['DockerfileDir'] = 'http_drupal8'
-    super(EnvironmentDrupal8, self).__init__(conf, owner)
+
+def adjustVersion(self, dockerfile):
+    hashes = {
+        '36': '98e1f62c11a5dc5f9481935eefc814c5',
+        '37': '3a70696c87b786365f2c6c3aeb895d8a',
+        '38': 'c18298c1a5aed32ddbdac605fdef7fce',
+        '39': '6f42a7e9c7a1c2c4c9c2f20c81b8e79a',
+        '40': 'd4509f13c23999a76e61ec4d5ccfaf26',
+        '41': '7636e75e8be213455b4ac7911ce5801f',
+        '42': '9a96f67474e209dd48750ba6fccc77db',
+        '43': 'c6fb49bc88a6408a985afddac76b9f8b'
+    }
+
+    if self.Version not in hashes:
+        raise Exception('Version %s is not supported' % self.Version)
+
+    with codecs.open(dockerfile, mode='r', encoding='utf-8') as dockerfile:
+        commands = dockerfile.read()
+        commands = re.sub('@VERSION@', '7.' + self.Version, commands)
+        commands = re.sub('@HASH@', hashes[self.Version], commands)
+    with codecs.open(dockerfile, mode='r', encoding='utf-8') as dockerfile:
+        dockerfile.write(commands)
