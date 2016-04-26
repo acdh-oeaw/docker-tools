@@ -1,0 +1,74 @@
+#!/bin/python
+
+import argparse
+import codecs
+import os
+import re
+import subprocess
+
+parser = argparse.ArgumentParser(description='Script for building dependent images')
+parser.add_argument('dir', help='Directory containing images')
+parser.add_argument('-p', '--localPrefix', default='acdh', help='Local images prefix')
+parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+parser.add_argument('--skip', nargs='*', default=[], help='Images to be omitted (regular expression)')
+args = parser.parse_args()
+
+print(args)
+
+images = {}
+for img in os.listdir(args.dir):
+    skip = False
+    for exp in args.skip:
+        if re.search(exp, img):
+            skip = True
+            break
+    if skip:
+        continue
+
+    images[img] = None
+
+    dockerfilePath = os.path.join(args.dir, img, 'Dockerfile')
+    with codecs.open(dockerfilePath, mode='r', encoding='utf-8') as dockerfile:
+        commands = dockerfile.readlines()
+        commands = [x for x in commands if re.match('FROM %s/' % args.localPrefix, x)]
+        if len(commands) == 1:
+            depends = re.sub('^FROM %s/' % args.localPrefix, '', commands[0])
+            depends = re.sub('[^-a-zA-Z0-9_:.]*$', '', depends)
+            images[img] = depends
+
+while True:
+    todel = []
+    for key, value in images.iteritems():
+        if value is None:
+            try:
+                if args.verbose:
+                    print('####################')
+                print('# Building %s' % key)
+                if args.verbose:
+                    print('####################')
+
+                cmd = ['docker', 'build', '--force-rm=true', '-t', args.localPrefix + '/' + key,
+                       os.path.join(args.dir, key)]
+                out = err = ''
+                if args.verbose:
+                    ret = subprocess.call(cmd)
+                else:
+                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    out, err = proc.communicate()
+                    ret = proc.returncode
+                if ret != 0:
+                    raise Exception()
+                todel.append(key)
+            except:
+                print('  build failed')
+                print out + '\n' + err
+    for img in todel:
+        del images[img]
+        for key, value in images.iteritems():
+            if value == img:
+                images[key] = None
+    if len(todel) == 0:
+        break
+
+if len(images) > 0:
+    print('\nImages skipped due to missing dependencies: %s' % ', '.join(images))
