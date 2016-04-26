@@ -11,11 +11,12 @@ Important remark - all paths according to CentOs 7
 ** /etc/httpd/conf.d/sites-enabled
 ** /etc/httpd/conf.d/shared
 * Install netstat
-* Copy etc-httpd-conf.d-shared-ssl_without_certs.conf to /etc/httpd/conf.d/shared/ssl_without_certs.conf
+* Copy Apache config:
+  cp etc-httpd-conf.d-shared-ssl_without_certs.conf /etc/httpd/conf.d/shared/
+  cp etc-httpd-conf.d-zzz-sites.conf /etc/httpd/conf.d/
 * Copy environment types Dockerfiles to /var/lib/docker/images:
   cp -pR images /var/lib/docker
   mkdir /var/lib/docker/images/tmp
-  chmod 777 /var/lib/docker/images/tmp
 * Set up system permissions:
   ./permissions
 * Adjust docker-add-project to meet your requirements
