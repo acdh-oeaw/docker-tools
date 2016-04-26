@@ -11,17 +11,17 @@ Important remark - all paths according to CentOs 7
 ** /etc/httpd/conf.d/sites-enabled
 ** /etc/httpd/conf.d/shared
 * Install netstat
-* Copy etc-httpd-conf.d-shared-ssl.conf to /etc/httpd/conf.d/shared/ssl.conf
+* Copy etc-httpd-conf.d-shared-ssl_without_certs.conf to /etc/httpd/conf.d/shared/ssl_without_certs.conf
 * Copy environment types Dockerfiles to /var/lib/docker/images:
   cp -pR images /var/lib/docker
+  mkdir /var/lib/docker/images/tmp
+  chmod 777 /var/lib/docker/images/tmp
 * Set up system permissions:
   ./permissions
-* Set up required sudo rules:
-  cp etc-sudoers.d-docker /etc/sudoers.d/docker
 * Adjust docker-add-project to meet your requirements
 ** In particular see if you have a separate /home for xfs_quota else / will most probably be the right path
-* Copy scripts to the location included in PATH
-  cp docker-* /usr/sbin
+* Install admin scripts
+  python setup.py build && sudo python setup.py install
 * Register clean-up scripts in cron:
   cp etc-cron.daily-docker /etc/cron.daily/docker
 * There is a slightly modified replacement for /etc/pki/tls/openssl.cnf in etc-pki-tls-openssl.cnf

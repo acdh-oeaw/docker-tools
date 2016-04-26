@@ -11,3 +11,9 @@
 for i in `docker ps -a | grep -E '[0-9a-z]{64}' | grep Exited | awk '{print \$1}'`; do
 	docker rm -fv $i
 done
+
+if [ "$1" == "all" ]; then
+	for i in `docker ps -a | grep -E ' [a-z]+_[a-z]+$' | grep Exited | awk '{print \$1}'`; do
+	        docker rm -fv $i
+	done
+fi

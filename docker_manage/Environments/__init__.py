@@ -9,6 +9,7 @@ from .EnvironmentWSGI3 import EnvironmentWSGI3
 from .EnvironmentWSGI2 import EnvironmentWSGI2
 from .EnvironmentDrupal7 import EnvironmentDrupal7, EnvironmentDrupal7old
 from .EnvironmentJava8 import EnvironmentJava8
+from .EnvironmentJava9 import EnvironmentJava9
 from .EnvironmentExistdb30 import EnvironmenteXistdb30
 from .Environmentcrxqmets import Environmentcrxqmets
 from .EnvironmentBaseX import EnvironmentBaseX, EnvironmentRHELBaseX
