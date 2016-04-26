@@ -4,6 +4,8 @@ from . import *
 
 
 class EnvironmentDrupal8(EnvironmentDrupal7, IEnvironment):
+    Version = '1.0'
+
     def __init__(self, conf, owner):
         super(EnvironmentDrupal8, self).__init__(conf, owner)
 
@@ -22,9 +24,10 @@ class EnvironmentDrupal8(EnvironmentDrupal7, IEnvironment):
         if self.Version not in hashes:
             raise Exception('Version %s is not supported' % self.Version)
 
-        with codecs.open(dockerfile, mode='r', encoding='utf-8') as dockerfile:
-            commands = dockerfile.read()
+        with codecs.open(dockerfile, mode='r', encoding='utf-8') as df:
+            commands = df.read()
             commands = re.sub('@VERSION@', '8.' + self.Version, commands)
             commands = re.sub('@HASH@', hashes[self.Version], commands)
-        with codecs.open(dockerfile, mode='r', encoding='utf-8') as dockerfile:
-            dockerfile.write(commands)
+        with codecs.open(dockerfile, mode='w', encoding='utf-8') as df:
+            df.write(commands)
+

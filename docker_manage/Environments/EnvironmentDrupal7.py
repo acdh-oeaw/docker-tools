@@ -5,6 +5,7 @@ from . import *
 
 class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
     skipDocumentRoot = True
+    Version = '43'
 
     def __init__(self, conf, owner):
         if 'DockerfileDir' not in conf:
@@ -37,25 +38,25 @@ class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
             ['docker', 'exec', self.Name, 'chown', '-R', self.UserName + ':' + self.UserName, '/var/www/html'], verbose,
             '', 'Setting up permissions failed')
 
+    def adjustVersion(self, dockerfile):
+        hashes = {
+            '36': '98e1f62c11a5dc5f9481935eefc814c5',
+            '37': '3a70696c87b786365f2c6c3aeb895d8a',
+            '38': 'c18298c1a5aed32ddbdac605fdef7fce',
+            '39': '6f42a7e9c7a1c2c4c9c2f20c81b8e79a',
+            '40': 'd4509f13c23999a76e61ec4d5ccfaf26',
+            '41': '7636e75e8be213455b4ac7911ce5801f',
+            '42': '9a96f67474e209dd48750ba6fccc77db',
+            '43': 'c6fb49bc88a6408a985afddac76b9f8b'
+        }
 
-def adjustVersion(self, dockerfile):
-    hashes = {
-        '36': '98e1f62c11a5dc5f9481935eefc814c5',
-        '37': '3a70696c87b786365f2c6c3aeb895d8a',
-        '38': 'c18298c1a5aed32ddbdac605fdef7fce',
-        '39': '6f42a7e9c7a1c2c4c9c2f20c81b8e79a',
-        '40': 'd4509f13c23999a76e61ec4d5ccfaf26',
-        '41': '7636e75e8be213455b4ac7911ce5801f',
-        '42': '9a96f67474e209dd48750ba6fccc77db',
-        '43': 'c6fb49bc88a6408a985afddac76b9f8b'
-    }
+        if self.Version not in hashes:
+            raise Exception('Version %s is not supported' % self.Version)
 
-    if self.Version not in hashes:
-        raise Exception('Version %s is not supported' % self.Version)
+        with codecs.open(dockerfile, mode='r', encoding='utf-8') as df:
+            commands = df.read()
+            commands = re.sub('@VERSION@', '7.' + self.Version, commands)
+            commands = re.sub('@HASH@', hashes[self.Version], commands)
+        with codecs.open(dockerfile, mode='w', encoding='utf-8') as df:
+            df.write(commands)
 
-    with codecs.open(dockerfile, mode='r', encoding='utf-8') as dockerfile:
-        commands = dockerfile.read()
-        commands = re.sub('@VERSION@', '7.' + self.Version, commands)
-        commands = re.sub('@HASH@', hashes[self.Version], commands)
-    with codecs.open(dockerfile, mode='r', encoding='utf-8') as dockerfile:
-        dockerfile.write(commands)
