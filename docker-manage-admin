@@ -38,8 +38,6 @@ args.project = sanitizeArg(args.project)
 args.environment = sanitizeArg(args.environment)
 args.command = sanitizeArg(args.command)
 
-print(args)
-
 print('Loading config...')
 configuration = docker_manage.Configuration()
 

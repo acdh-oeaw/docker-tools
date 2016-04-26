@@ -18,7 +18,7 @@ print(args)
 images = {}
 for img in os.listdir(args.dir):
     skip = False
-    if not os.path.exists(os.path.join(arg.dir, img, 'Dockerfile')):
+    if not os.path.exists(os.path.join(args.dir, img, 'Dockerfile')):
         skip = True
     for exp in args.skip:
         if re.search(exp, img):
