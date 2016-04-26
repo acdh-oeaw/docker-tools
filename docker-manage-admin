@@ -44,8 +44,9 @@ configuration = docker_manage.Configuration()
 print('Checking conflicts between environments...')
 configuration.check()
 
-print('Removing obsolete environments...')
-configuration.clean(args.verbose)
+if args.action is None or args.action.count('check') == 0 :
+  print('Removing obsolete environments...')
+  configuration.clean(args.verbose)
 
 if args.action is None or args.action.count('build') > 0:
     print('Building images...')
