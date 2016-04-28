@@ -3,11 +3,56 @@ import re
 from . import *
 
 
-class EnvironmentDrupal8(EnvironmentDrupal7, IEnvironment):
+class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
+    skipDocumentRoot = True
     Version = '1.0'
 
     def __init__(self, conf, owner):
+        if 'DockerfileDir' not in conf:
+            conf['DockerfileDir'] = 'http_drupal'
+        self.ImitateHTTPS = self.HTTPS
+
         super(EnvironmentDrupal8, self).__init__(conf, owner)
+
+        if not 'SitesDir' in conf or not Param.isValidRelPath(conf['SitesDir']) or not Param.isValidDir(
+                                self.BaseDir + '/' + conf['SitesDir']):
+            raise Exception('SitesDir is missing or invalid')
+        self.Mounts.append({"Host": conf['SitesDir'], "Guest": '/var/www/html/sites', "Rights": "rw"})
+
+        if not 'ModulesDir' in conf or not Param.isValidRelPath(conf['ModulesDir']) or not Param.isValidDir(
+                                self.BaseDir + '/' + conf['ModulesDir']):
+            raise Exception('ModulesDir is missing or invalid')
+        self.Mounts.append({"Host": conf['ModulesDir'], "Guest": '/var/www/html/modules', "Rights": "rw"})
+
+        if not 'ThemesDir' in conf or not Param.isValidRelPath(conf['ThemesDir']) or not Param.isValidDir(
+                                self.BaseDir + '/' + conf['ThemesDir']):
+            raise Exception('ThemesDir is missing or invalid')
+        self.Mounts.append({"Host": conf['ThemesDir'], "Guest": '/var/www/html/themes', "Rights": "rw"})
+
+        if not 'ProfilesDir' in conf or not Param.isValidRelPath(conf['ProfilesDir']) or not Param.isValidDir(
+                                self.BaseDir + '/' + conf['ProfilesDir']):
+            raise Exception('ProfilesDir is missing or invalid')
+        self.Mounts.append({"Host": conf['ProfilesDir'], "Guest": '/var/www/html/profiles', "Rights": "rw"})
+
+        if not 'LibrariesDir' in conf or not Param.isValidRelPath(conf['LibrariesDir']) or not Param.isValidDir(
+                                self.BaseDir + '/' + conf['LibrariesDir']):
+            raise Exception('LibrariesDir is missing or invalid')
+        self.Mounts.append({"Host": conf['LibrariesDir'], "Guest": '/var/www/html/libraries', "Rights": "rw"})
+
+
+    # as Drupal environment does not have DocumentRoot it is not clear what
+    # should be a base dir for aliases
+    def processAliases(self, conf):
+        pass
+
+    def runHooks(self, verbose):
+        super(EnvironmentDrupal7, self).runHooks(verbose)
+
+        if verbose:
+            print('    Setting up drupal permissions')
+        self.runProcess(
+            ['docker', 'exec', self.Name, 'chown', '-R', self.UserName + ':' + self.UserName, '/var/www/html'], verbose,
+            '', 'Setting up permissions failed')
 
     def adjustVersion(self, dockerfile):
         hashes = {
