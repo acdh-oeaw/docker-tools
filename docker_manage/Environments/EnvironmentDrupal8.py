@@ -9,7 +9,7 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
 
     def __init__(self, conf, owner):
         if 'DockerfileDir' not in conf:
-            conf['DockerfileDir'] = 'http_drupal'
+            conf['DockerfileDir'] = 'http_drupal8'
         self.ImitateHTTPS = self.HTTPS
 
         super(EnvironmentDrupal8, self).__init__(conf, owner)
