@@ -46,7 +46,7 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
         pass
 
     def runHooks(self, verbose):
-        super(EnvironmentDrupal7, self).runHooks(verbose)
+        super(EnvironmentPHP, self).runHooks(verbose)
 
         if verbose:
             print('    Setting up drupal permissions')
