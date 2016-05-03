@@ -27,6 +27,7 @@ class Environment(IEnvironment, object):
     Hosts = None
     EnvVars = None
     Version = None
+    BackupDir = None
     runAsUser = False
 
     def __init__(self, conf, owner):
@@ -101,6 +102,11 @@ class Environment(IEnvironment, object):
             if not isinstance(conf['Version'], basestring):
                 raise Exception('Version is not a string')
             self.Version = conf['Version']
+
+        if 'BackupDir' in conf:
+            if not Param.isValidDir(self.BaseDir + '/' + conf['BackupDir']):
+                raise Exception('BackupDir is invalid')
+            self.BackupDir = conf['BackupDir']
 
     def processMounts(self, conf):
         if not isinstance(conf, list):

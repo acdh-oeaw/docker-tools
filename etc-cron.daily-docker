@@ -12,13 +12,27 @@ DAY=`date +%u`
 
 # BACKUP
 tar -cf $BACKUP_DIR/${DAY}_config.json.tar /home/*/config.json
-to_backup=""
 for i in `ls -1 /home/*/config.json`; do
-        for j in `cat $i | json_pp | grep '"DockerfileDir" : ' | sed -r -e 's/^ *"DockerfileDir" : "(.*)",$/\1/'`; do
-                to_backup="$to_backup `dirname $i`/$j"
+	cd `dirname $i`
+        username=`dirname $i`
+        username=`basename $username`
+
+        backupdirs=""
+        for j in `cat $i | json_pp | grep '"DockerfileDir" : ' | sed -r -e 's/^ *"DockerfileDir" : "(.*)",?$/\1/'`; do
+                backupdirs="$backupdirs $j"
         done
+        if [ -n "$backupdirs" ]; then
+		tar -czf ${BACKUP_DIR}/${username}_DockerfileDirs_${DAY}.tar $backupdirs
+	fi
+
+        backupdirs=""
+        for j in `cat $i | json_pp | grep '"BackupDir" : ' | sed -r -e 's/^ *"BackupDir" : "(.*)",?$/\1/'`; do
+                backupdirs="$backupdirs $j"
+        done
+        if [ -n "$backupdirs" ]; then
+		tar -czf ${BACKUP_DIR}/${username}_BackupDirs_${DAY}.tar $backupdirs
+	fi
 done
-tar -czf $BACKUP_DIR/${DAY}_DockerfileDirs.tar $to_backup
 
 # UPDATE
 BUILD=0
