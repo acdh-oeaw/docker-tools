@@ -19,9 +19,9 @@ images = {}
 for img in os.listdir(args.dir):
     dockerfilePath = os.path.join(args.dir, img, 'Dockerfile')
 
-    skip = False
     if not os.path.exists(os.path.join(args.dir, img, 'Dockerfile')):
-        skip = True
+        continue
+    skip = False
     with codecs.open(dockerfilePath, mode='r', encoding='utf-8') as dockerfile:
         line1 = dockerfile.readline()
         if re.match('#@TEMPLATE', line1):
@@ -42,9 +42,6 @@ for img in os.listdir(args.dir):
             depends = re.sub('^FROM %s/' % args.localPrefix, '', commands[0])
             depends = re.sub('[^-a-zA-Z0-9_:.]*$', '', depends)
             images[img] = depends
-
-print(images)
-exit()
 
 while True:
     todel = []
