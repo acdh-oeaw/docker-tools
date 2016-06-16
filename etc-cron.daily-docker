@@ -22,7 +22,10 @@ for i in `ls -1 /home/*/config.json`; do
                 backupdirs="$backupdirs $j"
         done
         if [ -n "$backupdirs" ]; then
-		tar -czf ${BACKUP_DIR}/${username}_DockerfileDirs_${DAY}.tar $backupdirs
+                tarfile=${BACKUP_DIR}/${username}_DockerfileDirs_${DAY}.tar
+		tar -czf $tarfile $backupdirs
+                chmod 640 $tarfile
+                chgrp $username $tarfile
 	fi
 
         backupdirs=""
@@ -30,7 +33,10 @@ for i in `ls -1 /home/*/config.json`; do
                 backupdirs="$backupdirs $j"
         done
         if [ -n "$backupdirs" ]; then
-		tar -czf ${BACKUP_DIR}/${username}_BackupDirs_${DAY}.tar $backupdirs
+                tarfile=${BACKUP_DIR}/${username}_BackupDirs_${DAY}.tar
+		tar -czf $tarfile $backupdirs
+                chmod 640 $tarfile
+                chgrp $username $tarfile
 	fi
 done
 
