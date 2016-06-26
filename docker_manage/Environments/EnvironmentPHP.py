@@ -63,4 +63,4 @@ class EnvironmentPHP5(EnvironmentPHP, IEnvironment):
     def __init__(self, conf, owner):
         if 'DockerfileDir' not in conf:
             conf['DockerfileDir'] = self.DockerfileDir
-        super(EnvironmentPHP, self).__init__(conf, owner)
+        super(EnvironmentPHP5, self).__init__(conf, owner)
