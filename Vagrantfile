@@ -199,6 +199,6 @@ Terminal=false
 StartupWMClass=jetbrains-pycharm-ce
 EOF
   cd /home
-  chmod vagrant:vagrant -R vagrant
+  chown vagrant:vagrant -R vagrant
   SHELL
 end
