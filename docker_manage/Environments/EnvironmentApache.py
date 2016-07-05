@@ -137,6 +137,7 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     os.remove(tmpFile)
 
   def apacheRestart(self, verbose):
+    self.runProcess(['docker', 'exec', self.Name, 'apachectl', 'graceful'], verbose, '', 'Apache graceful restart failed')
     self.runProcess(['docker', 'exec', self.Name, 'supervisorctl', 'restart', 'apache2'], verbose, '', 'Apache restart failed')
 
   def getDockerOpts(self):
