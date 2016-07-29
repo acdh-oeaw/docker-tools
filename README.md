@@ -28,13 +28,15 @@ Set of tools to make Docker administration easier
     * `system_files/etc/httpd/conf.d/shared/ssl.conf` - path to your servers SSL key and cert files
     * `system_files/etc/cron.daily/docker` backup paths, etc.
 * Run `./install.sh`
+  Be aware installation can take much time (most of it spent on compiling base images for ACDH environment types)
 
 ### Virtual Box VM creation and deployment on it
 
 * Install VirtualBox and Vagrant
 * Clone this repo, open console and go into the repo directory
 * Run `vagrant up`
-* You can log in 
+  Be aware installation can take much time (most of it spent on compiling base images for ACDH environment types)
+* You can log into guest machine by running `vagrant ssh` or by making SSH connection to 127.0.0.1 on port 2222 (user `vagrant`, password`vagrant`)
 
 ### Installation instructions from Omar
 
