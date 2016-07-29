@@ -279,6 +279,7 @@ class Environment(IEnvironment, object):
         # check and prepare volumes if necessary
         cli = Client(base_url='unix://var/run/docker.sock')
         volumesToCopy = self.checkVolumes(cli)
+        print(volumesToCopy)
         if len(volumesToCopy) > 0:
             mountsTmp = self.Mounts
             self.Mounts = []
