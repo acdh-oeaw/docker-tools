@@ -6,6 +6,10 @@ Set of tools to make Docker administration easier
 
 ### Installation on already running CentOs7 machine
 
+You should use this installation variant if you are deploying a new "ACDH-like" server.
+
+If you are using desktop or laptop, you should probably follow the *Installation including Virtual Box VM creation* variant.
+
 * If you want to store Docker images on a separate partition (if you are installing it on the server, the answer is always YES), then:
     * Install docker
       `sudo yum install -y docker`
@@ -30,7 +34,9 @@ Set of tools to make Docker administration easier
 * Run `./install.sh`
   Be aware installation can take much time (most of it spent on compiling base images for ACDH environment types)
 
-### Virtual Box VM creation and deployment on it
+## Installation including Virtual Box VM creation
+
+This is the most convenient installation option for PCs and laptops.
 
 * Install VirtualBox and Vagrant
 * Clone this repo, open console and go into the repo directory
