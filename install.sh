@@ -16,13 +16,11 @@ cp -r system_files/* /
 yum makecache fast
 yum install -y yum-plugin-fastestmirror deltarpm epel-release
 yum update -y
-yum install -y docker docker-selinux httpd net-tools python-docker git xfsprogs
+yum install -y docker docker-selinux httpd net-tools python-docker git xfsprogs mod_ssl
 
 ###################
 # Configure Apache
 ###################
-mkdir /etc/httpd/conf.d/sites-enabled
-mkdir /etc/httpd/conf.d/shared
 systemctl enable httpd
 systemctl start httpd
 
@@ -34,11 +32,13 @@ sed -i -e 's/home +xfs +defaults /home +xfs +defaults,pquota /' /etc/fstab
 
 # to enable volumes access for normal users
 chmod +x /var/lib/docker
+mkdir /var/lib/docker/images/tmp
 chmod 777 /var/lib/docker/images/tmp
 
 # SELinux context to allow docker access external mounts
-semanage fcontext -a -t svirt_sandbox_file_t "/home(/[^.].*)?"
-restorecon -RvF /home
+semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
+restorecon -RF /home
+chcon -R -t ssh_home_t /home/*/.ssh
 
 # As apache is the reverse proxy it has to be able to connect
 # via network
@@ -47,5 +47,9 @@ setsebool -P httpd_can_network_connect true
 ###################
 # Configure Docker and prepare images
 ###################
+systemctl enable docker-storage-setup
+systemctl start docker-storage-setup
 systemctl enable docker
 systemctl start docker
+
+docker-build-images /var/lib/docker/images/

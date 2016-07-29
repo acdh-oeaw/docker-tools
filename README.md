@@ -4,7 +4,42 @@ Set of tools to make Docker administration easier
 
 ## Installation
 
-Important remark - all paths according to CentOs 7
+### Installation on already running CentOs7 machine
+
+* If you want to store Docker images on a separate partition (if you are installing it on the server, the answer is always YES), then:
+    * Install docker
+      `sudo yum install -y docker`
+    * Adjust `/etc/sysconfig/docker-storage-setup`, e.g.
+      ```
+      STORAGE_DRIVER=devicemapper
+      VG=centos00
+      DATA_SIZE=50G
+      GROWPART=false
+      ```
+    * Run
+      ```
+      systemctl enable docker-storage-setup
+      systemctl start docker-storage-setup
+      ```
+    * Check created `/etc/sysconfig/docker-storage`
+      You may consider adding `--storage-opt dm.min_free_space=5%` to it (the default is 10%)
+* Clone this repo and enter its directory
+* Consider adjusting configuration files in the `system_files` directory, especially:
+    * `system_files/etc/httpd/conf.d/shared/ssl.conf` - path to your servers SSL key and cert files
+    * `system_files/etc/cron.daily/docker` backup paths, etc.
+* Run `./install.sh`
+
+### Virtual Box VM creation and deployment on it
+
+* Install VirtualBox and Vagrant
+* Clone this repo, open console and go into the repo directory
+* Run `vagrant up`
+* You can log in 
+
+### Installation instructions from Omar
+
+Omar's installation creates a Virtual Box VM with the windows manager, Python IDE, etc.
+You do not need all this stuff if you only want to test your services in ACDH server environment.
 
 * Make sure docker docker-python httpd mod_ssl are already installed
 * Create these non-standard directories if they don't exist:
@@ -53,31 +88,21 @@ For Development:
 
 Included scripts are:
 
-* docker-manage-admin
-  Our workhorse for checking configuration, building images, running containers 
-  and accessing guest console
-* docker-manage
-  Alias for docker-manage for unprivileged users so they do not have to type 
-  "sudo -g docker docker-manage"
-* docker-add-project
-  Script which properly adds new system user taking care of setting up quota, 
-  files required for ssh access, etc.
-  You should use it instead of normal "useradd" or "adduser"
-* docker-clean, docker-register-proxy, docker-register-systemd
+* `docker-manage-admin`
+  Our workhorse for checking configuration, building images, running containers and accessing guest console
+* `docker-manage`
+  Alias for `docker-manage-admin` for unprivileged users so they do not have to type `sudo -g docker docker-manage`
+* `docker-add-project`
+  Script which properly adds new system user taking care of setting up quota, files required for ssh access, etc.
+  You should use it instead of normal `useradd` or `adduser`
+* `docker-clean`, `docker-register-proxy`, `docker-register-systemd`
   Helper scripts run by docker-manage
   There is no need to run them directly but if you are root, you can do it
-* docker-remove-unused-images, docker-remove-unused-containers
+* `docker-remove-unused-images`, `docker-remove-unused-containers`
   Clean-up scripts removing obsolete containers and images
   They are run by docker-manage and by cron, you can also run them manually
-* docker-check-quota
+* `docker-check-quota`
   Script for quickly checking if we can safely extend quota limit or maybe we
   should ask ARZ to extend disk space first
-* docker-install-container
-  An old script used for building and running a given container on the basis of 
-  Dockerfile
-  It takes care of a removal of the previous version of the container, 
-  registers created container in systemd and mounts all container volumes under
-  /srv/docker/containerName/
-  In general you should use a json configuration file and docker-manage 
-  instead.
-
+* `docker-tools-update`
+  Updates this tools by fetching the up to date version from the repository and installing it
