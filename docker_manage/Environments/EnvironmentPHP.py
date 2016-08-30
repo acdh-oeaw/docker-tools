@@ -26,7 +26,7 @@ class EnvironmentPHP(EnvironmentApache, IEnvironment):
                 raise Exception('LogDir is invalid')
             self.LogDir = conf['LogDir']
         else:
-            print('    Please specify a LogDir! This will be mandatory in the future!')
+            raise Exception('LogDir is not specified')
 
         if 'ExecDir' in conf:
             if (
