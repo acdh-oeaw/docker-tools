@@ -4,11 +4,14 @@ import os
 class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
   PythonPath      = None
   WSGIScriptAlias = None
+  LogDirMount = '/var/log/apache2'
 
   def __init__(self, conf, owner):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'http_wsgi3'
     super(EnvironmentWSGI3, self).__init__(conf, owner)
+
+    self.processLogDir(conf, False)
 
     if 'PythonPath' in conf :
       self.processPythonPath(conf['PythonPath'])

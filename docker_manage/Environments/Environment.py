@@ -16,6 +16,7 @@ class Environment(IEnvironment, object):
     ready = False
     owner = False
     Name = None
+    ID = None
     UID = None
     GID = None
     UserName = ''
@@ -29,6 +30,8 @@ class Environment(IEnvironment, object):
     Version = None
     BackupDir = None
     runAsUser = False
+    LogDir = None
+    LogDirMount = None
 
     def __init__(self, conf, owner):
         self.Mounts = []
@@ -46,6 +49,11 @@ class Environment(IEnvironment, object):
         if not 'Name' in conf or not Param.isValidName(conf['Name']):
             raise Exception('Name is missing or invalid')
         self.Name = conf['Account'] + '-' + conf['Name']
+        if not 'ID' in conf or not Param.isValidNumber(conf['ID']):
+            if self.owner:
+                print('    Warning! Redmine issue ID is missing in environment %s' % self.Name)
+        else:
+            self.ID = conf['ID']
 
         if not 'BaseDir' in conf or not Param.isValidDir(conf['BaseDir']):
             raise Exception('Base dir is missing or invalid')
@@ -107,6 +115,24 @@ class Environment(IEnvironment, object):
             if not Param.isValidDir(self.BaseDir + '/' + conf['BackupDir']):
                 raise Exception('BackupDir is invalid')
             self.BackupDir = conf['BackupDir']
+
+    def processLogDir(self, conf, enforce = False):
+        if 'LogDir' in conf:
+            if (
+                self.owner and (
+                    not Param.isValidRelPath(conf['LogDir'])
+                    or not Param.isValidDir(self.BaseDir + '/' + conf['LogDir'])
+                )
+            ):
+                raise Exception('LogDir is invalid')
+            self.LogDir = conf['LogDir']
+            if self.LogDirMount is not None:
+                self.Mounts.append({"Host": self.LogDir, "Guest": self.LogDirMount, "Rights": "rw"})
+        else:
+            if enforce:
+                raise Exception('LogDir is not specified')
+            elif self.owner:
+                print('    Warning! LogDir is not specified in environment %s' % self.Name) 
 
     def processMounts(self, conf):
         if not isinstance(conf, list):

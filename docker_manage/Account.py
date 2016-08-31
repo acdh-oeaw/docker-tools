@@ -28,14 +28,16 @@ class Account:
     self.owner = os.access(self.base, os.W_OK)
   
   def readConfig(self):
-    print '  ' + self.name
+    if self.owner:
+        print('  ' + self.name)
     confFileName = self.base + '/config.json'
     if os.path.isfile(confFileName):
       try:
         config = json.load(open(confFileName, 'r'))
         self.processConfig(config)
       except Exception as e:
-        print '    Configuration file ' + confFileName + ' is not a valid JSON: ' + str(e)
+        if self.owner:
+            print('    Configuration file ' + confFileName + ' is not a valid JSON: ' + str(e))
 
   def processConfig(self, conf):
     if not isinstance(conf, list) :
