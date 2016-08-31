@@ -72,6 +72,7 @@ class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
   WSGIDaemonProcess {ServerName} user={UID} group={GID} python-path={PythonPath}
   WSGIProcessGroup {ServerName}
   WSGIScriptAlias / {WSGIScriptAlias}
+  WSGIPassAuthorization On
 
   <Directory {DocumentRootMount}>
     Require all granted
