@@ -73,7 +73,8 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
             '1.7': '19e95079e50dd3c19222b91ef1b57036',
             '1.8': '7c00b318590a22f2df7a18cf70df06dc',
             '1.9': '4de7c001ecbd5c27e5837c97e40facc2',
-            '1.10': 'ce373a1a7a075ff9035b1c95f54170a4'
+            '1.10': 'ce373a1a7a075ff9035b1c95f54170a4',
+            '2.0': '5d0c57d2fd6338d60a5e311acc188b44'
         }
 
         if self.Version not in hashes:
