@@ -412,7 +412,7 @@ class Environment(IEnvironment, object):
         return []
 
     def getDockerOpts(self):
-        dockerOpts = ['-d']
+        dockerOpts = ['-d', '-h', self.Name]
         for mount in self.Mounts:
             dockerOpts += ['-v', self.BaseDir + '/' + mount['Host'] + ':' + mount['Guest'] + ':' + mount['Rights']]
         for port in self.Ports:
