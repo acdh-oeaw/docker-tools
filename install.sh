@@ -57,4 +57,4 @@ systemctl start docker-storage-setup
 systemctl enable docker
 systemctl start docker
 
-docker-build-images -v /var/lib/docker/images/ --skip basex corpus_shell existdb22 noske existdb30 vleserver 
+#docker-build-images -v /var/lib/docker/images/ --skip basex corpus_shell existdb22 noske existdb30 vleserver 
