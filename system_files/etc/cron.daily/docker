@@ -41,6 +41,7 @@ for i in `ls -1 /home/*/config.json`; do
 done
 
 # UPDATE
+docker-tools-update /root/docker-tools
 BUILD=0
 for i in `docker images | grep -v '^<none>' | grep -v "^$PREFIX/" | sed -n '1!p' | awk '{print $1 ":" $2}'`; do
         RES=`docker pull $i | grep 'up to date'`

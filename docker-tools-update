@@ -14,3 +14,4 @@ else
 fi
 cd /var/lib/docker/images
 git pull origin master
+echo 'Rebuild images with `docker-build-images -v /var/lib/docker/images/`'
