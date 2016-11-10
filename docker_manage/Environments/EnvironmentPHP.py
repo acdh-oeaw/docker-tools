@@ -50,3 +50,19 @@ class EnvironmentPHP5(EnvironmentPHP, IEnvironment):
         if 'DockerfileDir' not in conf:
             conf['DockerfileDir'] = self.DockerfileDir
         super(EnvironmentPHP5, self).__init__(conf, owner)
+
+class EnvironmentCorpusShell(EnvironmentPHP, IEnvironment):
+    DockerfileDir = 'corpus_shell'
+
+    def __init__(self, conf, owner):
+        if 'DockerfileDir' not in conf:
+            conf['DockerfileDir'] = self.DockerfileDir
+        super(EnvironmentCorpusShell, self).__init__(conf, owner)
+
+class EnvironmentVLEServer(EnvironmentPHP, IEnvironment):
+    DockerfileDir = 'vleserver'
+
+    def __init__(self, conf, owner):
+        if 'DockerfileDir' not in conf:
+            conf['DockerfileDir'] = self.DockerfileDir
+        super(EnvironmentVLEServer, self).__init__(conf, owner)
