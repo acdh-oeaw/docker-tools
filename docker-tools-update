@@ -12,3 +12,5 @@ else
 	cd .. && \
 	rm -fR docker-tools
 fi
+cd /var/lib/docker/images
+git pull origin master

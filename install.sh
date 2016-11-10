@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd dirname $0
+DIR=`dirname $0`
+cd $DIR
 
 ###################
 # Install system packages
@@ -14,8 +15,15 @@ yum install -y docker docker-selinux httpd net-tools python-docker python-setupt
 # Install docker-tools
 ###################
 python setup.py build && sudo python setup.py install
-mkdir -p /var/lib/docker/images
-cp -r images/* /var/lib/docker/images/
+
+cd /var/lib/docker
+git clone https://github.com/acdh-oeaw/docker-tools-environments.git
+mv docker-tools-environments images
+git clone https://redmine.acdh.oeaw.ac.at/docker-tools-environments-priv.git
+mv docker-tools-environments-priv/* images/
+rm -fR docker-tools-environments
+cd $DIR
+
 cp -r system_files/* /
 
 ###################
@@ -32,7 +40,7 @@ sed -i -e 's/home +xfs +defaults /home +xfs +defaults,pquota /' /etc/fstab
 
 # to enable volumes access for normal users
 chmod +x /var/lib/docker
-mkdir /var/lib/docker/images/tmp
+mkdir -p /var/lib/docker/images/tmp
 chmod 777 /var/lib/docker/images/tmp
 
 # SELinux context to allow docker access external mounts
@@ -57,4 +65,5 @@ systemctl start docker-storage-setup
 systemctl enable docker
 systemctl start docker
 
-#docker-build-images -v /var/lib/docker/images/ --skip basex corpus_shell existdb22 noske existdb30 vleserver 
+echo 'To build images run'
+echo '  docker-build-images -v /var/lib/docker/images/ --skip envToSkip1 envToSkip2'
