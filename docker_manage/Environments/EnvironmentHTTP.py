@@ -93,7 +93,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
   def check(self, duplDomains, duplPorts, duplNames, names):
     errors = super(EnvironmentHTTP, self).check(duplDomains, duplPorts, duplNames, names)
     if self.ServerName in duplDomains :
-      errors.append('Domain ' + self.serverName + ' is duplicated')
+      errors.append('Domain ' + self.ServerName + ' is duplicated')
     for alias in self.ServerAlias:
       if alias in duplDomains :
         errors.append('ServerAlias ' + alias + ' is duplicated')
