@@ -6,6 +6,7 @@ from . import *
 class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
     skipDocumentRoot = True
     Version = '2.3'
+    VendorDir = False
 
     def __init__(self, conf, owner):
         if 'DockerfileDir' not in conf:
@@ -39,6 +40,14 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
             raise Exception('LibrariesDir is missing or invalid')
         self.Mounts.append({"Host": conf['LibrariesDir'], "Guest": '/var/www/html/libraries', "Rights": "rw"})
 
+        if 'HtaccessFile' in conf and Param.isValidFile(self.BaseDir + '/' + conf['HtaccessFile']):
+            self.Mounts.append({"Host": conf['HtaccessFile'], "Guest": "/var/www/html/.htaccess", "Rights": "rw"})
+
+        if 'VendorDir' in conf:
+           if not Param.isValidRelPath(conf['VendorDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['VendorDir']):
+               raise Exception('VendorDir is invalid')
+           self.Mounts.append({"Host": conf['VendorDir'], "Guest": "/var/www/html/vendor", "Rights": "rw"})
+           self.VendorDir = True
 
     # as Drupal environment does not have DocumentRoot it is not clear what
     # should be a base dir for aliases
@@ -53,6 +62,11 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
         self.runProcess(
             ['docker', 'exec', self.Name, 'chown', '-R', self.UserName + ':' + self.UserName, '/var/www/html'], verbose,
             '', 'Setting up permissions failed')
+
+        if self.VendorDir:
+            if verbose:
+                print('    Updating composer libraries')
+            self.runProcess(['docker', 'exec', '-u', 'www-data', self.Name, '/usr/local/sbin/updateLibs.sh'], verbose, '', 'Updating libs failed')
 
     def adjustVersion(self, dockerfile):
         hashes = {
