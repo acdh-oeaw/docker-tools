@@ -32,6 +32,8 @@ class Environment(IEnvironment, object):
     runAsUser = False
     LogDir = None
     LogDirMount = None
+    userHookUser = None
+    userHookRoot = None
 
     def __init__(self, conf, owner):
         self.Mounts = []
@@ -115,6 +117,23 @@ class Environment(IEnvironment, object):
             if not Param.isValidDir(self.BaseDir + '/' + conf['BackupDir']):
                 raise Exception('BackupDir is invalid')
             self.BackupDir = conf['BackupDir']
+
+        if 'Hooks' in conf:
+            self.processUserHooks(conf['Hooks'])
+
+    def processUserHooks(self, conf):
+        if not isinstance(conf, dict):
+            raise Exception('Invalid RunHooks')
+        
+        if 'User' in conf:
+            if not Param.isValidFile(conf['User']):
+                raise Exception('User RunHook is not a file')
+            self.userHookUser = conf['User']
+
+        if 'Root' in conf:
+            if not Param.isValidFile(conf['Root']):
+                raise Exception('Root RunHook is not a file')
+            self.userHookRoot = conf['Root']      
 
     def processLogDir(self, conf, enforce = False):
         if 'LogDir' in conf:
@@ -334,6 +353,18 @@ class Environment(IEnvironment, object):
             raise Exception('Must be environment owner to run hooks')
 
         print('  ' + self.Name)
+
+    def runUserHooks(self, verbose):
+        if not self.owner:
+            raise Exception('Must be environment owner to run hooks')
+
+        if not self.userHookRoot is None:
+            self.runProcess(['docker', 'cp', self.userHookRoot, self.Name + ':/tmp/root.sh'], False, '', 'Copying user hook failed')
+            self.runProcess(['docker', 'exec', '-u', 'root', self.Name, 'bash', '/tmp/root.sh'], verbose, '', 'Running user hook failed')
+
+        if not self.userHookUser is None:
+            self.runProcess(['docker', 'cp', self.userHookUser, self.Name + ':/tmp/user.sh'], False, '', 'Copying user hook failed')
+            self.runProcess(['docker', 'exec', '-u', self.UserName, self.Name, 'bash', '/tmp/user.sh'], verbose, '', 'Running user hook failed')
 
     def runCommand(self, root, command=None):
         if not self.ready:

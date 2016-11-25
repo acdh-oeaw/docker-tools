@@ -61,6 +61,7 @@ class Configuration:
     for env in self.findEnvironments(projects, names):
       try:
         env.runHooks(verbose)
+        env.runUserHooks(verbose)
       except Exception as e:
         print '    ' + str(e)
 

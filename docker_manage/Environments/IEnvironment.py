@@ -84,6 +84,19 @@ class IEnvironment():
         pass
 
     @abc.abstractmethod
+    def runUserHooks(self, verbose):
+        """Runs user-defined hooks
+
+        User-defined hooks are run after environment hooks and allow users to
+        adjust containers configuration.
+        You should not override this method.
+
+        Args:
+          verbose (boolean): If method should produce a verbose output.
+        """
+        pass
+
+    @abc.abstractmethod
     def runContainer(self, verbose):
         """Runs 'docker run'
 
