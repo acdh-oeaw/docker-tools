@@ -118,7 +118,7 @@ class Environment(IEnvironment, object):
                 raise Exception('BackupDir is invalid')
             self.BackupDir = conf['BackupDir']
 
-        if 'Hooks' in conf:
+        if 'Hooks' in conf and self.owner:
             self.processUserHooks(conf['Hooks'])
 
     def processUserHooks(self, conf):
