@@ -9,7 +9,7 @@ cd $DIR
 yum makecache fast
 yum install -y yum-plugin-fastestmirror deltarpm epel-release
 yum update -y
-yum install -y docker docker-selinux httpd net-tools python-docker python-setuptools git xfsprogs mod_ssl vim links
+yum install -y docker docker-selinux httpd net-tools python-docker python-setuptools git xfsprogs mod_ssl vim links perl-JSON-PP
 
 ###################
 # Install docker-tools
