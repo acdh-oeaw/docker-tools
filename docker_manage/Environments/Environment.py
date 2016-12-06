@@ -126,14 +126,14 @@ class Environment(IEnvironment, object):
             raise Exception('Invalid RunHooks')
         
         if 'User' in conf:
-            if not Param.isValidFile(conf['User']):
+            if not Param.isValidFile(self.BaseDir + '/' + conf['User']) or not Param.isValidRelPath(conf['User']):
                 raise Exception('User RunHook is not a file')
-            self.userHookUser = conf['User']
+            self.userHookUser = self.BaseDir + '/' + conf['User']
 
         if 'Root' in conf:
-            if not Param.isValidFile(conf['Root']):
+            if not Param.isValidFile(self.BaseDir + '/' + conf['Root']) or not Param.isValidRelPath(conf['Root']):
                 raise Exception('Root RunHook is not a file')
-            self.userHookRoot = conf['Root']      
+            self.userHookRoot = self.BaseDir + '/' + conf['Root']      
 
     def processLogDir(self, conf, enforce = False):
         if 'LogDir' in conf:
