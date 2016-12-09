@@ -403,10 +403,8 @@ class Environment(IEnvironment, object):
     def injectUserEnv(self, dockerfilePath):
         if self.UserName != '':
             # adjusting existing guest user to meet UID and GID used in host
-            cmd = 'sed -i -r -e "s/^' + self.UserName + ':x:[0-9]+:[0-9]+:/' + self.UserName + ':x:' + str(
-                self.UID) + ':' + str(self.GID) + ':/" /etc/passwd;'
-            cmd += 'sed -i -r -e "s/^' + self.UserName + ':x:[0-9]+:/' + self.UserName + ':x:' + str(
-                self.GID) + ':/" /etc/group;'
+            cmd = 'groupmod --gid ' + str(self.GID) + ' "' + self.UserName + '"; '
+            cmd += 'usermod --gid ' + str(self.GID) + ' --uid ' + str(self.UID) + ' "' + self.UserName + '"; '
         else:
             # adding generic system user and group for UID and GID used in host
             cmd = 'echo "user:x:' + str(self.UID) + ':' + str(
