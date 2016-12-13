@@ -20,6 +20,7 @@ class Environment(IEnvironment, object):
     UID = None
     GID = None
     UserName = ''
+    GroupName = None
     BaseDir = None
     DockerfileDir = None
     Mounts = None
@@ -73,6 +74,11 @@ class Environment(IEnvironment, object):
             if not isinstance(conf['UserName'], basestring):
                 raise Exception('UserName is not a string')
             self.UserName = conf['UserName']
+
+        if 'GroupName' in conf:
+            if not isinstance(conf['GroupName'], basestring):
+                raise Exception('GroupName is not a string')
+            self.UserName = conf['GroupName']
 
         if 'runAsUser' in conf:
             if not isinstance(conf['runAsUser'], basestring) or not ['true', 'false'].count(conf['runAsUser']) > 0:
@@ -401,15 +407,20 @@ class Environment(IEnvironment, object):
         return ret
 
     def injectUserEnv(self, dockerfilePath):
+        cmd = ''
+
+        if self.GroupName is None:
+           self.GroupName = self.UserName
+
+        if self.GroupName != '':
+            cmd += 'groupmod --gid ' + str(self.GID) + ' "' + self.GroupName + '"; '
+        else:
+            cmd += 'groupadd --gid ' + str(self.GID) + ' user; '
+
         if self.UserName != '':
-            # adjusting existing guest user to meet UID and GID used in host
-            cmd = 'groupmod --gid ' + str(self.GID) + ' "' + self.UserName + '"; '
             cmd += 'usermod --gid ' + str(self.GID) + ' --uid ' + str(self.UID) + ' "' + self.UserName + '"; '
         else:
-            # adding generic system user and group for UID and GID used in host
-            cmd = 'echo "user:x:' + str(self.UID) + ':' + str(
-                self.GID) + '::' + self.getGuestHomeDir() + ':/bin/bash" >> /etc/passwd;'
-            cmd += 'echo "user:x:' + str(self.GID) + ':" >> /etc/group;'
+            cmd += 'useradd --gid ' + str(self.GID) + ' --uid ' + str(self.UID) + ' -d ' + self.getGuestHomeDir() + ' user; '
             cmd += 'echo "user:$6$04SIq7OY$7PT2WujGKsr6013IByauNo0tYLj/fperYRMC4nrsbODc9z.cnxqXDRkAmh8anwDwKctRUTiGhuoeali4JoeW8/:16231:0:99999:7:::" >> /etc/shadow;'
         cmd = 'USER root\nRUN ' + cmd + '\n'
 
