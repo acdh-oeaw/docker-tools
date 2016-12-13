@@ -413,16 +413,16 @@ class Environment(IEnvironment, object):
            self.GroupName = self.UserName
 
         if self.GroupName != '':
-            cmd += 'groupmod --gid ' + str(self.GID) + ' "' + self.GroupName + '"; '
+            cmd += 'groupmod --gid ' + str(self.GID) + ' "' + self.GroupName + '" && '
         else:
-            cmd += 'groupadd --gid ' + str(self.GID) + ' user; '
+            cmd += 'groupadd --gid ' + str(self.GID) + ' user && '
 
         if self.UserName != '':
-            cmd += 'usermod --gid ' + str(self.GID) + ' --uid ' + str(self.UID) + ' "' + self.UserName + '"; '
+            cmd += 'usermod --gid ' + str(self.GID) + ' --uid ' + str(self.UID) + ' "' + self.UserName + '" && '
         else:
-            cmd += 'useradd --gid ' + str(self.GID) + ' --uid ' + str(self.UID) + ' -d ' + self.getGuestHomeDir() + ' user; '
-            cmd += 'echo "user:$6$04SIq7OY$7PT2WujGKsr6013IByauNo0tYLj/fperYRMC4nrsbODc9z.cnxqXDRkAmh8anwDwKctRUTiGhuoeali4JoeW8/:16231:0:99999:7:::" >> /etc/shadow;'
-        cmd = 'USER root\nRUN ' + cmd + '\n'
+            cmd += 'useradd --gid ' + str(self.GID) + ' --uid ' + str(self.UID) + ' -d ' + self.getGuestHomeDir() + ' user && '
+            cmd += 'echo "user:$6$04SIq7OY$7PT2WujGKsr6013IByauNo0tYLj/fperYRMC4nrsbODc9z.cnxqXDRkAmh8anwDwKctRUTiGhuoeali4JoeW8/:16231:0:99999:7:::" >> /etc/shadow && '
+        cmd = 'USER root\nRUN ' + cmd[:-3] + '\n'
 
         for name, value in self.EnvVars.iteritems():
             cmd += 'ENV ' + name + ' ' + value + '\n'
