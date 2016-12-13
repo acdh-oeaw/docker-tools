@@ -375,10 +375,12 @@ class Environment(IEnvironment, object):
     def runCommand(self, root, command=None):
         if not self.ready:
             return False
+        opts = '-i'
         if command is None or not isinstance(command, list) or len(command) == 0:
             command = ['/bin/bash']
+            opts += 't'
 
-        args = ['docker', 'exec', '-ti', '-u', 'root', self.Name] + command
+        args = ['docker', 'exec', opts, '-u', 'root', self.Name] + command
         if not root:
             args[4] = self.UserName if self.UserName != '' else 'user'
         subprocess.call(args)
