@@ -78,7 +78,7 @@ class Environment(IEnvironment, object):
         if 'GroupName' in conf:
             if not isinstance(conf['GroupName'], basestring):
                 raise Exception('GroupName is not a string')
-            self.UserName = conf['GroupName']
+            self.GroupName = conf['GroupName']
 
         if 'runAsUser' in conf:
             if not isinstance(conf['runAsUser'], basestring) or not ['true', 'false'].count(conf['runAsUser']) > 0:
