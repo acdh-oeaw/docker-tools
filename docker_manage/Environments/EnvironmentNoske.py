@@ -25,13 +25,12 @@ class EnvironmentNoSkE(EnvironmentSkeBase, IEnvironment):
       ) :
         raise Exception('LogDir is missing or invalid')
     self.LogDir = conf['LogDir']
+    self.Mounts.append({ "Host" : self.LogDir,     "Guest" : self.LogDirMount,     "Rights" : "rw" })
 
     try:
       self.getHTTPPort()
     except:
       self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 8080 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
-
-    self.Mounts.append({ "Host" : self.LogDir,     "Guest" : self.LogDirMount,     "Rights" : "rw" })
 
 class EnvironmentNoSkE_patched(EnvironmentNoSkE, IEnvironment):
   def __init__(self, conf, owner):
