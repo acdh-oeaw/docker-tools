@@ -94,6 +94,7 @@ sudo yum install -y git docker docker-selinux python-docker python-setuptools ht
 
 git clone https://github.com/acdh-oeaw/docker-tools.git
 pushd docker-tools
+git clone https://github.com/acdh-oeaw/docker-tools-environments.git
 
 ###################
 # Install docker-tools
@@ -101,13 +102,13 @@ pushd docker-tools
 python setup.py build && sudo python setup.py install
 pushd /var/lib/docker
 
-cd /var/lib/docker
 sudo git clone https://github.com/acdh-oeaw/docker-tools-environments.git
 sudo mv docker-tools-environments images
 popd
 
 sudo cp -r system_files/* /
 
+popd
 ###################
 # Configure Apache
 ###################
