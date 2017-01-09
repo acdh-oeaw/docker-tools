@@ -82,19 +82,72 @@ Vagrant.configure(2) do |config|
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
-     sudo yum install -y yum-plugin-fastestmirror deltarpm epel-release dnsmasq
-     sudo yum update -y
-     sudo yum groups install -y "X Window System"
-     sudo yum groups install -y "MATE Desktop"
-     sudo systemctl set-default graphical.target
-     sudo yum install -y java-1.7.0-openjdk wget git patch httpd mod_ssl docker docker-python python-pip
-     sudo systemctl enable httpd
-     sudo systemctl enable docker
-     sudo sed -i -e 's/dockerroot/docker/' /etc/group
-     sudo usermod -a -G docker vagrant
-     sudo usermod -a -G users vagrant
-     # vagrant itself needs sudo to not requiretty so this default is already reverted 
-     (cat | sudo tee /etc/NetworkManager/dnsmasq.d/localdomain-wildcard.conf) > /dev/null <<"EOF"
+
+###################
+# Install system packages
+###################
+sudo yum makecache fast
+sudo yum install -y yum-plugin-fastestmirror deltarpm epel-release
+sudo yum makecache fast
+sudo yum update -y
+sudo yum install -y git docker docker-selinux python-docker python-setuptools httpd mod_ssl net-tools xfsprogs vim links perl-JSON-PP
+
+###################
+# Install docker-tools
+###################
+python setup.py build && sudo python setup.py install
+pushd /var/lib/docker
+
+cd /var/lib/docker
+sudo git clone https://github.com/acdh-oeaw/docker-tools-environments.git
+sudo mv docker-tools-environments images
+popd
+
+sudo cp -r system_files/* /
+
+###################
+# Configure Apache
+###################
+sudo systemctl enable httpd
+
+###################
+# Set permissions
+###################
+sudo sed -i -e 's/dockerroot/docker/' /etc/group
+
+# to enable volumes access for normal users
+sudo chmod +x /var/lib/docker
+sudo mkdir -p /var/lib/docker/images/tmp
+sudo chmod 777 /var/lib/docker/images/tmp
+
+# SELinux context to allow docker access external mounts
+sudo semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
+sudo semanage fcontext -a -t ssh_home_t "/home/[^/]*/\.ssh(/.*)?"
+sudo restorecon -RvF /home
+
+# As apache is the reverse proxy it has to be able to connect
+# via network
+sudo setsebool -P httpd_can_network_connect true
+
+# in the default CentOs vagrant image the vagrant user does not belong to the users group
+sudo usermod -a -G users vagrant
+sudo usermod -a -G docker vagrant
+
+###################
+# Configure Docker and prepare images
+###################
+sudo systemctl enable docker
+
+###################
+# GUI setup
+###################
+sudo yum groups install -y "X Window System"
+sudo yum groups install -y "MATE Desktop"
+sudo yum install -y dnsmasq java-1.7.0-openjdk patch wget python-pip
+sudo systemctl set-default graphical.target
+
+# vagrant itself needs sudo to not requiretty so this default is already reverted
+(cat | sudo tee /etc/NetworkManager/dnsmasq.d/localdomain-wildcard.conf) > /dev/null <<"EOF"
 # Add local-only domains here, queries in these domains are answered
 # from /etc/hosts or DHCP only.
 local=/localdomain/
@@ -105,15 +158,7 @@ EOF
      sudo sed -i -e '/^.main.$/ a\
 dns=dnsmasq' /etc/NetworkManager/NetworkManager.conf     
      sudo sed -i -e 's/dockerroot/docker/' /etc/group
-     # to enable volumes access for normal users
-     sudo chmod +x /var/lib/docker
-     sudo mkdir -p /var/lib/docker/images/tmp
-     sudo chmod g+w /var/lib/docker/images/tmp
-     sudo chgrp users /var/lib/docker/images/tmp
-     # SELinux context to allow docker access external mounts
-     sudo semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
-     sudo semanage fcontext -a -t ssh_home_t "/home/[^/]*/\.ssh(/.*)?"
-     sudo restorecon -RvF /home
+
      sudo mkdir /etc/httpd/conf.d/sites-enabled
      sudo mkdir /etc/httpd/conf.d/sites-available
      sudo mkdir /etc/httpd/conf.d/shared
@@ -141,9 +186,6 @@ BrowserMatch "MSIE [2-5]" \
          nokeepalive ssl-unclean-shutdown \
          downgrade-1.0 force-response-1.0
 EOF
-     # As apache is the reverse proxy it has to be able to connect
-     # via network
-     sudo setsebool -P httpd_can_network_connect true
      sudo patch /etc/pki/tls/openssl.cnf <<"EOF" 
 --- /etc/pki/tls/openssl.cnf	2016-01-17 18:19:25.312532499 -0500
 +++ etc-pki-tls-openssl.cnf	2016-01-17 18:19:38.040532499 -0500
@@ -183,16 +225,16 @@ EOF
      sudo cp localhost.key /etc/pki/tls/private/localhost.key
      sudo cp localhost.csr /etc/pki/tls/private/localhost.csr
      sudo restorecon -RvF /etc/pki     
-     wget https://download.jetbrains.com/python/pycharm-community-2016.1.4.tar.gz
-     tar -xzf pycharm-community-2016.1.4.tar.gz
+     wget http://download.jetbrains.com/python/pycharm-community-2016.3.2.tar.gz
+     tar -xzf pycharm-community-2016.3.2.tar.gz
      mkdir -p .local/share/applications
      cat > .local/share/applications/jetbrains-pycharm-ce.desktop <<"EOF"      
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyCharm Community Edition
-Icon=/home/vagrant/pycharm-community-2016.1.4/bin/pycharm.png
-Exec="/home/vagrant/pycharm-community-2016.1.4/bin/pycharm.sh" %f
+Icon=/home/vagrant/pycharm-community-2016.3.2/bin/pycharm.png
+Exec="/home/vagrant/pycharm-community-2016.3.2/bin/pycharm.sh" %f
 Comment=Develop with pleasure!
 Categories=Development;IDE;
 Terminal=false
