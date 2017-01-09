@@ -44,7 +44,7 @@ Vagrant.configure(2) do |config|
   # Besides that there is an optimization in vagrant 1.8.0 and 1.8.1 that breaks
   # the usual rsync binaries found on the internet for windows. See:
   # https://github.com/mitchellh/vagrant/issues/6702#issuecomment-166503021
-  config.vm.synced_folder ".", "/home/vagrant/sync", type: "virtualbox", disabled: true
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox", disabled: true
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -91,6 +91,9 @@ sudo yum install -y yum-plugin-fastestmirror deltarpm epel-release
 sudo yum makecache fast
 sudo yum update -y
 sudo yum install -y git docker docker-selinux python-docker python-setuptools httpd mod_ssl net-tools xfsprogs vim links perl-JSON-PP
+
+git clone https://github.com/acdh-oeaw/docker-tools.git
+pushd docker-tools
 
 ###################
 # Install docker-tools
