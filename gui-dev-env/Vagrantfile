@@ -104,6 +104,11 @@ pushd /var/lib/docker
 
 sudo git clone https://github.com/acdh-oeaw/docker-tools-environments.git
 sudo mv docker-tools-environments images
+pushd /var/lib/docker/images
+sudo git remote rename origin upstream
+sudo git remote add origin /home/vagrant/docker-tools/docker-tools-environments/.git
+sudo git branch --set-upstream-to origin/master
+popd
 popd
 
 sudo cp -r system_files/* /
@@ -147,7 +152,7 @@ sudo systemctl enable docker
 ###################
 sudo yum groups install -y "X Window System"
 sudo yum groups install -y "MATE Desktop"
-sudo yum install -y dnsmasq java-1.7.0-openjdk patch wget python-pip python-devel
+sudo yum install -y dnsmasq java-1.7.0-openjdk patch wget python-pip pyt
 sudo systemctl set-default graphical.target
 
 # vagrant itself needs sudo to not requiretty so this default is already reverted
