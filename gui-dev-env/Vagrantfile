@@ -147,7 +147,7 @@ sudo systemctl enable docker
 ###################
 sudo yum groups install -y "X Window System"
 sudo yum groups install -y "MATE Desktop"
-sudo yum install -y dnsmasq java-1.7.0-openjdk patch wget python-pip
+sudo yum install -y dnsmasq java-1.7.0-openjdk patch wget python-pip python-devel
 sudo systemctl set-default graphical.target
 
 # vagrant itself needs sudo to not requiretty so this default is already reverted
