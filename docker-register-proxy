@@ -49,6 +49,8 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
 
   $SSL_CONF
 
+  AllowEncodedSlashes On
+
   ProxyPreserveHost On
   RequestHeader set X-Forwarded-Proto \"https\" env=HTTPS
   RequestHeader set Front-End-Https \"on\" env=HTTPS
@@ -61,6 +63,8 @@ else
   echo "<VirtualHost *:80>
   ServerName $2
   ServerAlias $3
+
+  AllowEncodedSlashes On
 
   ProxyPreserveHost On
   $5
