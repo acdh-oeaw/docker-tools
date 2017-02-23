@@ -9,13 +9,15 @@
 
 PROT="http"
 SSLPROXY=""
-
+SSLHEADERS="RequestHeader set X-Forwarded-Proto \"https\" env=HTTPS
+  RequestHeader set Front-End-Https \"on\" env=HTTPS"
 if [ "$6" == "both" ]; then
   PROT="https"
   SSLPROXY="SSLProxyEngine on
   SSLProxyVerify none
   SSLProxyCheckPeerCN off
   SSLProxyCheckPeerName off"
+  SSLHEADERS=""
 fi
 
 if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
@@ -52,8 +54,7 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   AllowEncodedSlashes On
 
   ProxyPreserveHost On
-  RequestHeader set X-Forwarded-Proto \"https\" env=HTTPS
-  RequestHeader set Front-End-Https \"on\" env=HTTPS
+  $SSLHEADERS
   $SSLPROXY
   $5
   ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=300

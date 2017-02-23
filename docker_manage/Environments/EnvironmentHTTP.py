@@ -23,8 +23,8 @@ class EnvironmentHTTP(Environment, IEnvironment):
       self.processServerAlias(conf['ServerAlias'])
 
     if 'HTTPS' in conf :
-      if not isinstance(conf['HTTPS'], basestring) or not ['true', 'false'].count(conf['HTTPS']) > 0 :
-        raise Exception('HTTPS is not a string or has value other then true/false')
+      if not isinstance(conf['HTTPS'], basestring) or not ['true', 'false', 'both'].count(conf['HTTPS']) > 0 :
+        raise Exception('HTTPS is not a string or has value other then true/false/both')
       self.HTTPS = conf['HTTPS']
 
     if 'Auth' in conf :
