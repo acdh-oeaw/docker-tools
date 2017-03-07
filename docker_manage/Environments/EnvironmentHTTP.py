@@ -27,7 +27,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
         raise Exception('HTTPS is not a string or has value other then true/false/both')
       self.HTTPS = conf['HTTPS']
 
-    if 'Auth' in conf :
+    if 'Auth' in conf and self.owner:
       self.processAuth(conf['Auth'])
 
   def processAuth(self, conf):
