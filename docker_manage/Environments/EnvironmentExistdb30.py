@@ -56,3 +56,10 @@ class EnvironmenteXistdb22(EnvironmenteXistdb30, IEnvironment):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'existdb22'
     super(EnvironmenteXistdb22, self).__init__(conf, owner)
+
+class EnvironmenteXistdb31(EnvironmenteXistdb30, IEnvironment):
+
+  def __init__(self, conf, owner):
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'existdb31'
+    super(EnvironmenteXistdb31, self).__init__(conf, owner)
