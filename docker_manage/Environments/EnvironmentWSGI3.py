@@ -74,6 +74,7 @@ class EnvironmentWSGI3(EnvironmentApache, IEnvironment):
 
   WSGIDaemonProcess {ServerName} user={UID} group={GID} python-path={PythonPath}
   WSGIProcessGroup {ServerName}
+  WSGIApplicationGroup %{{GLOBAL}}
   WSGIScriptAlias / {WSGIScriptAlias}
   WSGIPassAuthorization On
 
