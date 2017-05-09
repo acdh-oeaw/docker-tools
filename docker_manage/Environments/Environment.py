@@ -326,6 +326,10 @@ class Environment(IEnvironment, object):
 
         print('  ' + self.Name)
         # remove
+        try:
+            self.stop(False)
+        except Exception:
+            pass
         self.runProcess(['docker', 'rm', '-f', '-v', self.Name], verbose, '    Removing old container...', None)
         # check and prepare volumes if necessary
         cli = Client(base_url='unix://var/run/docker.sock')
@@ -407,6 +411,17 @@ class Environment(IEnvironment, object):
                 print(out + '\n' + err)
             raise Exception(errorMsg)
         return ret
+
+    def stop(self, verbose):
+        if verbose:
+            print('  ' + self.Name)
+
+        ret = subprocess.call(['docker', 'stop', self.Name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if ret != 0:
+            raise Exception('Failed to stop')
+
+        if verbose:
+            print '    stopped'
 
     def injectUserEnv(self, dockerfilePath):
         cmd = ''

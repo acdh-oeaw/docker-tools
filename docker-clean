@@ -18,6 +18,7 @@ done
 
 # docker
 echo 'Stoping and removing docker containers...'
+docker stop $1 -t 10
 docker rm -fv $1
 docker-remove-unused-containers
 docker-remove-unused-images > /dev/null 2>&1

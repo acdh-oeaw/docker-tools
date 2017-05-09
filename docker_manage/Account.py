@@ -81,6 +81,8 @@ class Account:
         and (len(names) == 0 or names.count(env.Name) > 0) 
       ) :
         envs.append(env)
+    if len(envs) == 0:
+        print '\nNO SUCH ENVIRONMENTS - check your -e/-p parameter value\n'
     return envs
 
   def clean(self, verbose):

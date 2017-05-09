@@ -18,7 +18,7 @@ parser.add_argument('-p', '--project', action='append', nargs='*', required=Fals
 parser.add_argument('-e', '--environment', action='append', nargs='*', required=False,
                     help='Names of environments to process')
 parser.add_argument('-a', '--action', action='store', nargs=1, required=False,
-                    choices=['check', 'build', 'run', 'clean', 'enter-as-root', 'enter', 'logs'],
+                    choices=['check', 'build', 'run', 'stop', 'clean', 'enter-as-root', 'enter', 'logs'],
                     help='Action to perform')
 parser.add_argument('-c', '--command', action='append', nargs=argparse.REMAINDER, required=False,
                     help='Command to run inside guest (only if action=enter or action=enter-as-root)')
@@ -43,6 +43,10 @@ configuration = docker_manage.Configuration()
 
 print('Checking conflicts between environments...')
 configuration.check()
+
+if not args.action is None and args.action.count('stop') > 0:
+    print('Stopping containers...')
+    configuration.stop(args.project, args.environment, args.verbose)
 
 if args.action is None or args.action.count('check') == 0 :
   print('Removing obsolete environments...')

@@ -35,6 +35,13 @@ class Configuration:
         print '  ' + account.name, ': ', errors
         noErrors = False
 
+  def stop(self, projects, names, verbose):
+    for env in self.findEnvironments(projects, names):
+      try:
+        env.stop(True)
+      except Exception as e:
+        print '    ' + str(e)
+
   def clean(self, verbose):
     for account in self.accounts:
       if account.owner:
