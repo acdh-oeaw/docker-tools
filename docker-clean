@@ -11,7 +11,7 @@ rm -f /etc/httpd/conf.d/sites-enabled/$1.conf
 
 # systemd
 echo 'Removing systemd startup scripts...'
-rm -f /usr/lib/systemd/system/docker-${1}.service
+rm -f /etc/systemd/system/docker-${1}.service
 for i in `find /etc/systemd/system -name docker-${1}.service`; do
 	rm -f $i
 done

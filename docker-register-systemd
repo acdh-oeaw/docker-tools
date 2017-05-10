@@ -1,5 +1,4 @@
 #!/bin/bash
-# why to /usr/lib/systemd ???
 echo "[Unit]
 Description=$1
 Requires=docker.service
@@ -11,7 +10,7 @@ ExecStart=/usr/bin/docker start -a $1
 ExecStop=/usr/bin/docker stop $1
 
 [Install]
-WantedBy=multi-user.target" > /usr/lib/systemd/system/docker-${1}.service
+WantedBy=multi-user.target" > /etc/systemd/system/docker-${1}.service
 systemctl daemon-reload
 systemctl enable docker-${1}.service
 
