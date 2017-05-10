@@ -1,0 +1,8 @@
+#!/bin/bash
+if [ "$1" == "stop" ]; then
+  action="stop"
+else
+  action="start"
+fi
+systemctl $action "docker-$2"
+

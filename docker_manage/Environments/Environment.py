@@ -354,9 +354,12 @@ class Environment(IEnvironment, object):
         # run
         self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose,
                         '    Creating container...', 'Container creation failed')
-        # create systemd script
+        # create systemd script & run systemctl to set right status of the service
         self.runProcess(['sudo', '-u', 'root', 'docker-register-systemd', self.Name], verbose,
                         '    Registering in systemd', 'Systemd script creation failed')
+        self.runProcess(['sudo', '-u', 'root', 'docker-systemctl', 'start', self.Name], verbose,
+                        '    Setting systemd service status', 'Setting systemd service status failed')
+  
 
     def runHooks(self, verbose):
         if not self.owner:
@@ -416,7 +419,7 @@ class Environment(IEnvironment, object):
         if verbose:
             print('  ' + self.Name)
 
-        ret = subprocess.call(['docker', 'stop', self.Name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ret = subprocess.call(['sudo', '-u', 'root', 'docker-systemctl', 'stop', self.Name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if ret != 0:
             raise Exception('Failed to stop')
 

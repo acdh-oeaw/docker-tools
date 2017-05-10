@@ -29,7 +29,8 @@ setup(
                 'docker-manage-admin', 'docker-add-project', 'docker-check-quota',
                 'docker-clean', 'docker-register-proxy', 'docker-register-systemd', 
                 'docker-remove-unused-containers', 'docker-remove-unused-images', 
-                'docker-remove-project', 'docker-build-images', 'docker-tools-update'
+                'docker-remove-project', 'docker-build-images', 'docker-tools-update',
+                'docker-systemctl'
             ]
         )
     ],

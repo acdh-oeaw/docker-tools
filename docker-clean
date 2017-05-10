@@ -15,6 +15,7 @@ rm -f /etc/systemd/system/docker-${1}.service
 for i in `find /etc/systemd/system -name docker-${1}.service`; do
 	rm -f $i
 done
+systemctl daemon-reload
 
 # docker
 echo 'Stoping and removing docker containers...'
