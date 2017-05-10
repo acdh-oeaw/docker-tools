@@ -96,7 +96,11 @@ class Configuration:
 
   def findEnvironments(self, projects, names, readyOnly = True):
     envs = []
+    accountMatched = False
     for account in self.accounts:
       if len(projects) == 0 or projects.count(account.name) > 0 :
         envs += account.findEnvironments(names, readyOnly)
+        accountMatched = True
+    if not accountMatched and len(projects) > 0:
+      print '\nNO SUCH PROJECT - check -p parameter value\n'
     return envs
