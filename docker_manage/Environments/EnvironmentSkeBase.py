@@ -71,7 +71,7 @@ class EnvironmentSkeBase(EnvironmentHTTP, IEnvironment):
           raise Exception(corpora + ' corpora configuration file is missing in the RegistryDir')
         self.Corplist.append(corpora)
     if len(self.Corplist) == 0 :
-      print '    Corplist is empty - bonito will not work.\n    Create a corpora, fill in the Corplist configuration property and rerun environment to make bonito work.'
+      print '    Corplist is empty - bonito will not work.\n    Create a corpus, fill in the Corplist configuration property and rerun environment to make bonito work.'
 
     self.Mounts.append({ "Host" : self.DataDir,     "Guest" : self.DataDirMount,     "Rights" : "rw" })
     self.Mounts.append({ "Host" : self.BonitoDir,   "Guest" : self.BonitoDirMount,   "Rights" : "rw" })
