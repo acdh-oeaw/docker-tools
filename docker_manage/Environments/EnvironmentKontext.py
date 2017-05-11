@@ -2,7 +2,7 @@ from . import *
 
 class EnvironmentKontext(EnvironmentWSGI3, IEnvironment):
   PythonPath      = ''
-  WSGIScriptAlias = None
+  WSGIScriptAlias = '/var/www/html/public/app.py'
   DataDirMount      = '/var/lib/manatee/data'
   RegistryDirMount  = '/var/lib/manatee/registry'
   LogDirMount = '/var/log/apache2'
@@ -79,7 +79,7 @@ class EnvironmentKontext(EnvironmentWSGI3, IEnvironment):
   WSGIProcessGroup {ServerName}
   WSGIApplicationGroup %{{GLOBAL}}
   Alias "/files" "/var/www/html/public/files"
-  WSGIScriptAlias / /var/www/html/public/app.py
+  WSGIScriptAlias / {WSGIScriptAlias}
   WSGIPassAuthorization On
 
   <Directory {DocumentRootMount}>
