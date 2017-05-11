@@ -2,7 +2,7 @@ from . import *
 
 class EnvironmentKontext(EnvironmentWSGI3, IEnvironment):
   PythonPath      = ''
-  WSGIScriptAlias = '/var/www/html/public/app.py'
+  WSGIScriptAlias = 'public/app.py'
   DataDirMount      = '/var/lib/manatee/data'
   RegistryDirMount  = '/var/lib/manatee/registry'
   LogDirMount = '/var/log/apache2'
