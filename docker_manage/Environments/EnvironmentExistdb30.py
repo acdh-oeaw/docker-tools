@@ -43,13 +43,6 @@ class EnvironmenteXistdb30(EnvironmentHTTP, IEnvironment):
     self.Mounts.append({ "Host" : self.LogDir, "Guest" : self.LogDirMount, "Rights" : "rw" })
     if (self.AutodeployDir is not None): self.Mounts.append({ "Host" : self.AutodeployDir, "Guest" : self.AutodeployDirMount, "Rights" : "rw" })
 
-class EnvironmentRHELexistdb30(EnvironmenteXistdb30, IEnvironment):
-
-  def __init__(self, conf, owner):
-    if 'DockerfileDir' not in conf :
-      conf['DockerfileDir'] = 'rhel_existdb30'
-    super(EnvironmentRHELexistdb30, self).__init__(conf, owner)
-
 class EnvironmenteXistdb22(EnvironmenteXistdb30, IEnvironment):
 
   def __init__(self, conf, owner):
@@ -63,3 +56,10 @@ class EnvironmenteXistdb31(EnvironmenteXistdb30, IEnvironment):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'existdb31'
     super(EnvironmenteXistdb31, self).__init__(conf, owner)
+
+class EnvironmenteXistdb3x(EnvironmenteXistdb30, IEnvironment):
+
+  def __init__(self, conf, owner):
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'existdb3x'
+    super(EnvironmenteXistdb3x, self).__init__(conf, owner)
