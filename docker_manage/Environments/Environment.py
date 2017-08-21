@@ -35,6 +35,7 @@ class Environment(IEnvironment, object):
     LogDirMount = None
     userHookUser = None
     userHookRoot = None
+    swappiness = 30
 
     def __init__(self, conf, owner):
         self.Mounts = []
@@ -481,6 +482,7 @@ class Environment(IEnvironment, object):
             dockerOpts += ['--link', link['Name'] + ':' + link['Alias']]
         for host in self.Hosts:
             dockerOpts += ['--add-host', host['Name'] + ':' + host['IP']]
+        dockerOpts += ['--memory-swappiness', str(self.swappiness)]
         return dockerOpts
 
     def getGuestHomeDir(self):
