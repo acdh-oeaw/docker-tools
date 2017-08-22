@@ -82,6 +82,10 @@ class Param(object):
     )
 
   @staticmethod
+  def isValidBoolean(p):
+    return isinstance(p, basestring) and ['true', 'false'].count(p) > 0
+
+  @staticmethod
   def isValidParamsList(p):
     if not isinstance(p, list) :
       return False
