@@ -4,6 +4,7 @@ import subprocess
 import re
 import random
 import codecs
+import docker
 from docker import Client
 
 from . import *
@@ -25,6 +26,8 @@ class Environment(IEnvironment, object):
     DockerfileDir = None
     Mounts = None
     Links = None
+    NetAliases = None
+    Networks = None
     Ports = None
     Hosts = None
     EnvVars = None
@@ -39,6 +42,8 @@ class Environment(IEnvironment, object):
     def __init__(self, conf, owner):
         self.Mounts = []
         self.Links = []
+        self.NetAliases = []
+        self.Networks = []
         self.Ports = []
         self.Hosts = []
         self.EnvVars = {}
@@ -104,6 +109,12 @@ class Environment(IEnvironment, object):
 
         if 'Links' in conf and self.owner:
             self.processLinks(conf['Links'])
+
+        if 'NetAliases' in conf and self.owner:
+            self.processAliases(conf['NetAliases'])
+
+        if 'Networks' in conf and self.owner:
+            self.processNetworks(conf['Networks'], conf['Account'])
 
         if 'Ports' in conf:
             self.processPorts(conf['Ports'])
@@ -191,6 +202,24 @@ class Environment(IEnvironment, object):
             if not 'Alias' in link or not isinstance(link['Alias'], basestring):
                 raise Exception(str(len(self.Links) + 1) + ' link alias is missing or invalid')
             self.Links.append(link)
+
+    def processNetAliases(self, conf):
+        if not isinstance(conf, list):
+            conf = [conf]
+
+        for alias in conf:
+            if not isinstance(alias, basestring):
+                raise Exception(str(len(self.NetAliases) + 1) + ' network alias name is missing or invalid')
+            self.NetAliases.append(alias)
+
+    def processNetworks(self, conf, account):
+        if not isinstance(conf, list):
+            conf = [conf]
+
+        for network in conf:
+            if not isinstance(network, basestring):
+                raise Exception(str(len(self.Networks) + 1) + ' network name is missing or invalid')
+            self.Networks.append(account + '-' + network)
 
     def processPorts(self, conf):
         if not isinstance(conf, list):
@@ -318,6 +347,14 @@ class Environment(IEnvironment, object):
                 raise Exception('No mount point provided for path ' + vol)
         return volumesToCopy
 
+    def checkNetworks(self):
+        for network in self.Networks:
+            out = subprocess.check_output(['docker', 'network', 'ls']).split('\n')
+            out = [x for x in out if re.match('^[0-9a-f]+ +' + network, x)]
+            if len(out) == 0:
+                self.runProcess(['docker', 'network', 'create', '-d', 'bridge', network], False, '', 'Network creation failed')
+            self.runProcess(['docker', 'network', 'connect', network, self.Name], False, '', 'Failed to connect to the network')
+
     def runContainer(self, verbose):
         if not self.owner:
             raise Exception('Must be environment owner to run a container')
@@ -354,12 +391,13 @@ class Environment(IEnvironment, object):
         # run
         self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose,
                         '    Creating container...', 'Container creation failed')
+        # check networks
+        self.checkNetworks()
         # create systemd script & run systemctl to set right status of the service
         self.runProcess(['sudo', '-u', 'root', 'docker-register-systemd', self.Name], verbose,
                         '    Registering in systemd', 'Systemd script creation failed')
         self.runProcess(['sudo', '-u', 'root', 'docker-systemctl', 'start', self.Name], verbose,
                         '    Setting systemd service status', 'Setting systemd service status failed')
-  
 
     def runHooks(self, verbose):
         if not self.owner:
@@ -479,6 +517,9 @@ class Environment(IEnvironment, object):
             dockerOpts += ['-p', str(port['Host']) + ':' + str(port['Guest'])]
         for link in self.Links:
             dockerOpts += ['--link', link['Name'] + ':' + link['Alias']]
+        dockerOpts += ['--network', 'bridge']
+        for alias in self.NetAliases:
+            dockerOpts += ['--alias', alias]
         for host in self.Hosts:
             dockerOpts += ['--add-host', host['Name'] + ':' + host['IP']]
         return dockerOpts
