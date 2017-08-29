@@ -38,6 +38,8 @@ class Environment(IEnvironment, object):
     LogDirMount = None
     userHookUser = None
     userHookRoot = None
+    swappiness = 30
+    customStartup = False
 
     def __init__(self, conf, owner):
         self.Mounts = []
@@ -86,7 +88,7 @@ class Environment(IEnvironment, object):
             self.GroupName = conf['GroupName']
 
         if 'runAsUser' in conf:
-            if not isinstance(conf['runAsUser'], basestring) or not ['true', 'false'].count(conf['runAsUser']) > 0:
+            if not Param.isValidBoolean(conf['runAsUser']):
                 raise Exception('runAsUser is not a string or has value other then true/false')
             self.runAsUser = conf['runAsUser'] == 'true'
 
@@ -103,6 +105,14 @@ class Environment(IEnvironment, object):
         ):
             raise Exception('DockerfileDir ' + conf['DockerfileDir'] + ' is missing or invalid')
         self.DockerfileDir = conf['DockerfileDir']
+
+        if 'CustomStartup' in conf:
+            if (
+                 not Param.isValidFile(self.BaseDir + '/' + conf['DockerfileDir'] + '/Dockerfile')
+                 or not Param.isValidBoolean(conf['CustomStartup'])
+            ):
+                raise Exception('CustomStartup is not a string or has value other then true/false or a custom Dockerfile is not set')
+            self.customStartup = conf['CustomStartup'] == 'true'
 
         if 'Mounts' in conf and self.owner:
             self.processMounts(conf['Mounts'])
@@ -522,6 +532,7 @@ class Environment(IEnvironment, object):
             dockerOpts += ['--alias', alias]
         for host in self.Hosts:
             dockerOpts += ['--add-host', host['Name'] + ':' + host['IP']]
+        dockerOpts += ['--memory-swappiness', str(self.swappiness)]
         return dockerOpts
 
     def getGuestHomeDir(self):

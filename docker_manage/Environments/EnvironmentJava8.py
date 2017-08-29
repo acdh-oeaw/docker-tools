@@ -14,9 +14,10 @@ class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
       conf['DockerfileDir'] = 'java8'
     super(EnvironmentJava8, self).__init__(conf, owner)
 
-    if not 'JavaParams' in conf or not Param.isValidParamsList(conf['JavaParams']) :
-      raise Exception('JavaParams is missing or invalid')
-    self.JavaParams = conf['JavaParams']
+    if not self.customStartup:
+      if not 'JavaParams' in conf or not Param.isValidParamsList(conf['JavaParams']) :
+        raise Exception('JavaParams is missing or invalid')
+      self.JavaParams = conf['JavaParams']
 
     if 'JavaUser' in conf :
       self.JavaUser = conf['JavaUser']
@@ -26,21 +27,27 @@ class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
         raise Exception('JavaDir is not a valid absolute path')
       self.JavaDir = conf['JavaDir']
 
+    self.swappiness = 1
+
   def runHooks(self, verbose):
     super(EnvironmentJava8, self).runHooks(verbose)
 
     if verbose :
-      print '    Setting up supervisord config'
-    confPath = '/tmp/' + self.Name
-    with open(confPath, 'w') as config:
-      config.write(self.supervisorConfigTemplate.format(
-        Params = ' '.join(self.JavaParams),
-        Dir    = self.JavaDir,
-        User   = self.JavaUser
-      ))
-    self.runProcess(['docker', 'cp', confPath, self.Name+':/etc/supervisor/conf.d/supervisord.conf'], verbose, '', 'Copying supervisor config file failed')
-    self.runProcess(['docker', 'exec', self.Name, 'supervisorctl', 'update'], verbose, '', 'Reloading supervisor config failed')
-    os.remove(confPath)
+      if self.customStartup:
+        print '    Custom startup method is provided via custom Dockerfile'
+      else:
+        print '    Setting up supervisord config'
+    if not self.customStartup:
+      confPath = '/tmp/' + self.Name
+      with open(confPath, 'w') as config:
+        config.write(self.supervisorConfigTemplate.format(
+          Params = ' '.join(self.JavaParams),
+          Dir    = self.JavaDir,
+          User   = self.JavaUser
+        ))
+      self.runProcess(['docker', 'cp', confPath, self.Name+':/etc/supervisor/conf.d/supervisord.conf'], verbose, '', 'Copying supervisor config file failed')
+      self.runProcess(['docker', 'exec', self.Name, 'supervisorctl', 'update'], verbose, '', 'Reloading supervisor config failed')
+      os.remove(confPath)
 
   supervisorConfigTemplate = """
 [supervisord]
