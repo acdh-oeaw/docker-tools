@@ -49,10 +49,21 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
            self.Mounts.append({"Host": conf['VendorDir'], "Guest": "/var/www/html/vendor", "Rights": "rw"})
            self.VendorDir = True
 
-    # as Drupal environment does not have DocumentRoot it is not clear what
-    # should be a base dir for aliases
+    # allow to serve the site using aliases
     def processAliases(self, conf):
-        pass
+        if not isinstance(conf, list):
+            conf = [conf]
+
+        for alias in conf:
+            if not Param.isValidAlias(alias):
+                raise Exception(str(len(self.Aliases) + 1) + ' alias name is missing or invalid')
+            self.Aliases.append(alias)
+
+    def getAliases(self):
+        aliases = ''
+        for alias in self.Aliases:
+            aliases += 'Alias ' + alias + ' /var/www/html\n'
+        return aliases
 
     def runHooks(self, verbose):
         super(EnvironmentPHP, self).runHooks(verbose)
