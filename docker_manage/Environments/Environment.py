@@ -450,6 +450,7 @@ class Environment(IEnvironment, object):
         proc = None
         if verbose:
             print(header)
+            print(' '.join(args))
             ret = subprocess.call(args)
         else:
             proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

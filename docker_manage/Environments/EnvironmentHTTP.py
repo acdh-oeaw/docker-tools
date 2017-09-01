@@ -108,24 +108,26 @@ class EnvironmentHTTP(Environment, IEnvironment):
     self.configureProxy(verbose)
 
   def configureProxy(self, verbose):
-    if verbose :
-      print '    Setting up reverse proxy'
-
     HTTPPort = self.getHTTPPort()
     websockets = ''
     for ws in HTTPPort['ws']:
       websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
       websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-    proc = subprocess.Popen([
-      'sudo', '-u', 'root', 'docker-register-proxy', 
-      self.Name, 
-      self.ServerName, 
-      self.getServerAlias(), 
-      str(HTTPPort['Host']), 
+    cmd = [
+      'sudo', '-u', 'root', 'docker-register-proxy',
+      self.Name,
+      self.ServerName,
+      self.getServerAlias(),
+      str(HTTPPort['Host']),
       websockets + ''.join(self.Auth),
-      self.HTTPS, 
+      self.HTTPS,
       HTTPPort['Alias']
-    ])
+    ]
+    if verbose :
+      print('    Setting up reverse proxy')
+      print(' '.join(cmd))
+
+    proc = subprocess.Popen(cmd)
     out, err = proc.communicate()
 
   def getDockerOpts(self):
