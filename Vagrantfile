@@ -75,8 +75,7 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get update
   #   sudo apt-get install -y apache2
   # SHELL
-  config.ssh.password = "vagrant"
-  config.ssh.insert_key = false
+  config.ssh.insert_key = true
   config.vm.network :forwarded_port, guest: 80, host: 80
   config.vm.network :forwarded_port, guest: 443, host: 443
 
