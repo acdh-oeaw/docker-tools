@@ -38,6 +38,13 @@ Vagrant.configure(2) do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
+  
+  # Default unfortunately needs to be disabled or at least set to virtualbox on windows.
+  # Default sync method is rsync which is not installed together with vagrant.
+  # Besides that there is an optimization in vagrant 1.8.x that breaks
+  # the usual rsync binaries found on the internet for windows. See:
+  # https://github.com/mitchellh/vagrant/issues/6702#issuecomment-166503021
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox", disabled: true
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
