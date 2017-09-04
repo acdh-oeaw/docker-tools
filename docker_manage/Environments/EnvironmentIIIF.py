@@ -40,7 +40,8 @@ class EnvironmentIIIF(EnvironmentHTTP, IEnvironment):
         )
       ) :
         raise Exception('LogDir is missing or invalid')
-    self.DataDir = conf['LogDir']
+    self.LogDir = conf['LogDir']
+    
     self.Mounts.append({ "Host" : self.DropzoneDir, "Guest" : self.DropzoneDirMount, "Rights" : "rw" })
     self.Mounts.append({ "Host" : self.DataDir, "Guest" : self.DataDirMount, "Rights" : "rw" })
     self.Mounts.append({ "Host" : self.LogDir, "Guest" : self.LogDirMount, "Rights" : "rw" })
