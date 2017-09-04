@@ -1,6 +1,7 @@
 from . import *
 
 class EnvironmentIIIF(EnvironmentHTTP, IEnvironment):
+  DockerfileDir = 'iiif'
   DropzoneDirMount = '/dropzone/'
   DropzoneDir      = None
   DataDirMount     = '/data/'
