@@ -14,6 +14,11 @@ class EnvironmentIIIF(EnvironmentHTTP, IEnvironment):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'iiif'
     super(EnvironmentIIIF, self).__init__(conf, owner)
+    try:
+      self.getHTTPPort()
+    except:
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
+      
     if (
         not 'DropzoneDir' in conf
         or self.owner and (
