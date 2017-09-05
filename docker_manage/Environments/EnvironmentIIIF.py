@@ -17,8 +17,8 @@ class EnvironmentIIIF(EnvironmentHTTP, IEnvironment):
     try:
       self.getHTTPPort()
     except:
-      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
-      
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 8080 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
+
     if (
         not 'DropzoneDir' in conf
         or self.owner and (
