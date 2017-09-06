@@ -10,7 +10,6 @@ class EnvironmentIIIF(EnvironmentHTTP, IEnvironment):
   LogDir           = None
 
   def __init__(self, conf, owner):
-    self.runAsUser = True
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'iiif'
     super(EnvironmentIIIF, self).__init__(conf, owner)
