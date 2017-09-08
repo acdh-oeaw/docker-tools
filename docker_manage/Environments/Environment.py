@@ -227,9 +227,14 @@ class Environment(IEnvironment, object):
             conf = [conf]
 
         for network in conf:
-            if not isinstance(network, basestring):
-                raise Exception(str(len(self.Networks) + 1) + ' network name is missing or invalid')
-            self.Networks.append(account + '-' + network)
+            if isinstance(network, basestring):
+                network = {'Name': network}
+            if not isinstance(network, dict):
+                raise Exception(str(len(self.Networks) + 1) + ' network name is not a dictionary')
+            if 'Alias' in network and not isinstance(network['Alias'], basestring):
+                raise Exception(str(len(self.Networks) + 1) + ' network alias is invalid')
+            network['Name'] = account + '-' + network['Name']
+            self.Networks.append(network)
 
     def processPorts(self, conf):
         if not isinstance(conf, list):
@@ -360,10 +365,13 @@ class Environment(IEnvironment, object):
     def checkNetworks(self):
         for network in self.Networks:
             out = subprocess.check_output(['docker', 'network', 'ls']).split('\n')
-            out = [x for x in out if re.match('^[0-9a-f]+ +' + network, x)]
+            out = [x for x in out if re.match('^[0-9a-f]+ +' + network['Name'], x)]
             if len(out) == 0:
-                self.runProcess(['docker', 'network', 'create', '-d', 'bridge', network], False, '', 'Network creation failed')
-            self.runProcess(['docker', 'network', 'connect', network, self.Name], False, '', 'Failed to connect to the network')
+                self.runProcess(['docker', 'network', 'create', '-d', 'bridge', network['Name']], False, '', 'Network creation failed')
+            param = ['docker', 'network', 'connect', network['Name'], self.Name]
+            if 'Alias' in network:
+                param = param + ['--alias', network['Alias']]
+            self.runProcess(param, False, '', 'Failed to connect to the network')
 
     def runContainer(self, verbose):
         if not self.owner:
