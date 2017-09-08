@@ -20,3 +20,4 @@ from .EnvironmentSketchEngine import EnvironmentSketchEngine
 from .EnvironmentNoske import EnvironmentNoSkE, EnvironmentNoSkE_patched
 from .Environmentcorpus_shell import Environmentcorpus_shell
 from .EnvironmentJS import EnvironmentJS
+from .EnvironmentIIIF import EnvironmentIIIF
