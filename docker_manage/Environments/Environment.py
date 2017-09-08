@@ -26,7 +26,6 @@ class Environment(IEnvironment, object):
     DockerfileDir = None
     Mounts = None
     Links = None
-    NetAliases = None
     Networks = None
     Ports = None
     Hosts = None
@@ -44,7 +43,6 @@ class Environment(IEnvironment, object):
     def __init__(self, conf, owner):
         self.Mounts = []
         self.Links = []
-        self.NetAliases = []
         self.Networks = []
         self.Ports = []
         self.Hosts = []
@@ -119,9 +117,6 @@ class Environment(IEnvironment, object):
 
         if 'Links' in conf and self.owner:
             self.processLinks(conf['Links'])
-
-        if 'NetAliases' in conf and self.owner:
-            self.processAliases(conf['NetAliases'])
 
         if 'Networks' in conf and self.owner:
             self.processNetworks(conf['Networks'], conf['Account'])
@@ -212,15 +207,6 @@ class Environment(IEnvironment, object):
             if not 'Alias' in link or not isinstance(link['Alias'], basestring):
                 raise Exception(str(len(self.Links) + 1) + ' link alias is missing or invalid')
             self.Links.append(link)
-
-    def processNetAliases(self, conf):
-        if not isinstance(conf, list):
-            conf = [conf]
-
-        for alias in conf:
-            if not isinstance(alias, basestring):
-                raise Exception(str(len(self.NetAliases) + 1) + ' network alias name is missing or invalid')
-            self.NetAliases.append(alias)
 
     def processNetworks(self, conf, account):
         if not isinstance(conf, list):
@@ -537,8 +523,6 @@ class Environment(IEnvironment, object):
         for link in self.Links:
             dockerOpts += ['--link', link['Name'] + ':' + link['Alias']]
         dockerOpts += ['--network', 'bridge']
-        for alias in self.NetAliases:
-            dockerOpts += ['--alias', alias]
         for host in self.Hosts:
             dockerOpts += ['--add-host', host['Name'] + ':' + host['IP']]
         dockerOpts += ['--memory-swappiness', str(self.swappiness)]
