@@ -80,6 +80,9 @@ class EnvironmentIIIF(EnvironmentApache, IEnvironment):
     dockerOpts += ['--cap-add=SYS_NICE', '--cap-add=DAC_READ_SEARCH']
     return dockerOpts
 
+  def getAddHandler(self):
+    return 'fastcgi-script fcg fcgi fpl'  
+
   def getAliases(self):
     aliases = ''
     for alias in self.Aliases:
@@ -111,7 +114,8 @@ class EnvironmentIIIF(EnvironmentApache, IEnvironment):
     AllowOverride {AllowOverride}
     Options {Options}
   </Directory>
-
+   
+  {AddHandler} 
   {Aliases}
   {ImitateHTTPS}
 </VirtualHost>   
