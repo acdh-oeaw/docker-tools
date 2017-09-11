@@ -1,12 +1,12 @@
 from . import *
 
-class EnvironmentIIIF(EnvironmentHTTP, IEnvironment):
+class EnvironmentIIIF(EnvironmentApache, IEnvironment):
   DockerfileDir = 'iiif'
   DropzoneDirMount = '/dropzone/'
   DropzoneDir      = None
   DataDirMount     = '/data/'
   DataDir          = None
-  LogDirMount      = '/var/log'
+  LogDirMount      = '/opt/iiifserver/logs'
   LogDir           = None
 
   def __init__(self, conf, owner):
@@ -16,7 +16,7 @@ class EnvironmentIIIF(EnvironmentHTTP, IEnvironment):
     try:
       self.getHTTPPort()
     except:
-      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 8080 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
 
     if (
         not 'DropzoneDir' in conf
