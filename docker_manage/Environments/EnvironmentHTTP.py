@@ -86,6 +86,8 @@ class EnvironmentHTTP(Environment, IEnvironment):
       conf = [conf]
 
     for alias in conf:
+      if alias == self.ServerName:
+        continue
       if not Param.isValidDomain(alias) :
         raise Exception(alias + ' is not a valid domain')
     self.ServerAlias = conf
@@ -95,6 +97,8 @@ class EnvironmentHTTP(Environment, IEnvironment):
     if self.ServerName in duplDomains :
       errors.append('Domain ' + self.ServerName + ' is duplicated')
     for alias in self.ServerAlias:
+      if alias == self.ServerName:
+        continue
       if alias in duplDomains :
         errors.append('ServerAlias ' + alias + ' is duplicated')
     if len(errors) == 0 :
@@ -136,7 +140,7 @@ class EnvironmentHTTP(Environment, IEnvironment):
 
   def getDomains(self):
     domains = []
-    if not self.ServerName is None :
+    if not self.ServerName is None and self.ServerName not in self.ServerAlias:
       domains.append(self.ServerName)
     domains += self.ServerAlias
     return domains
