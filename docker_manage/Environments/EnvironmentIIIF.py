@@ -6,7 +6,7 @@ class EnvironmentIIIF(EnvironmentHTTP, IEnvironment):
   DropzoneDir      = None
   DataDirMount     = '/data/'
   DataDir          = None
-  LogDirMount      = '/var/log/nginx'
+  LogDirMount      = '/logs'
   LogDir           = None
 
   def __init__(self, conf, owner):
