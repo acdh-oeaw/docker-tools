@@ -57,7 +57,7 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   $SSLHEADERS
   $SSLPROXY
   $5
-  ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=300
+  ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=3600
   ProxyPassReverse / $PROT://127.0.0.1:$4/$7
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 else
@@ -69,7 +69,7 @@ else
 
   ProxyPreserveHost On
   $5
-  ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=300
+  ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=3600
   ProxyPassReverse / $PROT://127.0.0.1:$4/$7
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 
