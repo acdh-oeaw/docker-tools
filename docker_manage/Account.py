@@ -62,7 +62,7 @@ class Account:
           raise Exception('environment has no type')
         self.environments.append(env)
       except Exception as e:
-        print '    Error in emvironment ', (1 + len(self.environments)), ': ', e
+        print '    Error in environment ', (1 + len(self.environments)), ': ', e
 
   def check(self, duplDomains, duplPorts, duplNames, names):
     errors = {}
