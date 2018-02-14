@@ -78,6 +78,11 @@ while proc.returncode is None:
         for i in data:
             # 0 container        1 CPU    2 MEM                                    7 net in       9 net out      11 io read     13 io write    15 pids
             # 'tokeneditor-php', '0.02%', '8.977', 'MiB', '31.26', 'GiB', '0.03%', '761.5', 'MB', '870.9', 'MB', '292.4', 'MB', '106.5', 'kB', '12'
+            if i[1] == 'CPU' or len(i) != 16:
+                if not re.search('^[a-z0-9]+ [ -]+$', ' '.join(i)):
+                    print('Skipping invalid line')
+                    print('  ' + ' '.join(i))
+                continue
             id = getContainerId(cur, i[0], localCache, contCache)
             try: cpu = float(i[1][0:-1])
             except: cpu = 0
