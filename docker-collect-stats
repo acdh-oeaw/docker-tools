@@ -1,0 +1,99 @@
+#!/bin/python
+
+import argparse
+import datetime
+import fcntl
+import os
+import psycopg2
+import re
+import subprocess
+import time
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--dbConf', default='dbname=docker host=hermes user=docker')
+parser.add_argument('--timeout', default=1, type=int)
+parser.add_argument('host')
+args = parser.parse_args()
+
+con = psycopg2.connect(args.dbConf)
+cur = con.cursor()
+
+def getContainerId(cur, hash, localCache, contCache):
+    if hash not in localCache:
+        print('Refreshing docker container id to container name mappings')
+        data = subprocess.check_output(['/usr/bin/docker', 'ps'])
+        data = data.split("\n")[1:]
+        data = [x.split(' ') for x in data]
+        for i in data:
+            localCache[i[0]] = i[-1]
+    name = localCache[hash]
+    if name not in contCache:
+        cur.execute("SELECT container_id FROM containers WHERE name = %s", (name, ))
+        id = cur.fetchone()
+        if id is None:
+            print('Registering container %s in the database' % name)
+            cur.execute(
+                "INSERT INTO containers (container_id, name) VALUES (nextval('container_id_seq'), %s) RETURNING container_id",
+                (name, )
+            )
+            id = cur.fetchone()
+        contCache[name] = id[0]
+    return contCache[name]
+
+def writeIfDiff(cur, stat, statCache):
+    id = str(stat[0])
+    tmp = '|'.join([str(x) for x in stat])
+    if id not in statCache or tmp != statCache[id]:
+        cur.execute("INSERT INTO stats VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s)", stat)
+    statCache[id] = tmp
+
+cur.execute("SELECT host_id FROM hosts WHERE name = %s", (args.host, ))
+host = cur.fetchone()
+if host is None:
+    print('Registering host %s in the database' % args.host)
+    cur.execute(
+        "INSERT INTO hosts (host_id, name) VALUES (nextval('host_id_seq'), %s) RETURNING host_id", 
+        (args.host, )
+    )
+    host = cur.fetchone()
+    con.commit()
+host = host[0]
+
+localCache = {}
+contCache = {}
+statCache = {}
+multi = {'B': 1 / (1024 * 1024), 'k': 1 / 1024, 'M': 1, 'G': 1024, 'T': 1024*1024, 'P': 1024*1024*1024}
+proc = subprocess.Popen(['/usr/bin/docker', 'stats'], stdout=subprocess.PIPE)
+fcntl.fcntl(proc.stdout, fcntl.F_SETFL, fcntl.fcntl(proc.stdout, fcntl.F_GETFL) | os.O_NONBLOCK)
+while proc.returncode is None:
+    time.sleep(args.timeout)
+    try:
+        data = proc.stdout.read()
+    except:
+        continue
+    try:
+        data = data.split("\n")
+        data = [re.split('[ /]+', x) for x in data if re.search('^[A-Za-z0-9]', x)]
+        for i in data:
+            # 0 container        1 CPU    2 MEM                                    7 net in       9 net out      11 io read     13 io write    15 pids
+            # 'tokeneditor-php', '0.02%', '8.977', 'MiB', '31.26', 'GiB', '0.03%', '761.5', 'MB', '870.9', 'MB', '292.4', 'MB', '106.5', 'kB', '12'
+            id = getContainerId(cur, i[0], localCache, contCache)
+            try: cpu = float(i[1][0:-1])
+            except: cpu = 0
+            try: mem = float(i[2]) * multi[i[3][0:1]]
+            except: mem = 0
+            try: netIn = float(i[7]) * multi[i[8][0:1]]
+            except: netIn = 0
+            try: netOut = float(i[9]) * multi[i[10][0:1]]
+            except: netOut = 0
+            try: ioRead = float(i[11]) * multi[i[12][0:1]]
+            except: ioRead = 0
+            try: ioWrite = float(i[13]) * multi[i[14][0:1]]
+            except: ioWrite = 0
+            stat = (host, id, cpu, mem, netIn, netOut, ioRead, ioWrite)
+            writeIfDiff(cur, stat, statCache)
+            con.commit()
+    except Exception as e:
+        print e
+
