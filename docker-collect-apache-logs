@@ -1,0 +1,79 @@
+#!/bin/python
+
+import argparse
+import datetime
+import json
+import os
+import psycopg2
+import re
+import socket
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--dbConf', default='dbname=docker host=hermes user=docker')
+parser.add_argument('--log', default='/var/log/httpd/access_log')
+args = parser.parse_args()
+
+con = psycopg2.connect(args.dbConf)
+cur = con.cursor()
+
+
+
+
+
+def getContainerId(cur, domain, localCache, contCache):
+    if domain not in localCache:
+        return None
+    name = localCache[domain]
+    if name not in contCache:
+        cur.execute("SELECT container_id FROM containers WHERE name = %s", (name, ))
+        id = cur.fetchone()
+        if id is None:
+            print('Registering container %s in the database' % name)
+            cur.execute(
+                "INSERT INTO containers (container_id, name) VALUES (nextval('container_id_seq'), %s) RETURNING container_id",
+                (name, )
+            )
+            id = cur.fetchone()
+        contCache[name] = id[0]
+    return contCache[name]
+
+cur.execute("SELECT host_id FROM hosts WHERE name = %s", (socket.gethostname(), ))
+host = cur.fetchone()
+if host is None:
+    print('Registering host %s in the database' % args.host)
+    cur.execute(
+        "INSERT INTO hosts (host_id, name) VALUES (nextval('host_id_seq'), %s) RETURNING host_id", 
+        (args.host, )
+    )
+    host = cur.fetchone()
+    con.commit()
+host = host[0]
+
+localCache = {}
+for user in os.listdir('/home'):
+    cfgPath = '/home/%s/config.json' % user
+    if os.path.isfile(cfgPath):
+        with open(cfgPath) as cfgFile:
+            cfg = json.loads(cfgFile.read())
+            for container in cfg:
+                if 'ServerName' in container and u'Name' in container:
+                    localCache[container['ServerName']] = '%s-%s' % (user, container['Name'])
+
+contCache = {}
+with open(args.log, 'r') as log:
+    while True:
+        #GET vicav.apollo.arz.oeaw.ac.at / [18/Feb/2018:17:21:21 +0100] TLSv1.2 193.170.85.96
+        l = log.readline().split(' ')
+        if len(l) < 4 or l[1] == '-':
+            continue
+        id = getContainerId(cur, l[1], localCache, contCache)
+        if id is not None:
+            cur.execute(
+                "INSERT INTO requests (host_id, container_id, date, path) VALUES (%s, %s, %s, %s)",
+                (host, id, l[3][1:], l[2])
+            )
+            con.commit()
+        else:
+            print("  Can't map domain %s" % l[1])
+

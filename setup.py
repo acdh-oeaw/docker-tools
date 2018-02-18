@@ -30,7 +30,7 @@ setup(
                 'docker-clean', 'docker-register-proxy', 'docker-register-systemd', 
                 'docker-remove-unused-containers', 'docker-remove-unused-images', 
                 'docker-remove-project', 'docker-build-images', 'docker-tools-update',
-                'docker-systemctl', 'docker-collect-stats'
+                'docker-systemctl', 'docker-collect-stats', 'docker-collect-apache-logs'
             ]
         )
     ],

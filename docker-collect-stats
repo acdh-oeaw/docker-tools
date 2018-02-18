@@ -6,6 +6,7 @@ import fcntl
 import os
 import psycopg2
 import re
+import socket
 import subprocess
 import time
 
@@ -13,7 +14,6 @@ import time
 parser = argparse.ArgumentParser()
 parser.add_argument('--dbConf', default='dbname=docker host=hermes user=docker')
 parser.add_argument('--timeout', default=1, type=int)
-parser.add_argument('host')
 args = parser.parse_args()
 
 con = psycopg2.connect(args.dbConf)
@@ -48,7 +48,7 @@ def writeIfDiff(cur, stat, statCache):
         cur.execute("INSERT INTO stats VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s)", stat)
     statCache[id] = tmp
 
-cur.execute("SELECT host_id FROM hosts WHERE name = %s", (args.host, ))
+cur.execute("SELECT host_id FROM hosts WHERE name = %s", (socket.gethostname(), ))
 host = cur.fetchone()
 if host is None:
     print('Registering host %s in the database' % args.host)
