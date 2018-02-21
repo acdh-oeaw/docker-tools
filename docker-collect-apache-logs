@@ -17,10 +17,6 @@ args = parser.parse_args()
 con = psycopg2.connect(args.dbConf)
 cur = con.cursor()
 
-
-
-
-
 def getContainerId(cur, domain, localCache, contCache):
     if domain not in localCache:
         return None
@@ -69,11 +65,16 @@ with open(args.log, 'r') as log:
             continue
         id = getContainerId(cur, l[1], localCache, contCache)
         if id is not None:
-            cur.execute(
-                "INSERT INTO requests (host_id, container_id, date, path) VALUES (%s, %s, %s, %s)",
-                (host, id, l[3][1:], l[2])
-            )
-            con.commit()
+            try:
+                cur.execute(
+                    "INSERT INTO requests (host_id, container_id, date, path, ip) VALUES (%s, %s, %s, %s, %s)",
+                    (host, id, l[3][1:], l[2], l[6])
+                )
+                con.commit()
+            except Exception as e:
+                con.rollback()
+                print(l)
+                print((host, id, l[3][1:], l[2], l[6]))
         else:
             print("  Can't map domain %s" % l[1])
 

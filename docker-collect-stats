@@ -69,17 +69,17 @@ users = os.listdir('/home')
 multi = {'B': 1 / (1024 * 1024), 'k': 1 / 1024, 'M': 1, 'G': 1024, 'T': 1024*1024, 'P': 1024*1024*1024}
 proc = subprocess.Popen(['/usr/bin/docker', 'stats'], stdout=subprocess.PIPE)
 fcntl.fcntl(proc.stdout, fcntl.F_SETFL, fcntl.fcntl(proc.stdout, fcntl.F_GETFL) | os.O_NONBLOCK)
-data = ''
+prev = ''
 while proc.returncode is None:
     time.sleep(args.timeout)
     try:
-        data = data + proc.stdout.read()
+        data = proc.stdout.read()
     except:
         continue
     try:
-        lines = data.split("\n")
+        lines = (prev + data).split("\n")
+        prev = lines.pop()
         lines = [re.split('[ /]+', x) for x in lines if re.search('^[A-Za-z0-9]', x)]
-        data = lines.pop()
         for i in lines:
             # 0 container        1 CPU    2 MEM                                    7 net in       9 net out      11 io read     13 io write    15 pids
             # 'tokeneditor-php', '0.02%', '8.977', 'MiB', '31.26', 'GiB', '0.03%', '761.5', 'MB', '870.9', 'MB', '292.4', 'MB', '106.5', 'kB', '12'
