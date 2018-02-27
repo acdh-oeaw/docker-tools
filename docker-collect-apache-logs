@@ -12,6 +12,7 @@ import socket
 parser = argparse.ArgumentParser()
 parser.add_argument('--dbConf', default='dbname=docker host=hermes user=docker')
 parser.add_argument('--log', default='/var/log/httpd/access_log')
+parser.add_argument('-c', action='store_true', help='wait for new data to come')
 args = parser.parse_args()
 
 con = psycopg2.connect(args.dbConf)
@@ -63,6 +64,8 @@ with open(args.log, 'r') as log:
     while True:
         #GET vicav.apollo.arz.oeaw.ac.at / [18/Feb/2018:17:21:21 +0100] TLSv1.2 193.170.85.96
         l = log.readline().split(' ')
+        if len(l) <= 1 and not args.c:
+            break
         if len(l) < 4 or l[1] == '-':
             continue
         id = getContainerId(cur, l[1], localCache, contCache)
