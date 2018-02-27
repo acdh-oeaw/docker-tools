@@ -492,6 +492,9 @@ class Environment(IEnvironment, object):
 
         with codecs.open(dockerfilePath, mode='r', encoding='utf-8') as dockerfile:
             commands = dockerfile.read()
+        if re.search('\\n#@INJECT_USER@[^\\n]*', commands) is not None:
+            commands = re.sub('\\n#(@INJECT_USER@[^\\n]*)', '\n' + cmd, commands)
+        else:
             commands = re.sub('\\n(MAINTAINER[^\\n]*)', '\n\\1\n' + cmd, commands)
         with codecs.open(dockerfilePath, mode='w', encoding='utf-8') as dockerfile:
             dockerfile.write(commands)
