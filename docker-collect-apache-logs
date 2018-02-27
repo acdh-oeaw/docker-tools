@@ -51,10 +51,12 @@ for user in os.listdir('/home'):
     cfgPath = '/home/%s/config.json' % user
     if os.path.isfile(cfgPath):
         with open(cfgPath) as cfgFile:
-            cfg = json.loads(cfgFile.read())
-            for container in cfg:
-                if 'ServerName' in container and u'Name' in container:
-                    localCache[container['ServerName']] = '%s-%s' % (user, container['Name'])
+            try:
+                cfg = json.loads(cfgFile.read())
+                for container in cfg:
+                    if 'ServerName' in container and u'Name' in container:
+                        localCache[container['ServerName']] = '%s-%s' % (user, container['Name'])
+            except: pass
 
 contCache = {}
 with open(args.log, 'r') as log:
