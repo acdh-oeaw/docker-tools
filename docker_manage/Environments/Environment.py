@@ -37,7 +37,7 @@ class Environment(IEnvironment, object):
     LogDirMount = None
     userHookUser = None
     userHookRoot = None
-    swappiness = 30
+    swappiness = 100
     customStartup = False
 
     def __init__(self, conf, owner):
