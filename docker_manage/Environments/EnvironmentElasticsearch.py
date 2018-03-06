@@ -34,7 +34,7 @@ class Environmentelasticsearch(EnvironmentElasticsearchBase, IEnvironment):
 
   def __init__(self, conf, owner):
     self.runAsUser = True
-    self.LogDirMount        = '/usr/share/elasticsearch/log'
+    self.LogDirMount        = '/usr/share/elasticsearch/logs'
     self.ConfDirMount       = '/usr/share/elasticsearch/config'
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'elasticsearch'
