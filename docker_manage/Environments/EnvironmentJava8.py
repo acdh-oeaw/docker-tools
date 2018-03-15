@@ -27,8 +27,6 @@ class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
         raise Exception('JavaDir is not a valid absolute path')
       self.JavaDir = conf['JavaDir']
 
-    self.swappiness = 1
-
   def runHooks(self, verbose):
     super(EnvironmentJava8, self).runHooks(verbose)
 

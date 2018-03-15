@@ -55,8 +55,6 @@ class Environmentelasticsearch(EnvironmentElasticsearchBase, IEnvironment):
     except:
       self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 9200 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
 
-    self.swappiness = 1
-
 class Environmentkibana(EnvironmentElasticsearchBase, IEnvironment):
   def __init__(self, conf, owner):
     self.runAsUser = True
