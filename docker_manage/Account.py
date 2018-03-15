@@ -1,3 +1,4 @@
+import copy
 import os
 import json
 import subprocess
@@ -12,9 +13,11 @@ class Account:
   gid          = -1
   environments = None
   owner        = False
+  adminCfg     = None
 
-  def __init__(self, name):
+  def __init__(self, name, adminCfg):
     self.environments = []
+    self.adminCfg = adminCfg
 
     if not Param.isValidName(name) :
       raise Exception('account name contains forbidden characters')
@@ -46,10 +49,10 @@ class Account:
     self.environments = []
     for envConf in conf:
       try:
-        envConf['BaseDir'] = self.base
-        envConf['UID']     = self.uid
-        envConf['GID']     = self.gid
-        envConf['Account'] = self.name
+        envConf['BaseDir']     = self.base
+        envConf['UID']         = self.uid
+        envConf['GID']         = self.gid
+        envConf['Account']     = self.name
         if 'Type' in envConf :
           envName = 'Environment' + envConf['Type']
           for envType in IEnvironment.__subclasses__():
@@ -61,6 +64,11 @@ class Account:
         else :
           raise Exception('environment has no type')
         self.environments.append(env)
+
+        adminCfg = self.adminCfg['default']
+        if envConf['Name'] in self.adminCfg['environments']:
+          adminCfg.update(copy.deepcopy(self.adminCfg['environments'][envConf['Name']]))
+        env.adminCfg = adminCfg
       except Exception as e:
         if self.owner:
           print '    Error in environment ', (1 + len(self.environments)), ': ', e
@@ -82,8 +90,6 @@ class Account:
         and (len(names) == 0 or names.count(env.Name) > 0) 
       ) :
         envs.append(env)
-    if len(envs) == 0 and len(names) > 0 and self.owner and readOnly == True:
-        print '\nNO SUCH ENVIRONMENT - check -e parameter value\n'
     return envs
 
   def clean(self, verbose):

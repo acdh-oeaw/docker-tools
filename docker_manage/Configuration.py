@@ -1,19 +1,47 @@
 import collections
+import copy
+import json
 import os
 
 from .Account import Account
+from .Environments.Environment import Environment
 
 class Configuration:
+  cfg = None
   accounts = None
+  cfgFile = '/etc/docker-tools.json'
 
   def __init__(self):
     self.accounts = []
 
-    base = '/home'
+    # initialize config
+    Configuration.cfg = {
+      'baseDir': '/home',
+      'DockerImgBase': '/var/lib/docker/images',
+      'DockerMntBase': '/srv/docker',
+      'default': {},
+      'projects': {}
+    }
+    if os.path.exists(Configuration.cfgFile):
+      with open(Configuration.cfgFile, 'r') as cfgHandle:
+        cfg = json.loads(cfgHandle.read())
+      self.cfg.update(cfg)
+
+    Environment.DockerImgBase = self.cfg['DockerImgBase']
+
+    # initialize Account objects
+    base = self.cfg['baseDir']
     for accName in sorted(os.listdir(base)):
       if os.path.isdir(os.path.join(base, accName)) :
         try:
-          account = Account(accName)
+          cfg = {'default': copy.deepcopy(self.cfg['default']), 'environments': {}}
+          if accName in self.cfg['projects']:
+            if 'default' in self.cfg['projects'][accName]:
+              cfg['default'].update(self.cfg['projects'][accName]['default'])
+            if 'environments' in self.cfg['projects'][accName]:
+              cfg['environments'] = self.cfg['projects'][accName]['environments']
+          
+          account = Account(accName, cfg)
           account.readConfig()
           self.accounts.append(account)
         except Exception as e:
@@ -100,7 +128,12 @@ class Configuration:
     for account in self.accounts:
       if len(projects) == 0 or projects.count(account.name) > 0 :
         envs += account.findEnvironments(names, readyOnly)
+      if account.name in projects:
         accountMatched = True
-    if not accountMatched and len(projects) > 0:
-      print '\nNO SUCH PROJECT - check -p parameter value\n'
+    if len(envs) == 0:
+      if len(projects) > 0 and not accountMatched:
+        print '\nNO SUCH PROJECT - check -p parameter value\n'
+      elif len(names) > 0:
+        print '\nNO SUCH ENVIRONMENT - check -e parameter value\n'
     return envs
+

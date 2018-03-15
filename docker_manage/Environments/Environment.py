@@ -11,8 +11,7 @@ from . import *
 
 
 class Environment(IEnvironment, object):
-    DockerImgBase = '/var/lib/docker/images'
-    DockerMntBase = '/srv/docker'
+    DockerImgBase = None
 
     ready = False
     owner = False
@@ -37,8 +36,8 @@ class Environment(IEnvironment, object):
     LogDirMount = None
     userHookUser = None
     userHookRoot = None
-    swappiness = 100
     customStartup = False
+    adminCfg = None
 
     def __init__(self, conf, owner):
         self.Mounts = []
@@ -48,6 +47,7 @@ class Environment(IEnvironment, object):
         self.Hosts = []
         self.EnvVars = {}
         self.owner = owner
+        self.adminCfg = {}
 
         if not isinstance(conf, dict):
             raise Exception('configuration is of a wrong type')
@@ -528,7 +528,12 @@ class Environment(IEnvironment, object):
         dockerOpts += ['--network', 'bridge']
         for host in self.Hosts:
             dockerOpts += ['--add-host', host['Name'] + ':' + host['IP']]
-        dockerOpts += ['--memory-swappiness', str(self.swappiness)]
+        for option, value in self.adminCfg.iteritems():
+            if not isinstance(value, list):
+                value = [value]
+            for v in value:
+                dockerOpts.append('--' + option)
+                dockerOpts.append(v)
         return dockerOpts
 
     def getGuestHomeDir(self):

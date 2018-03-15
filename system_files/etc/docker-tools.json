@@ -1,0 +1,16 @@
+{
+  "baseDir": "/home",
+  "DockerImgBase": "/var/lib/docker/images",
+  "default": {
+  },
+  "projects":{
+    "sampleProject: {
+      "default": {
+      },
+      "environments": {
+        "sampleEnv": {
+        }
+      }
+    }
+  }
+}
