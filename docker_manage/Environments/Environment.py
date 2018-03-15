@@ -36,7 +36,6 @@ class Environment(IEnvironment, object):
     LogDirMount = None
     userHookUser = None
     userHookRoot = None
-    customStartup = False
     adminCfg = None
 
     def __init__(self, conf, owner):
@@ -103,14 +102,6 @@ class Environment(IEnvironment, object):
         ):
             raise Exception('DockerfileDir ' + conf['DockerfileDir'] + ' is missing or invalid')
         self.DockerfileDir = conf['DockerfileDir']
-
-        if 'CustomStartup' in conf and self.owner:
-            if (
-                 not Param.isValidBoolean(conf['CustomStartup'])
-                 or (conf['CustomStartup'] == 'true' and not Param.isValidFile(self.BaseDir + '/' + conf['DockerfileDir'] + '/Dockerfile'))
-            ):
-                raise Exception('CustomStartup is not a string or has value other then true/false or a custom Dockerfile is not set')
-            self.customStartup = conf['CustomStartup'] == 'true'
 
         if 'Mounts' in conf and self.owner:
             self.processMounts(conf['Mounts'])

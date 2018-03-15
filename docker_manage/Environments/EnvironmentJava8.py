@@ -3,9 +3,10 @@ import os
 from . import *
 
 class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
-  JavaParams = None
-  JavaUser   = 'user'
-  JavaDir    = '/opt'
+  JavaParams    = None
+  JavaUser      = 'user'
+  JavaDir       = '/opt'
+  CustomStartup = False
 
   def __init__(self, conf, owner):
     JavaParams = []
@@ -14,7 +15,15 @@ class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
       conf['DockerfileDir'] = 'java8'
     super(EnvironmentJava8, self).__init__(conf, owner)
 
-    if not self.customStartup:
+    if 'CustomStartup' in conf and self.owner:
+      if (
+        not Param.isValidBoolean(conf['CustomStartup'])
+        or (conf['CustomStartup'] == 'true' and not Param.isValidFile(self.BaseDir + '/' + conf['DockerfileDir'] + '/Dockerfile'))
+      ):
+        raise Exception('CustomStartup is not a string or has value other then true/false or a custom Dockerfile is not set')
+      self.CustomStartup = conf['CustomStartup'] == 'true'
+
+    if not self.CustomStartup:
       if not 'JavaParams' in conf or not Param.isValidParamsList(conf['JavaParams']) :
         raise Exception('JavaParams is missing or invalid')
       self.JavaParams = conf['JavaParams']
@@ -31,11 +40,11 @@ class EnvironmentJava8(EnvironmentHTTP, IEnvironment):
     super(EnvironmentJava8, self).runHooks(verbose)
 
     if verbose :
-      if self.customStartup:
+      if self.CustomStartup:
         print '    Custom startup method is provided via custom Dockerfile'
       else:
         print '    Setting up supervisord config'
-    if not self.customStartup:
+    if not self.CustomStartup:
       confPath = '/tmp/' + self.Name
       with open(confPath, 'w') as config:
         config.write(self.supervisorConfigTemplate.format(
