@@ -21,18 +21,13 @@ setup(
     keywords = "docker apache managent",
     url = "",
     packages=['docker_manage', "docker_manage.Environments"],
-    scripts=['docker-manage'],
-    data_files=[
-        (
-            '/usr/sbin', 
-            [
-                'docker-manage-admin', 'docker-add-project', 'docker-check-quota',
-                'docker-clean', 'docker-register-proxy', 'docker-register-systemd', 
-                'docker-remove-unused-containers', 'docker-remove-unused-images', 
-                'docker-remove-project', 'docker-build-images', 'docker-tools-update',
-                'docker-systemctl', 'docker-collect-stats', 'docker-collect-apache-logs'
-            ]
-        )
+    scripts=[
+        'scripts/docker-manage', 'scripts/docker-manage-admin', 'scripts/docker-add-project', 
+        'scripts/docker-check-quota', 'scripts/docker-clean', 'scripts/docker-register-proxy', 
+        'scripts/docker-register-systemd', 'scripts/docker-remove-unused-containers', 
+        'scripts/docker-remove-unused-images', 'scripts/docker-remove-project', 
+        'scripts/docker-build-images', 'scripts/docker-tools-update', 'scripts/docker-systemctl', 
+        'scripts/docker-collect-stats', 'scripts/docker-collect-apache-logs'
     ],
     long_description=read('README.md'),
     classifiers=[
