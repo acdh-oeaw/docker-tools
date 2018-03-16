@@ -4,7 +4,7 @@
   "default": {
   },
   "projects":{
-    "sampleProject: {
+    "sampleProject": {
       "default": {
       },
       "environments": {

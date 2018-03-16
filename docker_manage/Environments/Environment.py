@@ -523,8 +523,8 @@ class Environment(IEnvironment, object):
             if not isinstance(value, list):
                 value = [value]
             for v in value:
-                dockerOpts.append('--' + option)
-                dockerOpts.append(v)
+                dockerOpts.append('--' + str(option))
+                dockerOpts.append(str(v))
         return dockerOpts
 
     def getGuestHomeDir(self):
