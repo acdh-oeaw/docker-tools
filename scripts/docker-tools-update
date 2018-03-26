@@ -6,7 +6,7 @@ if [ "$1" != "" ]; then
 	python setup.py build && python setup.py install
 else
 	cd /tmp && \
-	git clone https://redmine.acdh.oeaw.ac.at/docker-tools.git && \
+	git clone https://github.com/acdh-oeaw/docker-tools.git && \
 	cd docker-tools && \
 	python setup.py build && python setup.py install && \
 	cd .. && \
