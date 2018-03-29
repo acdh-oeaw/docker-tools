@@ -56,7 +56,8 @@ class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
             '54': '3068cbe488075ae166e23ea6cd29cf0f',
             '55': 'ad97f8c86cee7be9d6ab13724b55fa1c',
             '56': '5d198f40f0f1cbf9cdf1bf3de842e534',
-            '57': '44dec95a0ef56c4786785f575ac59a60' 
+            '57': '44dec95a0ef56c4786785f575ac59a60',
+            '58': 'c59949bcfd0d68b4f272bc05a91d4dc6' 
         }
 
         if self.Version not in hashes:
