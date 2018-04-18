@@ -5,6 +5,8 @@ class EnvironmentElasticsearchBase(EnvironmentHTTP):
   LogDir             = None
   ConfDirMount       = None
   ConfDir            = None
+  PluginsDir         = None
+  PluginsDirMount    = None
 
   def __init__(self, conf, owner):
     super(EnvironmentElasticsearchBase, self).__init__(conf, owner)
@@ -25,8 +27,17 @@ class EnvironmentElasticsearchBase(EnvironmentHTTP):
         ) :
           raise Exception('ConfigDir is missing or invalid')
     self.ConfDir = conf['ConfigDir']
+    if 'PluginsDir' in conf:
+      if (self.owner and (
+            not Param.isValidRelPath(conf['PluginsDir'])
+            or not Param.isValidDir(self.BaseDir + '/' + conf['PluginsDir'])
+          )
+        ) :
+          raise Exception('PluginsDir is missing or invalid')
+      self.AutodeployDir = conf['PluginsDir']
     self.Mounts.append({ "Host" : self.LogDir, "Guest" : self.LogDirMount, "Rights" : "rw" })
     self.Mounts.append({ "Host" : self.ConfDir, "Guest" : self.ConfDirMount, "Rights" : "rw" })
+    if (self.PluginsDir is not None): self.Mounts.append({ "Host" : self.PluginsDir, "Guest" : self.PluginsDirMount, "Rights" : "rw" })
 
 class Environmentelasticsearch(EnvironmentElasticsearchBase, IEnvironment):
   DataDirMount       = '/usr/share/elasticsearch/data'
@@ -36,6 +47,7 @@ class Environmentelasticsearch(EnvironmentElasticsearchBase, IEnvironment):
     self.runAsUser = True
     self.LogDirMount        = '/usr/share/elasticsearch/logs'
     self.ConfDirMount       = '/usr/share/elasticsearch/config'
+    self.PluginsDirMount    = '/usr/share/elasticsearch/plugins'
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'elasticsearch'
     super(Environmentelasticsearch, self).__init__(conf, owner)
@@ -60,6 +72,7 @@ class Environmentkibana(EnvironmentElasticsearchBase, IEnvironment):
     self.runAsUser = True
     self.LogDirMount        = '/usr/share/kibana/log'
     self.ConfDirMount       = '/usr/share/kibana/config'
+    self.PluginsDirMount    = '/usr/share/kibana/plugins'
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'kibana'
     super(Environmentkibana, self).__init__(conf, owner)
