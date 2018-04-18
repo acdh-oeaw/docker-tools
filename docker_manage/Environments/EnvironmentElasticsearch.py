@@ -34,7 +34,7 @@ class EnvironmentElasticsearchBase(EnvironmentHTTP):
           )
         ) :
           raise Exception('PluginsDir is missing or invalid')
-      self.AutodeployDir = conf['PluginsDir']
+      self.PluginsDir = conf['PluginsDir']
     self.Mounts.append({ "Host" : self.LogDir, "Guest" : self.LogDirMount, "Rights" : "rw" })
     self.Mounts.append({ "Host" : self.ConfDir, "Guest" : self.ConfDirMount, "Rights" : "rw" })
     if (self.PluginsDir is not None): self.Mounts.append({ "Host" : self.PluginsDir, "Guest" : self.PluginsDirMount, "Rights" : "rw" })
