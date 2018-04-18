@@ -26,7 +26,7 @@ setup(
         (
             '/usr/sbin', 
             [
-                'scripts/docker-manage-admin', 'scripts/docker-add-project', 
+                'docker-manage-admin', 'scripts/docker-add-project',
                 'scripts/docker-check-quota', 'scripts/docker-clean', 'scripts/docker-register-proxy', 
                 'scripts/docker-register-systemd', 'scripts/docker-remove-unused-containers', 
                 'scripts/docker-remove-unused-images', 'scripts/docker-remove-project', 
