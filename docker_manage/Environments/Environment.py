@@ -47,6 +47,7 @@ class Environment(IEnvironment, object):
         self.EnvVars = {}
         self.owner = owner
         self.adminCfg = {}
+        self.volumesToCopy = []
 
         if not isinstance(conf, dict):
             raise Exception('configuration is of a wrong type')
@@ -322,6 +323,7 @@ class Environment(IEnvironment, object):
 
     def checkVolumes(self, cli):
         volumesToCopy = []
+        volumesToCopy.extend(self.volumesToCopy)
         volumes = cli.inspect_image('acdh/' + self.Name)['Config']['Volumes']
         if volumes is None:
             return volumesToCopy
@@ -373,6 +375,8 @@ class Environment(IEnvironment, object):
                             verbose, '    Creating temporary container to copy volumes content...',
                             'Container creation failed')
             volumes = cli.inspect_container(self.Name)['Config']['Volumes']
+            for item in self.volumesToCopy:
+                volumes.update({item['Volume'][:-1]: {}})
             for v in volumesToCopy:
                 for volume, hostPath in volumes.iteritems():
                     volume = '/' + re.sub('^/?(.*)/?$', '\\1', volume) + '/'
