@@ -381,9 +381,13 @@ class Environment(IEnvironment, object):
                 for volume, hostPath in volumes.iteritems():
                     volume = '/' + re.sub('^/?(.*)/?$', '\\1', volume) + '/'
                     if volume == v['Volume']:
-                        os.rmdir(self.BaseDir + '/' + v['Host'])
-                        self.runProcess(['docker', 'cp', self.Name + ':' + volume, self.BaseDir + '/' + v['Host']],
+                        try:
+                            os.rmdir(self.BaseDir + '/' + v['Host'])
+                            self.runProcess(['docker', 'cp', self.Name + ':' + volume, self.BaseDir + '/' + v['Host']],
                                         verbose, '    Copying ' + volume + ' into ' + v['Host'], 'Copying failed')
+                        except OSError as E:
+                            if E.errno == 39: continue
+                            else: raise
             self.runProcess(['docker', 'rm', '-f', '-v', self.Name], verbose, '    Removing temporary container...',
                             None)
             self.Mounts = mountsTmp
