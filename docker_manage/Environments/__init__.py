@@ -12,7 +12,7 @@ from .EnvironmentDrupal7 import EnvironmentDrupal7
 from .EnvironmentDrupal8 import EnvironmentDrupal8
 from .EnvironmentJava8 import EnvironmentJava8
 from .EnvironmentJava9 import EnvironmentJava9
-from .EnvironmentExistdb30 import EnvironmenteXistdb30, EnvironmenteXistdb22, EnvironmenteXistdb31, EnvironmenteXistdb34, EnvironmenteXistdb3x
+from .EnvironmentExistdb30 import EnvironmenteXistdb30, EnvironmenteXistdb22, EnvironmenteXistdb31, EnvironmenteXistdb34, EnvironmenteXistdb3x, EnvironmenteXistdb4x
 from .Environmentcrxqmets import Environmentcrxqmets
 from .EnvironmentBaseX import EnvironmentBaseX, EnvironmentRHELBaseX
 from .EnvironmentSkeBase import EnvironmentSkeBase
