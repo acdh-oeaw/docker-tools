@@ -49,6 +49,7 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   ServerName $2
   ServerAlias $3
 
+  Include /etc/httpd/conf.d/shared/error_pages.conf
   $SSL_CONF
 
   AllowEncodedSlashes On
@@ -64,6 +65,8 @@ else
   echo "<VirtualHost *:80>
   ServerName $2
   ServerAlias $3
+
+  Include /etc/httpd/conf.d/shared/error_pages.conf
 
   AllowEncodedSlashes On
 
