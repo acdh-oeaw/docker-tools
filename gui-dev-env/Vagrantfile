@@ -253,5 +253,6 @@ StartupWMClass=jetbrains-pycharm-ce
 EOF
   cd /home
   chown vagrant:vagrant -R vagrant
+  cp /opt/VBoxGuestAdditions-*/other/98vboxadd-xclient /etc/X11/xinit/xinitrc.d/
   SHELL
 end
