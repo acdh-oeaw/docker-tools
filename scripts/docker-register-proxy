@@ -6,10 +6,13 @@
 # $5 Websockets, Authorization
 # $6 SSL ("true"/"false"/"both")
 # $7 InternalAlias
+# $8 AllowEncodedSlashes Off|[On]|NoDecode (optional)
+# $9 Additional ProxyPass options (e.g. nocanon) (optional)
 
 PROT="http"
 SSLPROXY=""
 SSLHEADERS="RequestHeader set X-Forwarded-Proto \"https\" env=HTTPS
+  RequestHeader set X-Forwarded-Port \"443\" env=HTTPS
   RequestHeader set Front-End-Https \"on\" env=HTTPS"
 if [ "$6" == "both" ]; then
   PROT="https"
@@ -19,6 +22,8 @@ if [ "$6" == "both" ]; then
   SSLProxyCheckPeerName off"
   SSLHEADERS=""
 fi
+
+if [ "$8x" == "x" ] ; then ALLOW_ENCODED_SLASHES="On" ; else ALLOW_ENCODED_SLASHES="$8"; fi
 
 if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   # search for a specific certificate
@@ -52,13 +57,13 @@ if [ "$6" == "true" ] || [ "$6" == "both" ] ; then
   Include /etc/httpd/conf.d/shared/error_pages.conf
   $SSL_CONF
 
-  AllowEncodedSlashes On
+  AllowEncodedSlashes $ALLOW_ENCODED_SLASHES
 
   ProxyPreserveHost On
   $SSLHEADERS
   $SSLPROXY
   $5
-  ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=3600
+  ProxyPass        / $PROT://127.0.0.1:$4/$7 $9 timeout=3600
   ProxyPassReverse / $PROT://127.0.0.1:$4/$7
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 else
@@ -68,11 +73,11 @@ else
 
   Include /etc/httpd/conf.d/shared/error_pages.conf
 
-  AllowEncodedSlashes On
+  AllowEncodedSlashes $ALLOW_ENCODED_SLASHES
 
   ProxyPreserveHost On
   $5
-  ProxyPass        / $PROT://127.0.0.1:$4/$7 timeout=3600
+  ProxyPass        / $PROT://127.0.0.1:$4/$7 $9 timeout=3600
   ProxyPassReverse / $PROT://127.0.0.1:$4/$7
 </VirtualHost>" > /etc/httpd/conf.d/sites-enabled/$1.conf
 

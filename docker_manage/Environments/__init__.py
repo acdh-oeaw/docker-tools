@@ -22,3 +22,4 @@ from .Environmentcorpus_shell import Environmentcorpus_shell
 from .EnvironmentJS import EnvironmentJS
 from .EnvironmentIIIF import EnvironmentIIIF
 from .EnvironmentElasticsearch import Environmentelasticsearch, Environmentkibana
+from .EnvironmentJenkins import Environmentjenkins

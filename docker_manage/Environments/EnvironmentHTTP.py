@@ -10,6 +10,8 @@ class EnvironmentHTTP(Environment, IEnvironment):
   ServerAlias  = None
   HTTPS        = "true"
   Auth         = None
+  AllowEncodedSlashes = "On"
+  ProxyOptions = ""
 
   def __init__(self, conf, owner):
     self.ServerAlias = []
@@ -125,7 +127,9 @@ class EnvironmentHTTP(Environment, IEnvironment):
       str(HTTPPort['Host']),
       websockets + ''.join(self.Auth),
       self.HTTPS,
-      HTTPPort['Alias']
+      HTTPPort['Alias'],
+      self.AllowEncodedSlashes,
+      self.ProxyOptions
     ]
     if verbose :
       print('    Setting up reverse proxy')
