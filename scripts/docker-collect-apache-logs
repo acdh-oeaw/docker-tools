@@ -11,6 +11,7 @@ import socket
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dbConf', default='dbname=docker host=hermes user=docker')
+parser.add_argument('--stdout', action='store_true', help='output data to stdout instead of writing into the database')
 parser.add_argument('--log', default='/var/log/httpd/access_log')
 parser.add_argument('-c', action='store_true', help='wait for new data to come')
 args = parser.parse_args()
@@ -18,7 +19,7 @@ args = parser.parse_args()
 con = psycopg2.connect(args.dbConf)
 cur = con.cursor()
 
-def getContainerId(cur, domain, localCache, contCache):
+def getContainerId(cur, domain, localCache, contCache, stdout):
     if domain not in localCache:
         return None
     name = localCache[domain]
@@ -26,7 +27,8 @@ def getContainerId(cur, domain, localCache, contCache):
         cur.execute("SELECT container_id FROM containers WHERE name = %s", (name, ))
         id = cur.fetchone()
         if id is None:
-            print('Registering container %s in the database' % name)
+            if not stdout:
+                print('Registering container %s in the database' % name)
             cur.execute(
                 "INSERT INTO containers (container_id, name) VALUES (nextval('container_id_seq'), %s) RETURNING container_id",
                 (name, )
@@ -38,7 +40,8 @@ def getContainerId(cur, domain, localCache, contCache):
 cur.execute("SELECT host_id FROM hosts WHERE name = %s", (socket.gethostname(), ))
 host = cur.fetchone()
 if host is None:
-    print('Registering host %s in the database' % args.host)
+    if not args.stdout:
+        print('Registering host %s in the database' % args.host)
     cur.execute(
         "INSERT INTO hosts (host_id, name) VALUES (nextval('host_id_seq'), %s) RETURNING host_id", 
         (args.host, )
@@ -68,18 +71,29 @@ with open(args.log, 'r') as log:
             break
         if len(l) < 4 or l[1] == '-':
             continue
-        id = getContainerId(cur, l[1], localCache, contCache)
+
+        while not re.search('^\[[0-9]+/[A-Z][a-z]+/[0-9]{4}:[0-9]{2}:[0-9]{2}:[0-9]{2}', l[3]):
+            l[2] += ' ' + l[3]
+            l = l[0:3] + l[4:]
+        
+        id = getContainerId(cur, l[1], localCache, contCache, args.stdout)
         if id is not None:
-            try:
-                cur.execute(
-                    "INSERT INTO requests (host_id, container_id, date, path, ip) VALUES (%s, %s, %s, %s, %s)",
-                    (host, id, l[3][1:], l[2], l[6])
-                )
-                con.commit()
-            except Exception as e:
-                con.rollback()
-                print(l)
-                print((host, id, l[3][1:], l[2], l[6]))
+            if args.stdout:
+                if l[3][1:] == 'ogo.png': print(l)
+                print('%s\t%s\t%s\t%s\t%s' % (host, id, l[3][1:], l[2], l[6]))
+            else:
+                try:
+                    cur.execute(
+                        "INSERT INTO requests (host_id, container_id, date, path, ip) VALUES (%s, %s, %s, %s, %s)",
+                        (host, id, l[3][1:], l[2], l[6])
+                    )
+                    con.commit()
+                except Exception as e:
+                    con.rollback()
+                    print(e)
+                    print(l)
+                    print((host, id, l[3][1:], l[2], l[6]))
         else:
-            print("  Can't map domain %s" % l[1])
+            if not args.stdout:
+                print("  Can't map domain %s" % l[1])
 
