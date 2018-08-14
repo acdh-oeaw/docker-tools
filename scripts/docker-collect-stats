@@ -12,7 +12,7 @@ import time
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dbConf', default='dbname=docker host=hermes user=docker')
+parser.add_argument('--dbConf', default='dbname=docker host=helios port=5433 user=docker')
 parser.add_argument('--file')
 parser.add_argument('--timeout', default=1, type=int)
 args = parser.parse_args()
@@ -61,10 +61,10 @@ def writeIfDiff(cur, stat, statCache, file):
 cur.execute("SELECT host_id FROM hosts WHERE name = %s", (socket.gethostname(), ))
 host = cur.fetchone()
 if host is None:
-    print('Registering host %s in the database' % args.host)
+    print('Registering host %s in the database' % socket.gethostname())
     cur.execute(
         "INSERT INTO hosts (host_id, name) VALUES (nextval('host_id_seq'), %s) RETURNING host_id", 
-        (args.host, )
+        (socket.gethostname(), )
     )
     host = cur.fetchone()
     con.commit()
@@ -114,6 +114,6 @@ while proc.returncode is None:
             con.commit()
     except Exception as e:
         print e
-
-close(file)
+if file is not None:
+    close(file)
 
