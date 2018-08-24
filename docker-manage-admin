@@ -42,7 +42,8 @@ print('Loading config...')
 configuration = docker_manage.Configuration()
 
 print('Checking conflicts between environments...')
-configuration.check()
+if configuration.check() == False:
+    exit()
 
 if not args.action is None and args.action.count('stop') > 0:
     print('Stopping containers...')
@@ -76,3 +77,4 @@ if not args.action is None:
         elif args.action.count('logs') > 0:
             print('Printing logs...')
             configuration.showLogs(args.project, args.environment[0])
+

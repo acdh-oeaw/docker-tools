@@ -57,11 +57,18 @@ class Configuration:
     duplPorts = [port for port, count in collections.Counter(ports).iteritems() if count > 1]
     duplNames = [name for name, count in collections.Counter(names).iteritems() if count > 1]
 
+    accountNames = []
     for account in self.accounts:
+      accountNames.append(account.name)
       errors = account.check(duplDomains, duplPorts, duplNames, names)
       if len(errors) > 0 :
         print '  ' + account.name, ': ', errors
-        noErrors = False
+    accountNames.sort()
+    if len(accountNames) > 1:
+      for i in xrange(1, len(accountNames)):
+        if accountNames[i].startswith(accountNames[i - 1]):
+          print '  FATAL ERROR: nested project names %s and %s' % (accountNames[i - 1], accountNames[i])
+          return False
 
   def stop(self, projects, names, verbose):
     for env in self.findEnvironments(projects, names):
