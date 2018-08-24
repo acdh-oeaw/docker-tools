@@ -2,6 +2,12 @@
 
 # Removes all images without tags
 
-for i in `docker images -qf dangling=true`; do
-	docker rmi $i
-done
+if [ "$1" == "all" ]; then
+    for i in `docker images -q`; do
+        docker rmi -f $i
+    done
+else
+    for i in `docker images -qf dangling=true`; do
+        docker rmi -f $i
+    done
+fi
