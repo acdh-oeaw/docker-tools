@@ -15,6 +15,7 @@ parser.add_argument('--dbConf', default='dbname=docker host=helios port=5433 use
 parser.add_argument('--file')
 parser.add_argument('--log', default='/var/log/httpd/access_log')
 parser.add_argument('--sleep', type=int, default=5)
+parser.add_argument('--icingaIp', default='193.170.85.96')
 parser.add_argument('-c', action='store_true', help='wait for new data to come')
 args = parser.parse_args()
 
@@ -81,6 +82,8 @@ with open(args.log, 'r') as log:
         lines = buf.split('\n')
         buf = lines.pop()
         for l in lines:
+            icinga = 'nagios-plugin' in l and 'check_http' in l
+
             l = l.split(' ')
             if len(l) < 4 or l[1] == '-':
                 continue
@@ -88,6 +91,9 @@ with open(args.log, 'r') as log:
             while not re.search('^\[[0-9]+/[A-Z][a-z]+/[0-9]{4}:[0-9]{2}:[0-9]{2}:[0-9]{2}', l[3]):
                 l[2] += ' ' + l[3]
                 l = l[0:3] + l[4:]
+
+            if icinga:
+                l[6] = args.icingaIp
         
             id = getContainerId(cur, l[1], localCache, contCache)
             if id is not None:
