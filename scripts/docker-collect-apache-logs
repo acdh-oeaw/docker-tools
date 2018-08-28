@@ -15,7 +15,7 @@ parser.add_argument('--dbConf', default='dbname=docker host=helios port=5433 use
 parser.add_argument('--file')
 parser.add_argument('--log', default='/var/log/httpd/access_log')
 parser.add_argument('--sleep', type=int, default=5)
-parser.add_argument('--icingaIp', default='193.170.85.96')
+parser.add_argument('--icingaIp', default='193.170.85.88')
 parser.add_argument('-c', action='store_true', help='wait for new data to come')
 args = parser.parse_args()
 
