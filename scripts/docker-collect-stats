@@ -33,8 +33,12 @@ def getContainerId(cur, hash, localCache, contCache, users):
         for i in data:
             localCache[i[0]] = i[-1]
     name = localCache[hash]
-    if name.split('-')[0] not in users:
-        name = 'temp'
+    user = name.split('-')[0]
+    if user not in users:
+        if user not in os.listdir('/home'):
+            name = 'temp'
+        else:
+            users.append(user)
     if name not in contCache:
         cur.execute("SELECT container_id FROM containers WHERE name = %s", (name, ))
         id = cur.fetchone()
