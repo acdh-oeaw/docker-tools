@@ -2,12 +2,9 @@
 
 # Removes all images without tags
 
+
 if [ "$1" == "all" ]; then
-    for i in `docker images -q`; do
-        docker rmi -f $i
-    done
+    docker image prune -f -a
 else
-    for i in `docker images -qf dangling=true`; do
-        docker rmi -f $i
-    done
+    docker image prune -f
 fi
