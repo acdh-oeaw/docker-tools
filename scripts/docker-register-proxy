@@ -19,7 +19,8 @@ if [ "$6" == "both" ]; then
   SSLPROXY="SSLProxyEngine on
   SSLProxyVerify none
   SSLProxyCheckPeerCN off
-  SSLProxyCheckPeerName off"
+  SSLProxyCheckPeerName off
+  SSLProxyCheckPeerExpire off"
   SSLHEADERS=""
 fi
 
