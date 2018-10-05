@@ -57,9 +57,11 @@ def writeIfDiff(cur, stat, statCache, file):
     tmp = '|'.join([str(x) for x in stat])
     if id not in statCache or tmp != statCache[id]:
         if file is not None:
+            #file.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (stat[0:2] + (str(datetime.datetime.now()), ) + stat[2:]))
             file.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (stat[0:2] + (str(datetime.datetime.now()), ) + stat[2:]))
         else:
-            cur.execute("INSERT INTO stats VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s)", stat)
+            #cur.execute("INSERT INTO stats VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s)", stat)
+            cur.execute("INSERT INTO stats VALUES (%s, %s, now(), %s, %s)", stat)
     statCache[id] = tmp
 
 cur.execute("SELECT host_id FROM hosts WHERE name = %s", (socket.gethostname(), ))
