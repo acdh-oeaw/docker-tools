@@ -105,15 +105,16 @@ while proc.returncode is None:
             except: cpu = 0
             try: mem = float(i[2]) * multi[i[3][0:1]]
             except: mem = 0
-            try: netIn = float(i[7]) * multi[i[8][0:1]]
-            except: netIn = 0
-            try: netOut = float(i[9]) * multi[i[10][0:1]]
-            except: netOut = 0
-            try: ioRead = float(i[11]) * multi[i[12][0:1]]
-            except: ioRead = 0
-            try: ioWrite = float(i[13]) * multi[i[14][0:1]]
-            except: ioWrite = 0
-            stat = (host, id, cpu, mem, netIn, netOut, ioRead, ioWrite)
+            #try: netIn = float(i[7]) * multi[i[8][0:1]]
+            #except: netIn = 0
+            #try: netOut = float(i[9]) * multi[i[10][0:1]]
+            #except: netOut = 0
+            #try: ioRead = float(i[11]) * multi[i[12][0:1]]
+            #except: ioRead = 0
+            #try: ioWrite = float(i[13]) * multi[i[14][0:1]]
+            #except: ioWrite = 0
+            #stat = (host, id, cpu, mem, netIn, netOut, ioRead, ioWrite)
+            stat = (host, id, cpu, mem)
             writeIfDiff(cur, stat, statCache, file)
             con.commit()
     except Exception as e:
