@@ -104,11 +104,11 @@ git clone https://github.com/acdh-oeaw/docker-tools-environments.git
 python setup.py build && sudo python setup.py install
 pushd /var/lib/docker
 
-sudo git clone https://github.com/acdh-oeaw/docker-tools-environments.git
+sudo git clone /home/vagrant/docker-tools/docker-tools-environments
 sudo mv docker-tools-environments images
 pushd /var/lib/docker/images
-sudo git remote rename origin upstream
-sudo git remote add origin /home/vagrant/docker-tools/docker-tools-environments/.git
+sudo git remote add upstream https://github.com/acdh-oeaw/docker-tools-environments.git
+sudo git fetch upstream
 sudo git branch --set-upstream-to origin/master
 popd
 popd
@@ -236,16 +236,16 @@ EOF
      sudo cp localhost.key /etc/pki/tls/private/localhost.key
      sudo cp localhost.csr /etc/pki/tls/private/localhost.csr
      sudo restorecon -RvF /etc/pki     
-     wget https://download.jetbrains.com/python/pycharm-community-2018.1.4.tar.gz
-     tar -xzf pycharm-community-2018.1.4.tar.gz
+     wget https://download.jetbrains.com/python/pycharm-community-2018.2.4.tar.gz
+     tar -xzf pycharm-community-2018.2.4.tar.gz
      mkdir -p .local/share/applications
      cat > .local/share/applications/jetbrains-pycharm-ce.desktop <<"EOF"      
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyCharm Community Edition
-Icon=/home/vagrant/pycharm-community-2018.1.4/bin/pycharm.png
-Exec="/home/vagrant/pycharm-community-2018.1.4/bin/pycharm.sh" %f
+Icon=/home/vagrant/pycharm-community-2018.2.4/bin/pycharm.png
+Exec="/home/vagrant/pycharm-community-2018.2.4/bin/pycharm.sh" %f
 Comment=Develop with pleasure!
 Categories=Development;IDE;
 Terminal=false
