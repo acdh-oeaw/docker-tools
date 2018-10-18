@@ -134,8 +134,10 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
             '5.5': '4fee1348bbac85cae82d6634e7296b9f',
             '5.6': '1e789adb03cf2a82a9c3bced67c02328',
             '5.7': 'a5f35336995ed209a917a4370e0c34d7',
+            '5.8': '9642e018a0b0ed7bd8a3472fa0b64ccd',
             '6.0': '6d457c7e478574a5125f608f3d6b7fa5',
-            '6.1': 'fad034b129695c5066e892cd7cb02a11' 
+            '6.1': 'fad034b129695c5066e892cd7cb02a11',
+            '6.2': '46a42d70047dafd4b05e3dd050cea887'
 
         }
 
