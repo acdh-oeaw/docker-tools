@@ -40,13 +40,13 @@ def getContainerId(cur, hash, localCache, contCache, users):
         else:
             users.append(user)
     if name not in contCache:
-        cur.execute("SELECT container_id FROM containers WHERE name = %s", (name, ))
+        cur.execute("SELECT container_id FROM containers WHERE name = %s AND host = %s", (name, socket.gethostname()))
         id = cur.fetchone()
         if id is None:
             print('Registering container %s in the database' % name)
             cur.execute(
-                "INSERT INTO containers (container_id, name) VALUES (nextval('container_id_seq'), %s) RETURNING container_id",
-                (name, )
+                "INSERT INTO containers (container_id, name, host) VALUES (nextval('container_id_seq'), %s, %s) RETURNING container_id",
+                (name, socket.gethostname())
             )
             id = cur.fetchone()
         contCache[name] = id[0]
@@ -57,24 +57,12 @@ def writeIfDiff(cur, stat, statCache, file):
     tmp = '|'.join([str(x) for x in stat])
     if id not in statCache or tmp != statCache[id]:
         if file is not None:
-            #file.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (stat[0:2] + (str(datetime.datetime.now()), ) + stat[2:]))
-            file.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (stat[0:2] + (str(datetime.datetime.now()), ) + stat[2:]))
+            #file.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (stat[0:1] + (str(datetime.datetime.now()), ) + stat[1:]))
+            file.write('%s\t%s\t%s\t%s\n' % (stat[0:1] + (str(datetime.datetime.now()), ) + stat[1:]))
         else:
-            #cur.execute("INSERT INTO stats VALUES (%s, %s, now(), %s, %s, %s, %s, %s, %s)", stat)
-            cur.execute("INSERT INTO stats VALUES (%s, %s, now(), %s, %s)", stat)
+            #cur.execute("INSERT INTO stats VALUES (%s, now(), %s, %s, %s, %s, %s, %s)", stat)
+            cur.execute("INSERT INTO stats VALUES (%s, now(), %s, %s)", stat)
     statCache[id] = tmp
-
-cur.execute("SELECT host_id FROM hosts WHERE name = %s", (socket.gethostname(), ))
-host = cur.fetchone()
-if host is None:
-    print('Registering host %s in the database' % socket.gethostname())
-    cur.execute(
-        "INSERT INTO hosts (host_id, name) VALUES (nextval('host_id_seq'), %s) RETURNING host_id", 
-        (socket.gethostname(), )
-    )
-    host = cur.fetchone()
-    con.commit()
-host = host[0]
 
 localCache = {}
 contCache = {}
@@ -115,8 +103,8 @@ while proc.returncode is None:
             #except: ioRead = 0
             #try: ioWrite = float(i[13]) * multi[i[14][0:1]]
             #except: ioWrite = 0
-            #stat = (host, id, cpu, mem, netIn, netOut, ioRead, ioWrite)
-            stat = (host, id, cpu, mem)
+            #stat = (id, cpu, mem, netIn, netOut, ioRead, ioWrite)
+            stat = (id, cpu, mem)
             writeIfDiff(cur, stat, statCache, file)
             con.commit()
     except Exception as e:

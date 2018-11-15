@@ -31,29 +31,17 @@ def getContainerId(cur, domain, localCache, contCache):
         return None
     name = localCache[domain]
     if name not in contCache:
-        cur.execute("SELECT container_id FROM containers WHERE name = %s", (name, ))
+        cur.execute("SELECT container_id FROM containers WHERE name = %s AND host = %s", (name, socket.gethostname()))
         id = cur.fetchone()
         if id is None:
             print('Registering container %s in the database' % name)
             cur.execute(
-                "INSERT INTO containers (container_id, name) VALUES (nextval('container_id_seq'), %s) RETURNING container_id",
-                (name, )
+                "INSERT INTO containers (container_id, name, host) VALUES (nextval('container_id_seq'), %s, %s) RETURNING container_id",
+                (name, socket.gethostname())
             )
             id = cur.fetchone()
         contCache[name] = id[0]
     return contCache[name]
-
-cur.execute("SELECT host_id FROM hosts WHERE name = %s", (socket.gethostname(), ))
-host = cur.fetchone()
-if host is None:
-    print('Registering host %s in the database' % socket.gethostname())
-    cur.execute(
-        "INSERT INTO hosts (host_id, name) VALUES (nextval('host_id_seq'), %s) RETURNING host_id", 
-        (socket.gethostname(), )
-    )
-    host = cur.fetchone()
-    con.commit()
-host = host[0]
 
 localCache = {}
 for user in os.listdir('/home'):
@@ -99,18 +87,18 @@ with open(args.log, 'r') as log:
             if id is not None:
                 try:
                     if file is not None:
-                        file.write('%s\t%s\t%s\t%s\t%s\n' % (host, id, l[3][1:], l[2], l[6]))
+                        file.write('%s\t%s\t%s\t%s\n' % (id, l[3][1:], l[2], l[6]))
                     else:
                         cur.execute(
-                            "INSERT INTO requests (host_id, container_id, date, path, ip) VALUES (%s, %s, %s, %s, %s)",
-                            (host, id, l[3][1:], l[2], l[6])
+                            "INSERT INTO requests (container_id, date, path, ip) VALUES (%s, %s, %s, %s)",
+                            (id, l[3][1:], l[2], l[6])
                         )
                         con.commit()
                 except Exception as e:
                     con.rollback()
                     print(e)
                     print(l)
-                    print((host, id, l[3][1:], l[2], l[6]))
+                    print((id, l[3][1:], l[2], l[6]))
             else:
                 print("  Can't map domain %s" % l[1])
 
