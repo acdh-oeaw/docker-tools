@@ -64,6 +64,8 @@ def writeIfDiff(cur, stat, statCache, file):
             cur.execute("INSERT INTO stats VALUES (%s, now(), %s, %s)", stat)
     statCache[id] = tmp
 
+with open('/proc/cpuinfo', 'r') as f:
+  maxCpu = 100 * len(re.findall('processor[^:]*: [0-9]+', f.read()))
 localCache = {}
 contCache = {}
 statCache = {}
@@ -91,7 +93,7 @@ while proc.returncode is None:
                     print('  ' + ' '.join(i))
                 continue
             id = getContainerId(cur, i[0], localCache, contCache, users)
-            try: cpu = float(i[1][0:-1])
+            try: cpu = min(maxCpu, float(i[1][0:-1]))
             except: cpu = 0
             try: mem = float(i[2]) * multi[i[3][0:1]]
             except: mem = 0
