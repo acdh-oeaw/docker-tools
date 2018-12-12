@@ -26,11 +26,11 @@ setup(
         (
             '/usr/sbin', 
             [
-                'docker-manage-admin', 'scripts/docker-add-project',
+                'docker-manage-admin', 
+                'scripts/docker-add-project', 'scripts/docker-remove-project',
                 'scripts/docker-check-quota', 'scripts/docker-clean', 'scripts/docker-register-proxy', 
-                'scripts/docker-register-systemd', 'scripts/docker-remove-unused-containers', 
-                'scripts/docker-remove-unused-images', 'scripts/docker-remove-project', 
-                'scripts/docker-build-images', 'scripts/docker-tools-update', 'scripts/docker-systemctl', 
+                'scripts/docker-remove-unused-containers', 'scripts/docker-remove-unused-images',
+                'scripts/docker-build-images', 'scripts/docker-tools-update', 
                 'scripts/docker-collect-stats', 'scripts/docker-collect-apache-logs'
             ]
         )

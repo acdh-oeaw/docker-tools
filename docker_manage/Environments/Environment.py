@@ -37,6 +37,7 @@ class Environment(IEnvironment, object):
     userHookUser = None
     userHookRoot = None
     adminCfg = None
+    stopTimeout = 60
 
     def __init__(self, conf, owner):
         self.Mounts = []
@@ -396,11 +397,6 @@ class Environment(IEnvironment, object):
                         '    Creating container...', 'Container creation failed')
         # check networks
         self.checkNetworks()
-        # create systemd script & run systemctl to set right status of the service
-        self.runProcess(['sudo', '-u', 'root', 'docker-register-systemd', self.Name], verbose,
-                        '    Registering in systemd', 'Systemd script creation failed')
-        self.runProcess(['sudo', '-u', 'root', 'docker-systemctl', 'start', self.Name], verbose,
-                        '    Setting systemd service status', 'Setting systemd service status failed')
 
     def runHooks(self, verbose):
         if not self.owner:
@@ -461,7 +457,7 @@ class Environment(IEnvironment, object):
         if verbose:
             print('  ' + self.Name)
 
-        ret = subprocess.call(['sudo', '-u', 'root', 'docker-systemctl', 'stop', self.Name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ret = subprocess.call(['docker', 'stop', '-t', str(self.stopTimeout), self.Name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if ret != 0:
             raise Exception('Failed to stop')
 
@@ -517,7 +513,7 @@ class Environment(IEnvironment, object):
         return []
 
     def getDockerOpts(self):
-        dockerOpts = ['-d', '-h', self.Name]
+        dockerOpts = ['-d', '-h', self.Name, '--restart', 'unless-stopped']
         for mount in self.Mounts:
             dockerOpts += ['-v', self.BaseDir + '/' + mount['Host'] + ':' + mount['Guest'] + ':' + mount['Rights']]
         for port in self.Ports:

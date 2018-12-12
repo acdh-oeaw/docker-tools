@@ -46,7 +46,6 @@ chmod 777 /var/lib/docker/images/tmp
 # SELinux context to allow docker access external mounts
 # svirt_sandbox_file_t will stop working in CentOS 7.5 fresh installs
 # https://bugzilla.redhat.com/show_bug.cgi?id=1525921
-semanage fcontext -a -t svirt_sandbox_file_t "/home(/.*)?"
 semanage fcontext -a -t container_file_t "/home(/.*)?"
 restorecon -RF /home
 chcon -R -t ssh_home_t /home/*/.ssh

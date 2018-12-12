@@ -9,17 +9,9 @@ fi
 echo 'Removing Apache proxy config...'
 rm -f /etc/httpd/conf.d/sites-enabled/$1.conf
 
-# systemd
-echo 'Removing systemd startup scripts...'
-rm -f /etc/systemd/system/docker-${1}.service
-for i in `find /etc/systemd/system -name docker-${1}.service`; do
-	rm -f $i
-done
-systemctl daemon-reload
-
 # docker
 echo 'Stoping and removing docker containers...'
-docker stop $1 -t 10
+docker stop $1 -t 60
 docker rm -fv $1
 docker-remove-unused-containers
 docker-remove-unused-images > /dev/null 2>&1

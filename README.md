@@ -10,23 +10,7 @@ You should use this installation variant if you are deploying a new "ACDH-like" 
 
 If you are using desktop or laptop, you should probably follow the *Installation including Virtual Box VM creation* variant.
 
-* If you want to store Docker images on a separate partition (if you are installing it on the server, the answer is always YES), then:
-    * Install docker
-      `sudo yum install -y docker`
-    * Adjust `/etc/sysconfig/docker-storage-setup`, e.g.
-      ```
-      STORAGE_DRIVER=devicemapper
-      VG=centos00
-      DATA_SIZE=50G
-      GROWPART=false
-      ```
-    * Run
-      ```
-      systemctl enable docker-storage-setup
-      systemctl start docker-storage-setup
-      ```
-    * Check created `/etc/sysconfig/docker-storage`
-      You may consider adding `--storage-opt dm.min_free_space=5%` to it (the default is 10%)
+* If you want to store Docker images on a separate partition (if you are installing it on the server, the answer is always YES), then simply mount the partition under /var/lib/docker
 * Clone this repo and enter its directory
 * Consider adjusting configuration files in the `system_files` directory, especially:
     * `system_files/etc/httpd/conf.d/shared/ssl.conf` - path to your servers SSL key and cert files
@@ -103,7 +87,7 @@ Included scripts are:
 * `docker-add-project`
   Script which properly adds new system user taking care of setting up quota, files required for ssh access, etc.
   You should use it instead of normal `useradd` or `adduser`
-* `docker-clean`, `docker-register-proxy`, `docker-register-systemd`
+* `docker-clean`, `docker-register-proxy`, 
   Helper scripts run by docker-manage
   There is no need to run them directly but if you are root, you can do it
 * `docker-remove-unused-images`, `docker-remove-unused-containers`
@@ -114,3 +98,4 @@ Included scripts are:
   should ask ARZ to extend disk space first
 * `docker-tools-update`
   Updates this tools by fetching the up to date version from the repository and installing it
+
