@@ -116,9 +116,10 @@ class EnvironmentHTTP(Environment, IEnvironment):
   def configureProxy(self, verbose):
     HTTPPort = self.getHTTPPort()
     websockets = ''
+    proto = 'ws' if self.HTTPS == 'false' else 'wss'
     for ws in HTTPPort['ws']:
-      websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-      websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+      websockets += 'ProxyPass        ' + ws + ' ' + proto + '://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+      websockets += 'ProxyPassReverse ' + ws + ' ' + proto + '://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
     cmd = [
       'sudo', '-u', 'root', 'docker-register-proxy',
       self.Name,
