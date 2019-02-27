@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -212,6 +213,8 @@ class Environment(IEnvironment, object):
                 raise Exception(str(len(self.Networks) + 1) + ' network name is not a dictionary')
             if 'Alias' in network and not isinstance(network['Alias'], basestring):
                 raise Exception(str(len(self.Networks) + 1) + ' network alias is invalid')
+            if not 'Size' in network:
+                network['Size'] = 6
             network['Name'] = account + '-' + network['Name']
             self.Networks.append(network)
 
@@ -343,11 +346,14 @@ class Environment(IEnvironment, object):
         return volumesToCopy
 
     def checkNetworks(self):
+        if len(self.Networks) > 0:
+            ranges = NetworkRange() 
         for network in self.Networks:
             out = subprocess.check_output(['docker', 'network', 'ls']).split('\n')
             out = [x for x in out if re.match('^[0-9a-f]+ +' + network['Name'], x)]
             if len(out) == 0:
-                self.runProcess(['docker', 'network', 'create', '-d', 'bridge', network['Name']], False, '', 'Network creation failed')
+                subnet = ranges.getSubnet(network['Size'])
+                self.runProcess(['docker', 'network', 'create', '-d', 'bridge', '--subnet', subnet, network['Name']], False, '', 'Network creation failed')
             param = ['docker', 'network', 'connect', network['Name'], self.Name]
             if 'Alias' in network:
                 param = param + ['--alias', network['Alias']]

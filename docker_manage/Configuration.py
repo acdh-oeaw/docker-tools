@@ -2,6 +2,7 @@ import collections
 import copy
 import json
 import os
+import subprocess
 
 from .Account import Account
 from .Environments.Environment import Environment
@@ -78,6 +79,7 @@ class Configuration:
         print '    ' + str(e)
 
   def clean(self, verbose):
+    subprocess.check_output(['docker', 'network', 'prune', '--force'])
     for account in self.accounts:
       if account.owner:
         account.clean(verbose)
