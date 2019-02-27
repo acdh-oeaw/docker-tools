@@ -8,8 +8,7 @@ DAY=`date +%u`
 
 # CLEAN
 /usr/sbin/docker-remove-unused-containers all
-/usr/sbin/docker-remove-unused-images
-docker network prune -f
+/usr/sbin/docker-remove-unused-images all
 
 # BACKUP
 tar -cf $BACKUP_DIR/${DAY}_config.json.tar /home/*/config.json
