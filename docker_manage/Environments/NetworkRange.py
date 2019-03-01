@@ -1,4 +1,5 @@
 import json
+import math
 import re
 import subprocess
 
@@ -26,8 +27,9 @@ class NetworkRange(object):
         size = int(size)
         count = 1 << size # convert from bits to number of addresses
         for rng in self.addrSpace:
-            if rng[1] - rng[0] + 1 >= count:
-                newRng = (rng[0], rng[0] + count - 1)
+            validStart = int(math.ceil(float(rng[0]) / count) * count)
+            if rng[1] - validStart + 1 >= count:
+                newRng = (validStart, validStart + count - 1)
                 self.reserveRange(newRng)
                 o4 = newRng[0] % 256
                 o3 = int(newRng[0] / 256) % 256
