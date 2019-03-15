@@ -5,7 +5,7 @@ from . import *
 
 class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
     skipDocumentRoot = True
-    Version = '6.11'
+    Version = '6.12'
     VendorDir = False
 
     def __init__(self, conf, owner):
@@ -139,6 +139,7 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
             '5.10': '39e2b451d6bc6f58c4eeb09ad26ad965',
             '5.11': '356333785c71215d2e3ec0d4a4e018df',
             '5.12': '91b4b708c231b098a52b15501ac3c4cf',
+            '5.13': '31fc4a473b2096284969ff2d2590323e',
             '6.0': '6d457c7e478574a5125f608f3d6b7fa5',
             '6.1': 'fad034b129695c5066e892cd7cb02a11',
             '6.2': '46a42d70047dafd4b05e3dd050cea887',
@@ -150,7 +151,8 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
             '6.8': '5c8f5107e3831f6e6f55f17486dee5d2',
             '6.9': '9455aeacf1faf24b3a12890a50198a5e',
             '6.10': '5aee2dacfb525f146fc28b4535066d1c',
-            '6.11': '9c2b33438b29df0395ff751b78cd1655'
+            '6.11': '9c2b33438b29df0395ff751b78cd1655',
+            '6.12': '0bc838e3e3155141a9496481c382c182'
 
 
         }
