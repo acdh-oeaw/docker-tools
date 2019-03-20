@@ -1,10 +1,19 @@
 #!/bin/bash
 
-# Removes all images without tags
-
+docker image prune -f
 
 if [ "$1" == "all" ]; then
-    docker image prune -f -a
-else
-    docker image prune -f
+    # try to remove everything which is not an ACDH image
+    # it will simply fail if an image is used or other images inherit from it
+    # because unused images can inherit from each other continue deleting until all tries fail
+    flag=1
+    while [ $flag -gt 0 ]; do
+        flag=0
+        for i in `docker image ls | tail -n +2 | grep -v ^acdh/ | awk '{print $3;}'`; do
+            docker image rm $i > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                flag=1
+            fi
+        done
+    done
 fi
