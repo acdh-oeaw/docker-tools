@@ -140,6 +140,7 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
             '5.11': '356333785c71215d2e3ec0d4a4e018df',
             '5.12': '91b4b708c231b098a52b15501ac3c4cf',
             '5.13': '31fc4a473b2096284969ff2d2590323e',
+            '5.14': '9f3035984039e0a5de0ce899722b9941',
             '6.0': '6d457c7e478574a5125f608f3d6b7fa5',
             '6.1': 'fad034b129695c5066e892cd7cb02a11',
             '6.2': '46a42d70047dafd4b05e3dd050cea887',
@@ -152,7 +153,8 @@ class EnvironmentDrupal8(EnvironmentPHP, IEnvironment):
             '6.9': '9455aeacf1faf24b3a12890a50198a5e',
             '6.10': '5aee2dacfb525f146fc28b4535066d1c',
             '6.11': '9c2b33438b29df0395ff751b78cd1655',
-            '6.12': '0bc838e3e3155141a9496481c382c182'
+            '6.12': '0bc838e3e3155141a9496481c382c182',
+            '6.13': 'ded84151ebda80826f18e924dab03edd'
 
 
         }
