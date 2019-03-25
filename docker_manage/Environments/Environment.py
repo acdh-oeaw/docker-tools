@@ -321,7 +321,7 @@ class Environment(IEnvironment, object):
 
         self.injectUserEnv(tmpDir + '/Dockerfile')
         self.adjustVersion(tmpDir + '/Dockerfile')
-        self.runProcess(['docker', 'build', '--force-rm=true', '-t', 'acdh/' + self.Name, tmpDir], verbose, '',
+        self.runProcess(['docker', 'build', '--force-rm=true', '-t', 'acdh-local/' + self.Name, tmpDir], verbose, '',
                         'Build failed')
         shutil.rmtree(tmpDir)
 
