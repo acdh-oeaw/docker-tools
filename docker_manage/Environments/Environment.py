@@ -328,7 +328,7 @@ class Environment(IEnvironment, object):
     def checkVolumes(self, cli):
         volumesToCopy = []
         volumesToCopy.extend(self.volumesToCopy)
-        volumes = cli.inspect_image('acdh/' + self.Name)['Config']['Volumes']
+        volumes = cli.inspect_image('acdh-local/' + self.Name)['Config']['Volumes']
         if volumes is None:
             return volumesToCopy
         for vol, hostPath in volumes.iteritems():
@@ -378,7 +378,7 @@ class Environment(IEnvironment, object):
         if len(volumesToCopy) > 0:
             mountsTmp = self.Mounts
             self.Mounts = []
-            self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name],
+            self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh-local/' + self.Name],
                             verbose, '    Creating temporary container to copy volumes content...',
                             'Container creation failed')
             volumes = cli.inspect_container(self.Name)['Config']['Volumes']
@@ -399,7 +399,7 @@ class Environment(IEnvironment, object):
                             None)
             self.Mounts = mountsTmp
         # run
-        self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh/' + self.Name], verbose,
+        self.runProcess(['docker', 'run', '--name', self.Name] + self.getDockerOpts() + ['acdh-local/' + self.Name], verbose,
                         '    Creating container...', 'Container creation failed')
         # check networks
         self.checkNetworks()
