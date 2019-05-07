@@ -242,12 +242,22 @@ class Environment(IEnvironment, object):
 
             if port['Type'] == 'HTTP':
                 if not 'ws' in port:
-                    port['ws'] = []
-                if not isinstance(port['ws'], list):
-                    port['ws'] = [port['ws']]
-                for ws in port['ws']:
-                    if not isinstance(ws, basestring) or not Param.isValidAlias(ws):
-                        raise Exception(str(len(self.Ports) + 1) + ' port forwarding websockets paths are invalid')
+                    port['ws'] = False
+                if not isinstance(port['ws'], bool):
+                    if not isinstance(port['ws'], list):
+                        port['ws'] = [port['ws']]
+                    for ws in port['ws']:
+                        if not isinstance(ws, basestring) or not Param.isValidAlias(ws):
+                            raise Exception(str(len(self.Ports) + 1) + ' port forwarding websockets paths are invalid')
+
+                if not 'wss' in port:
+                    port['wss'] = False
+                if not isinstance(port['wss'], bool):
+                    if not isinstance(port['wss'], list):
+                        port['wss'] = [port['wss']]
+                    for wss in port['wss']:
+                        if not isinstance(wss, basestring) or not Param.isValidAlias(wss):
+                            raise Exception(str(len(self.Ports) + 1) + ' port forwarding secure websockets paths are invalid')
 
                 if not 'Alias' in port:
                     port['Alias'] = ''

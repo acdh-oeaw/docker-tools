@@ -116,10 +116,22 @@ class EnvironmentHTTP(Environment, IEnvironment):
   def configureProxy(self, verbose):
     HTTPPort = self.getHTTPPort()
     websockets = ''
-    proto = 'ws' if self.HTTPS == 'false' else 'wss'
-    for ws in HTTPPort['ws']:
-      websockets += 'ProxyPass        ' + ws + ' ' + proto + '://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
-      websockets += 'ProxyPassReverse ' + ws + ' ' + proto + '://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+    if isinstance(HTTPPort['ws'], list):
+      for ws in HTTPPort['ws']:
+        websockets += 'ProxyPass        ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+        websockets += 'ProxyPassReverse ' + ws + ' ws://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+    elif isinstance(HTTPPort['ws'], bool) and HTTPPort['ws'] == True:
+      websockets += 'RewriteEngine on\n'
+      websockets += '  RewriteCond %{HTTP:Upgrade} =websocket\n'
+      websockets += '  RewriteRule /(.*) ws://127.0.0.1:' + str(HTTPPort['Host']) + '/$1 [P,L]\n'
+    if isinstance(HTTPPort['wss'], list):
+      for ws in HTTPPort['wss']:
+        websockets += 'ProxyPass        ' + ws + ' wss://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+        websockets += 'ProxyPassReverse ' + ws + ' wss://127.0.0.1:' + str(HTTPPort['Host']) + ws + '\n'
+    elif isinstance(HTTPPort['wss'], bool) and HTTPPort['wss'] == True:
+      websockets += 'RewriteEngine on\n'
+      websockets += '  RewriteCond %{HTTP:Upgrade} =websocket\n'
+      websockets += '  RewriteRule /(.*) wss://127.0.0.1:' + str(HTTPPort['Host']) + '/$1 [P,L]\n'
     cmd = [
       'sudo', '-u', 'root', 'docker-register-proxy',
       self.Name,
