@@ -20,7 +20,7 @@ class EnvironmentApache(EnvironmentHTTP, IEnvironment):
     try:
       self.getHTTPPort()
     except:
-      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : False, "wss" : False, "Alias" : ""})
 
     if not Param.isValidDomain(self.ServerName) :
       raise Exception('ServerName is missing or invalid')
