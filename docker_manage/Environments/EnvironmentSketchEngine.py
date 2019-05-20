@@ -15,7 +15,7 @@ class EnvironmentSketchEngine(EnvironmentSkeBase, IEnvironment):
     try:
       self.getHTTPPort()
     except:
-      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 80 , "Type" : "HTTP", "ws" : False, "wss" : False, "Alias" : ""})
 
     self.Mounts.append({ "Host" : self.RegistryDir, "Guest" : "/var/lib/ske/registry", "Rights" : "rw"})
 

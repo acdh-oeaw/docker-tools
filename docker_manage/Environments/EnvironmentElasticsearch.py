@@ -66,7 +66,7 @@ class Environmentelasticsearch(EnvironmentElasticsearchBase, IEnvironment):
     try:
       self.getHTTPPort()
     except:
-      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 9200 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 9200 , "Type" : "HTTP", "ws" : False, "wss" : False, "Alias" : ""})
 
 class Environmentkibana(EnvironmentElasticsearchBase, IEnvironment):
   def __init__(self, conf, owner):
@@ -80,4 +80,4 @@ class Environmentkibana(EnvironmentElasticsearchBase, IEnvironment):
     try:
       self.getHTTPPort()
     except:
-      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 5601 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 5601 , "Type" : "HTTP", "ws" : False, "wss" : False, "Alias" : ""})

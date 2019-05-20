@@ -30,7 +30,7 @@ class EnvironmentNoSkE(EnvironmentSkeBase, IEnvironment):
     try:
       self.getHTTPPort()
     except:
-      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 8080 , "Type" : "HTTP", "ws" : [], "Alias" : ""})
+      self.Ports.append({ "Host" : HTTPReverseProxy.getPort(), "Guest" : 8080 , "Type" : "HTTP", "ws" : False, "wss" : False, "Alias" : ""})
 
 class EnvironmentNoSkE_patched(EnvironmentNoSkE, IEnvironment):
   def __init__(self, conf, owner):
