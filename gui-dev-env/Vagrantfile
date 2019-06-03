@@ -154,7 +154,7 @@ sudo systemctl enable docker
 ###################
 sudo yum groups install -y "X Window System"
 sudo yum groups install -y "MATE Desktop"
-sudo yum install -y dnsmasq java-1.7.0-openjdk patch wget python-pip pyt
+sudo yum install -y dnsmasq java-1.8.0-openjdk patch wget python-pip pyt
 sudo systemctl set-default graphical.target
 
 # vagrant itself needs sudo to not requiretty so this default is already reverted
@@ -236,16 +236,16 @@ EOF
      sudo cp localhost.key /etc/pki/tls/private/localhost.key
      sudo cp localhost.csr /etc/pki/tls/private/localhost.csr
      sudo restorecon -RvF /etc/pki     
-     wget https://download.jetbrains.com/python/pycharm-community-2018.3.tar.gz
-     tar -xzf pycharm-community-2018.3.tar.gz
+     wget https://download.jetbrains.com/python/pycharm-community-2019.1.3.tar.gz
+     tar -xzf pycharm-community-2019.1.3.tar.gz
      mkdir -p .local/share/applications
      cat > .local/share/applications/jetbrains-pycharm-ce.desktop <<"EOF"      
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyCharm Community Edition
-Icon=/home/vagrant/pycharm-community-2018.3/bin/pycharm.png
-Exec="/home/vagrant/pycharm-community-2018.3/bin/pycharm.sh" %f
+Icon=/home/vagrant/pycharm-community-2019.1.3/bin/pycharm.png
+Exec="/home/vagrant/pycharm-community-2019.1.3/bin/pycharm.sh" %f
 Comment=Develop with pleasure!
 Categories=Development;IDE;
 Terminal=false
