@@ -165,6 +165,7 @@ sudo yum install -y dnsmasq java-1.8.0-openjdk patch wget python-pip python36-pi
 sudo systemctl set-default graphical.target
 git clone https://github.com/ubuntu-mate/mate-tweak.git
 pushd mate-tweak
+sed -i -e 's~/usr/lib/linuxmint/mintMenu/~/usr/share/linuxmint/mintMenu/~' mate-tweak
 ./setup.py build && sudo ./setup.py install
 popd
 sed -i -e s~/usr/lib/linuxmint/~/usr/share/linuxmint/~g mate-tweak
