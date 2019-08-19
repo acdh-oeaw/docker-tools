@@ -163,7 +163,7 @@ sudo yum groups install -y "X Window System"
 sudo yum groups install -y "MATE Desktop"
 sudo yum install -y dnsmasq java-1.8.0-openjdk patch wget python-pip python36-pip docker-compose pyt python-setuptools python36-setuptools python2-distutils-extra python36-distutils-extra python2-distro python36-distro python-gobject python36-gobject python-psutil python36-psutil  python-setproctitle python36-setproctitle intltool mintmenu nano hyperv-tools
 sudo systemctl set-default graphical.target
-sudo clone https://github.com/ubuntu-mate/mate-tweak.git
+git clone https://github.com/ubuntu-mate/mate-tweak.git
 pushd mate-tweak
 ./setup.py build && sudo ./setup.py install
 popd
@@ -267,6 +267,6 @@ StartupWMClass=jetbrains-pycharm-ce
 EOF
   cd /home
   chown vagrant:vagrant -R vagrant
-  cp /opt/VBoxGuestAdditions-*/other/98vboxadd-xclient /etc/X11/xinit/xinitrc.d/
+  cp /opt/VBoxGuestAdditions-*/other/98vboxadd-xclient /etc/X11/xinit/xinitrc.d/ || true
   SHELL
 end
