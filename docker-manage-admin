@@ -8,6 +8,7 @@ import os
 import re
 import stat
 import subprocess
+import sys
 import time
 
 import docker_manage
@@ -73,7 +74,7 @@ if not args.action is None:
     else:
         if args.action.count('enter-as-root') > 0 or args.action.count('enter') > 0:
             print('Running console...')
-            configuration.runCommand(args.project, args.environment[0], args.action[0], args.command)
+            sys.exit(configuration.runCommand(args.project, args.environment[0], args.action[0], args.command))
         elif args.action.count('logs') > 0:
             print('Printing logs...')
             configuration.showLogs(args.project, args.environment[0])

@@ -443,7 +443,7 @@ class Environment(IEnvironment, object):
         args = ['docker', 'exec', opts, '-u', 'root', self.Name] + command
         if not root:
             args[4] = self.UserName if self.UserName != '' else 'user'
-        subprocess.call(args)
+        return subprocess.call(args)
 
     def showLogs(self):
         if not self.ready:
