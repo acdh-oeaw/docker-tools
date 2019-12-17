@@ -1,4 +1,5 @@
 import codecs
+import os
 import re
 from . import *
 
@@ -6,7 +7,8 @@ from . import *
 class EnvironmentDrupal88(EnvironmentApache, IEnvironment):
     skipDocumentRoot = True
     UserName = 'www-data'
-    GroupName = 'www-data' 
+    GroupName = 'www-data'
+    ComposerDir = None
 
     def __init__(self, conf, owner):
         if 'DockerfileDir' not in conf:
@@ -22,6 +24,7 @@ class EnvironmentDrupal88(EnvironmentApache, IEnvironment):
         if not Param.isValidRelPath(conf['ComposerDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['ComposerDir']):
             raise Exception('ComposerDir is invalid')
         self.Mounts.append({"Host": conf['ComposerDir'], "Guest": "/var/www/drupal/composer", "Rights": "rw"})
+        self.ComposerDir = conf['ComposerDir']
 
         if 'ModulesDir' in conf:
             if not 'ModulesDir' in conf or not Param.isValidRelPath(conf['ModulesDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['ModulesDir']):
@@ -38,6 +41,21 @@ class EnvironmentDrupal88(EnvironmentApache, IEnvironment):
                 raise Exception('VendorDir is invalid')
             self.Mounts.append({"Host": conf['VendorDir'], "Guest": "/var/www/drupal/git/vendor", "Rights": "rw"})
 
+    def processAliases(self, conf):
+        if not isinstance(conf, list):
+            conf = [conf]
+
+        for alias in conf:
+            if not Param.isValidAlias(alias):
+                raise Exception(str(len(self.Aliases) + 1) + ' alias name is missing or invalid')
+            self.Aliases.append(alias)
+
+    def getAliases(self):
+        aliases = ''
+        for alias in self.Aliases:
+            aliases += 'Alias ' + alias + ' /var/www/drupal/git/web\n'
+        return aliases
+
     def runHooks(self, verbose):
         # it's not a but that we are skinng EnvironmentApache runHooks()
         super(EnvironmentApache, self).runHooks(verbose)
@@ -48,5 +66,46 @@ class EnvironmentDrupal88(EnvironmentApache, IEnvironment):
 
     def getDockerOpts(self):
         # it's not a but that we are skinng EnvironmentApache getDockerOpts()
-        return super(EnvironmentApache, self).getDockerOpts()
+        opts = super(EnvironmentApache, self).getDockerOpts()
+
+        localPath = self.BaseDir + '/' + self.ComposerDir + '/virtualHost.conf'
+        if len(os.listdir(os.path.dirname(localPath))) > 0:
+            # not to prevent composer.json from being copied from the container to the host
+            self.prepareApacheConf(localPath)
+            opts += ['-v', localPath + ':/etc/apache2/sites-enabled/000-default.conf']
+
+        return opts
+
+    def prepareApacheConf(self, path):
+      with open(path, 'w') as vhFile:
+          vhFile.write(self.guestVHTemplate.format(
+            ServerName = self.ServerName,
+            ServerAlias = self.getServerAlias(),
+            Aliases = self.getAliases(),
+            ImitateHTTPS = self.imitateHTTPSTemplate if self.ImitateHTTPS == 'true' else ''
+          ))
+
+    imitateHTTPSTemplate = """
+  SetEnv HTTPS on
+  SetEnv REQUEST_SCHEME https
+  SetEnv protossl s
+"""
+
+    guestVHTemplate = """
+<VirtualHost *:80>
+  ServerName {ServerName}
+  DocumentRoot /var/www/drupal/git/web
+  ServerAlias {ServerAlias}
+
+  <Directory /var/www/drupal/git/web>
+    Require all granted
+    AllowOverride All
+    Options All
+  </Directory>
+
+  {Aliases}
+  {ImitateHTTPS}
+</VirtualHost>   
+"""
+
 
