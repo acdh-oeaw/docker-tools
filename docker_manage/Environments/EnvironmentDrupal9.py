@@ -4,7 +4,7 @@ import re
 from . import *
 
 
-class EnvironmentDrupal88(EnvironmentApache, IEnvironment):
+class EnvironmentDrupal9(EnvironmentApache, IEnvironment):
     skipDocumentRoot = True
     UserName = 'www-data'
     GroupName = 'www-data'
@@ -12,10 +12,10 @@ class EnvironmentDrupal88(EnvironmentApache, IEnvironment):
 
     def __init__(self, conf, owner):
         if 'DockerfileDir' not in conf:
-            conf['DockerfileDir'] = 'http_drupal88'
+            conf['DockerfileDir'] = 'http_drupal9'
         self.ImitateHTTPS = self.HTTPS
 
-        super(EnvironmentDrupal88, self).__init__(conf, owner)
+        super(EnvironmentDrupal9, self).__init__(conf, owner)
 
         if not 'SitesDir' in conf or not Param.isValidRelPath(conf['SitesDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['SitesDir']):
             raise Exception('SitesDir is missing or invalid')
@@ -107,5 +107,4 @@ class EnvironmentDrupal88(EnvironmentApache, IEnvironment):
   {ImitateHTTPS}
 </VirtualHost>   
 """
-
 
