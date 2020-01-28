@@ -9,6 +9,7 @@ class EnvironmentDrupal9(EnvironmentApache, IEnvironment):
     UserName = 'www-data'
     GroupName = 'www-data'
     ComposerDir = None
+    LogDirMount = '/var/log/apache2'
 
     def __init__(self, conf, owner):
         if 'DockerfileDir' not in conf:
