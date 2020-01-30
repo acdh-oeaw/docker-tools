@@ -18,6 +18,8 @@ class EnvironmentDrupal9(EnvironmentApache, IEnvironment):
 
         super(EnvironmentDrupal9, self).__init__(conf, owner)
 
+        self.processLogDir(conf, True)
+
         if not 'SitesDir' in conf or not Param.isValidRelPath(conf['SitesDir']) or not Param.isValidDir(self.BaseDir + '/' + conf['SitesDir']):
             raise Exception('SitesDir is missing or invalid')
         self.Mounts.append({"Host": conf['SitesDir'], "Guest": '/var/www/drupal/git/web/sites', "Rights": "rw"})
