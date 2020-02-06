@@ -69,3 +69,5 @@ systemctl start docker
 
 echo 'To build images run'
 echo '  docker-build-images -v /var/lib/docker/images/ --skip envToSkip1 envToSkip2'
+
+echo 'Consider switching Apache to the mpm-event (see /etc/httpd/conf.modules.d/00-mpm.conf)'

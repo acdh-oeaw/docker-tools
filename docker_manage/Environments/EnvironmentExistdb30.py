@@ -77,3 +77,14 @@ class EnvironmenteXistdb4x(EnvironmenteXistdb30, IEnvironment):
     if 'DockerfileDir' not in conf :
       conf['DockerfileDir'] = 'existdb4x'
     super(EnvironmenteXistdb4x, self).__init__(conf, owner)
+
+
+class EnvironmenteXistdb5x(EnvironmenteXistdb30, IEnvironment):
+
+  def __init__(self, conf, owner):
+    self.DataDirMount = '/exist/data'
+    self.LogDirMount = '/exist/logs'
+    self.AutodeployDirMount = '/exist/autodeploy'
+    if 'DockerfileDir' not in conf :
+      conf['DockerfileDir'] = 'existdb5x'
+    super(EnvironmenteXistdb5x, self).__init__(conf, owner)
