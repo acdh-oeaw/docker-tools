@@ -9,6 +9,7 @@ import re
 import socket
 import subprocess
 import time
+import traceback
 
 
 parser = argparse.ArgumentParser()
@@ -87,6 +88,21 @@ while proc.returncode is None:
         for i in lines:
             # 0 container        1 CPU    2 MEM                                    7 net in       9 net out      11 io read     13 io write    15 pids
             # 'tokeneditor-php', '0.02%', '8.977', 'MiB', '31.26', 'GiB', '0.03%', '761.5', 'MB', '870.9', 'MB', '292.4', 'MB', '106.5', 'kB', '12'
+            if len(i) == 11:
+                # new format
+                # 0 id            1 container  2 CPU    3 MEM                            6 net in  7 net out  8 io read  9 io write  10 pids
+                # '636a88da3a7f', 'traefik',   '0.49%', '25.75MiB', '62.76GiB', '0.04%', '923MB',  '979MB',   '59.8MB',  '0B',       '43'
+                i = [
+                    i[0], i[2], 
+                    re.sub('[^0-9.]', '', i[3]), re.sub('^[0-9.]*', '', i[3]), 
+                    re.sub('[^0-9.]', '', i[4]), re.sub('^[0-9.]*', '', i[4]), 
+                    i[5],
+                    re.sub('[^0-9.]', '', i[6]), re.sub('^[0-9.]*', '', i[6]), 
+                    re.sub('[^0-9.]', '', i[7]), re.sub('^[0-9.]*', '', i[7]), 
+                    re.sub('[^0-9.]', '', i[8]), re.sub('^[0-9.]*', '', i[8]), 
+                    re.sub('[^0-9.]', '', i[9]), re.sub('^[0-9.]*', '', i[9]), 
+                    i[10]
+                ]
             if i[1] == 'CPU' or len(i) != 16:
                 if not re.search('^[a-z0-9]+ [ -]+$', ' '.join(i)):
                     print('Skipping invalid line')
@@ -110,7 +126,8 @@ while proc.returncode is None:
             writeIfDiff(cur, stat, statCache, file)
             con.commit()
     except Exception as e:
-        print e
+        print(traceback.format_exc())
+        print(e)
 if file is not None:
     close(file)
 
