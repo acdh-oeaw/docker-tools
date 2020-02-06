@@ -14,6 +14,7 @@ import traceback
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dbConf', default='dbname=docker host=helios port=5433 user=docker')
+parser.add_argument('--keepUnknownUsers', action='store_true')
 parser.add_argument('--file')
 parser.add_argument('--timeout', default=1, type=int)
 args = parser.parse_args()
@@ -25,7 +26,7 @@ file = None
 if args.file is not None:
     file = open(args.file, 'w')
 
-def getContainerId(cur, hash, localCache, contCache, users):
+def getContainerId(cur, hash, localCache, contCache, users, keepUnknownUser):
     if hash not in localCache:
         print('Refreshing docker container id to container name mappings')
         data = subprocess.check_output(['/usr/bin/docker', 'ps'])
@@ -37,7 +38,8 @@ def getContainerId(cur, hash, localCache, contCache, users):
     user = name.split('-')[0]
     if user not in users:
         if user not in os.listdir('/home'):
-            name = 'temp'
+            if keepUnknownUser == False:
+                name = 'temp'
         else:
             users.append(user)
     if name not in contCache:
@@ -108,7 +110,7 @@ while proc.returncode is None:
                     print('Skipping invalid line')
                     print('  ' + ' '.join(i))
                 continue
-            id = getContainerId(cur, i[0], localCache, contCache, users)
+            id = getContainerId(cur, i[0], localCache, contCache, users, args.keepUnknownUsers)
             try: cpu = min(maxCpu, float(i[1][0:-1]))
             except: cpu = 0
             try: mem = float(i[2]) * multi[i[3][0:1]]
