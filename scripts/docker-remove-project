@@ -6,8 +6,8 @@ if [ -z $1 ]; then
 fi;
 
 uid=`id -u $1`
-sed -i "/:$uid/d" /etc/projid
-sed -i "/$uid:/d" /etc/projects
+sed -i "/:$uid$/d" /etc/projid
+sed -i "/^$uid:/d" /etc/projects
 
 echo '[]' > /home/$1/config.json
 docker-manage-admin -p $1
