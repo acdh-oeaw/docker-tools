@@ -73,7 +73,9 @@ Vagrant.configure(2) do |config|
      hyperv.memory = 2048
      hyperv.maxmemory = 4096
      hyperv.cpus = 2
-     hyperv.enable_virtualization_extensions = true
+     # hyperv.enable_virtualization_extensions = true
+     # This does not work with AMD-V
+     hyperv.enable_virtualization_extensions = false
   end
   # config.vbguest.installer_arguments = ['--target /home/vagrant/VBoxGuestAddons --keep']
   #
@@ -251,16 +253,16 @@ EOF
      sudo cp localhost.key /etc/pki/tls/private/localhost.key
      sudo cp localhost.csr /etc/pki/tls/private/localhost.csr
      sudo restorecon -RvF /etc/pki     
-     wget https://download.jetbrains.com/python/pycharm-community-2019.2.tar.gz
-     tar -xzf pycharm-community-2019.2.tar.gz
+     wget https://download.jetbrains.com/python/pycharm-community-2020.2.2.tar.gz
+     tar -xzf pycharm-community-2020.2.2.tar.gz
      mkdir -p .local/share/applications
      cat > .local/share/applications/jetbrains-pycharm-ce.desktop <<"EOF"      
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyCharm Community Edition
-Icon=/home/vagrant/pycharm-community-2019.2/bin/pycharm.png
-Exec="/home/vagrant/pycharm-community-2019.2/bin/pycharm.sh" %f
+Icon=/home/vagrant/pycharm-community-2020.2.2/bin/pycharm.png
+Exec="/home/vagrant/pycharm-community-2020.2.2/bin/pycharm.sh" %f
 Comment=Develop with pleasure!
 Categories=Development;IDE;
 Terminal=false
