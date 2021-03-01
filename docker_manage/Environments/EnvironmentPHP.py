@@ -43,6 +43,26 @@ class EnvironmentPHP(EnvironmentApache, IEnvironment):
         if self.ConfigDir is not None:
             self.Mounts.append({"Host": self.ConfigDir, "Guest": self.ConfigDirMount, "Rights": "rw"})
 
+class EnvironmentPHPL(EnvironmentPHP, IEnvironment):
+    DockerfileDir = 'http_php_latest'
+    guestVHTemplate = """
+<VirtualHost *:80>
+  ServerName {ServerName}
+  DocumentRoot {DocumentRootMount}
+  ServerAlias {ServerAlias}
+
+  <Directory {DocumentRootMount}>
+    Require all granted
+    AllowOverride {AllowOverride}
+    Options {Options}
+  </Directory>
+
+  {Aliases}
+  {ImitateHTTPS}
+</VirtualHost>   
+"""
+
+
 class EnvironmentPHP5(EnvironmentPHP, IEnvironment):
     DockerfileDir = 'http_php5'
 
