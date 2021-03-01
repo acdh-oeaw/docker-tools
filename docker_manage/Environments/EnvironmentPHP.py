@@ -62,6 +62,8 @@ class EnvironmentPHPL(EnvironmentPHP, IEnvironment):
 </VirtualHost>   
 """
 
+    def getDockerOpts(self):
+        return super(EnvironmentApache, self).getDockerOpts()
 
 class EnvironmentPHP5(EnvironmentPHP, IEnvironment):
     DockerfileDir = 'http_php5'
