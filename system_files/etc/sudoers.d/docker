@@ -1,3 +1,4 @@
 %users  ALL=(:docker) NOPASSWD: /usr/sbin/docker-manage-admin
 %docker ALL=(root)    NOPASSWD: /usr/sbin/docker-register-proxy
 %docker ALL=(root)    NOPASSWD: /usr/sbin/docker-clean
+%docker ALL=(root)    NOPASSWD: /usr/bin/docker

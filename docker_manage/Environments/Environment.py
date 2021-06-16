@@ -331,8 +331,10 @@ class Environment(IEnvironment, object):
 
         self.injectUserEnv(tmpDir + '/Dockerfile')
         self.adjustVersion(tmpDir + '/Dockerfile')
-        self.runProcess(['docker', 'build', '--force-rm=true', '-t', 'acdh-local/' + self.Name, tmpDir], verbose, '',
-                        'Build failed')
+        self.runProcess(
+            ['sudo', 'docker', 'build', '--force-rm=true', '-t', 'acdh-local/' + self.Name, tmpDir], 
+            verbose, '', 'Build failed'
+        )
         shutil.rmtree(tmpDir)
 
     def checkVolumes(self, cli):
