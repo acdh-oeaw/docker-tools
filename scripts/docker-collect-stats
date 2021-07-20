@@ -130,6 +130,10 @@ while proc.returncode is None:
     except Exception as e:
         print(traceback.format_exc())
         print(e)
+        if cur.closed:
+            print('Reconnecting to the database')
+            con = psycopg2.connect(args.dbConf)
+            cur = con.cursor()
 if file is not None:
     close(file)
 
