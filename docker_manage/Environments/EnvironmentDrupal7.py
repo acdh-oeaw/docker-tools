@@ -5,7 +5,7 @@ from . import *
 
 class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
     skipDocumentRoot = True
-    Version = '80'
+    Version = '82'
 
     def __init__(self, conf, owner):
         if 'DockerfileDir' not in conf:
@@ -79,7 +79,8 @@ class EnvironmentDrupal7(EnvironmentPHP, IEnvironment):
             '77': '3594011c69191ce8804f27c698d18b0e',
             '78': '67c8e2974421e8d549ad705169977498',
             '79': '672d35b4e172721452f351ee01644d76',
-            '80': 'cfbbc4cde2782f4e7298db3991ca6f56'
+            '80': 'cfbbc4cde2782f4e7298db3991ca6f56',
+            '82': '51f8515161087935662b9835194a779b'
 
         }
 
