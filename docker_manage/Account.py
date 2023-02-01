@@ -65,9 +65,9 @@ class Account:
           raise Exception('environment has no type')
         self.environments.append(env)
 
-        adminCfg = self.adminCfg['default']
+        adminCfg = copy.deepcopy(self.adminCfg['default'])
         if envConf['Name'] in self.adminCfg['environments']:
-          adminCfg.update(copy.deepcopy(self.adminCfg['environments'][envConf['Name']]))
+          adminCfg.update(self.adminCfg['environments'][envConf['Name']])
         env.adminCfg = adminCfg
       except Exception as e:
         if self.owner:
