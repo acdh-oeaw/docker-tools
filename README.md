@@ -1,5 +1,7 @@
 # docker-tools
 
+_Note:_ docker-tools was tailored to CentOS 7. CentOS 7 now is end of life so this repo is archived now.
+
 Set of tools to make Docker administration easier
 
 ## Installation
